@@ -1,4 +1,4 @@
-const { Client, GatewayIntentBits } = require('discord.js');
+const { Client, GatewayIntentBits, EmbedBuilder } = require('discord.js');
 const express = require('express');
 
 const app = express();
@@ -16,18 +16,24 @@ client.once('ready', () => {
 });
 
 app.post('/candidature', async (req, res) => {
-  const { message } = req.body;
-  
+  const { fields, titre } = req.body;
+
+  const embed = new EmbedBuilder()
+    .setTitle(titre || "📋 Nouvelle candidature reçue !")
+    .setColor(0xFFD700)
+    .setTimestamp()
+    .addFields(fields || []);
+
   for (const userId of USER_IDS) {
     try {
       const user = await client.users.fetch(userId);
-      await user.send(message);
-      console.log(`MP envoyé à ${userId}`);
+      await user.send({ embeds: [embed] });
+      console.log(`MP embed envoyé à ${userId}`);
     } catch (err) {
       console.error(`Erreur MP pour ${userId}:`, err.message);
     }
   }
-  
+
   res.json({ success: true });
 });
 
