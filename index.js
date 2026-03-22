@@ -16,13 +16,20 @@ client.once('ready', () => {
 });
 
 app.post('/candidature', async (req, res) => {
+  console.log("Requête reçue:", JSON.stringify(req.body));
+
   const { fields, titre } = req.body;
+
+  if (!fields || fields.length === 0) {
+    console.log("Aucun champ reçu !");
+    return res.status(400).json({ error: "Aucun champ reçu" });
+  }
 
   const embed = new EmbedBuilder()
     .setTitle(titre || "📋 Nouvelle candidature reçue !")
     .setColor(0xFFD700)
     .setTimestamp()
-    .addFields(fields || []);
+    .addFields(fields.map(f => ({ name: f.name, value: String(f.value) })));
 
   for (const userId of USER_IDS) {
     try {
