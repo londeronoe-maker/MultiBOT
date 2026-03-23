@@ -11,13 +11,15 @@
     .login-screen { display: flex; align-items: center; justify-content: center; min-height: 100vh; }
     .login-box { background: #16213e; padding: 40px; border-radius: 16px; width: 340px; border: 1px solid #FFD700; }
     .login-box h2 { text-align: center; color: #FFD700; margin-bottom: 24px; font-size: 22px; }
-    .login-box input { width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #333; background: #0f3460; color: #fff; font-size: 15px; margin-bottom: 16px; }
+    .login-box input { width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #333; background: #0f3460; color: #fff; font-size: 15px; margin-bottom: 12px; }
     .login-box button { width: 100%; padding: 12px; background: #FFD700; color: #1a1a2e; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; }
     .login-box button:hover { background: #e6c200; }
 
     .dashboard { display: none; padding: 30px; max-width: 900px; margin: 0 auto; }
     .header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 30px; }
     .header h1 { color: #FFD700; font-size: 26px; }
+    .header-right { display: flex; align-items: center; gap: 12px; }
+    .username-badge { background: #0f3460; padding: 6px 12px; border-radius: 8px; font-size: 13px; color: #FFD700; }
     .logout { background: transparent; border: 1px solid #FFD700; color: #FFD700; padding: 8px 16px; border-radius: 8px; cursor: pointer; }
     .logout:hover { background: #FFD700; color: #1a1a2e; }
 
@@ -32,13 +34,30 @@
     .section { background: #16213e; border-radius: 12px; padding: 24px; margin-bottom: 20px; border: 1px solid #0f3460; }
     .section h2 { color: #FFD700; margin-bottom: 20px; font-size: 18px; }
     .form-row { display: flex; gap: 12px; flex-wrap: wrap; }
-    .form-row input, .form-row textarea { flex: 1; padding: 12px; border-radius: 8px; border: 1px solid #333; background: #0f3460; color: #fff; font-size: 14px; min-width: 200px; }
+    .form-row input, .form-row textarea, .form-row select { flex: 1; padding: 12px; border-radius: 8px; border: 1px solid #333; background: #0f3460; color: #fff; font-size: 14px; min-width: 150px; }
     .form-row textarea { height: 100px; resize: vertical; }
     .btn { padding: 12px 24px; background: #FFD700; color: #1a1a2e; border: none; border-radius: 8px; font-size: 14px; font-weight: bold; cursor: pointer; white-space: nowrap; }
     .btn:hover { opacity: 0.9; }
+    .btn-danger { background: #f44336; color: #fff; padding: 6px 12px; font-size: 12px; border: none; border-radius: 6px; cursor: pointer; }
     .feedback { margin-top: 12px; padding: 10px; border-radius: 8px; font-size: 14px; display: none; }
     .feedback.success { background: #1e4d2b; color: #4CAF50; display: block; }
     .feedback.error { background: #4d1e1e; color: #f44336; display: block; }
+
+    .comptes-list { margin-top: 16px; }
+    .compte-item { display: flex; align-items: center; justify-content: space-between; padding: 12px; background: #0f3460; border-radius: 8px; margin-bottom: 8px; }
+    .compte-info { display: flex; align-items: center; gap: 12px; }
+    .role-badge { padding: 3px 10px; border-radius: 12px; font-size: 11px; font-weight: bold; }
+    .role-admin { background: #FFD700; color: #1a1a2e; }
+    .role-normal { background: #0f3460; color: #aaa; border: 1px solid #333; }
+
+    .tabs { display: flex; gap: 8px; margin-bottom: 20px; }
+    .tab { padding: 8px 20px; border-radius: 8px; cursor: pointer; font-size: 14px; border: 1px solid #0f3460; color: #aaa; background: transparent; }
+    .tab.active { background: #FFD700; color: #1a1a2e; border-color: #FFD700; font-weight: bold; }
+
+    .send-results { margin-top: 12px; }
+    .send-result-item { padding: 8px 12px; border-radius: 6px; margin-bottom: 6px; font-size: 13px; }
+    .send-result-item.ok { background: #1e4d2b; color: #4CAF50; }
+    .send-result-item.ko { background: #4d1e1e; color: #f44336; }
   </style>
 </head>
 <body>
@@ -47,19 +66,24 @@
 <div class="login-screen" id="loginScreen">
   <div class="login-box">
     <h2>🤖 ARMORED.BOT</h2>
-    <input type="password" id="passwordInput" placeholder="Mot de passe" onkeydown="if(event.key==='Enter') login()">
+    <input type="text" id="loginUsername" placeholder="Nom d'utilisateur" onkeydown="if(event.key==='Enter') login()">
+    <input type="password" id="loginPassword" placeholder="Mot de passe" onkeydown="if(event.key==='Enter') login()">
     <button onclick="login()">Se connecter</button>
-    <div class="feedback error" id="loginError" style="display:none">Mot de passe incorrect</div>
+    <div class="feedback error" id="loginError" style="display:none;margin-top:12px">Identifiants incorrects</div>
   </div>
 </div>
 
 <!-- Dashboard -->
 <div class="dashboard" id="dashboard">
   <div class="header">
-    <h1>🤖 ARMORED.BOT Dashboard</h1>
-    <button class="logout" onclick="logout()">Se déconnecter</button>
+    <h1>🤖 ARMORED.BOT</h1>
+    <div class="header-right">
+      <span class="username-badge" id="usernameDisplay"></span>
+      <button class="logout" onclick="logout()">Se déconnecter</button>
+    </div>
   </div>
 
+  <!-- Statut -->
   <div class="cards">
     <div class="card">
       <h3>Statut</h3>
@@ -81,10 +105,11 @@
     </div>
   </div>
 
+  <!-- Envoyer un message -->
   <div class="section">
     <h2>💬 Envoyer un message</h2>
     <div class="form-row">
-      <input type="text" id="userId" placeholder="ID Discord de l'utilisateur">
+      <input type="text" id="userIds" placeholder="IDs Discord séparés par des virgules (ex: 123,456,789)">
     </div>
     <div class="form-row" style="margin-top:12px">
       <textarea id="messageContent" placeholder="Ton message..."></textarea>
@@ -92,38 +117,102 @@
     <div style="margin-top:12px">
       <button class="btn" onclick="envoyerMessage()">Envoyer</button>
     </div>
-    <div class="feedback" id="sendFeedback"></div>
+    <div class="send-results" id="sendResults"></div>
+  </div>
+
+  <!-- Gestion des comptes (admin uniquement) -->
+  <div class="section" id="sectionComptes" style="display:none">
+    <h2>👥 Gestion des comptes</h2>
+    <div class="tabs">
+      <button class="tab active" onclick="switchTab('liste')">Liste</button>
+      <button class="tab" onclick="switchTab('creer')">Créer</button>
+      <button class="tab" onclick="switchTab('password')">Changer mot de passe</button>
+    </div>
+
+    <!-- Liste -->
+    <div id="tabListe">
+      <div class="comptes-list" id="comptesList"></div>
+    </div>
+
+    <!-- Créer -->
+    <div id="tabCreer" style="display:none">
+      <div class="form-row">
+        <input type="text" id="newUsername" placeholder="Nom d'utilisateur">
+        <input type="password" id="newPassword" placeholder="Mot de passe">
+        <select id="newRole">
+          <option value="normal">Normal</option>
+          <option value="admin">Admin</option>
+        </select>
+      </div>
+      <div style="margin-top:12px">
+        <button class="btn" onclick="creerCompte()">Créer le compte</button>
+      </div>
+      <div class="feedback" id="creerFeedback"></div>
+    </div>
+
+    <!-- Changer mot de passe -->
+    <div id="tabPassword" style="display:none">
+      <div class="form-row">
+        <input type="text" id="pwUsername" placeholder="Nom d'utilisateur">
+        <input type="password" id="pwNew" placeholder="Nouveau mot de passe">
+      </div>
+      <div style="margin-top:12px">
+        <button class="btn" onclick="changerPassword()">Changer</button>
+      </div>
+      <div class="feedback" id="passwordFeedback"></div>
+    </div>
   </div>
 </div>
 
 <script>
   const BOT_URL = window.location.origin;
+  let username = '';
   let password = '';
+  let role = '';
 
   function login() {
-    password = document.getElementById('passwordInput').value;
-    fetch(`${BOT_URL}/status`, { headers: { 'x-password': password } })
-      .then(r => {
-        if (r.status === 401) {
-          document.getElementById('loginError').style.display = 'block';
-        } else {
-          document.getElementById('loginScreen').style.display = 'none';
-          document.getElementById('dashboard').style.display = 'block';
-          chargerStatut();
-          setInterval(chargerStatut, 10000);
+    username = document.getElementById('loginUsername').value;
+    password = document.getElementById('loginPassword').value;
+
+    fetch(`${BOT_URL}/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, password })
+    })
+    .then(r => r.json())
+    .then(data => {
+      if (data.error) {
+        document.getElementById('loginError').style.display = 'block';
+      } else {
+        role = data.role;
+        document.getElementById('loginScreen').style.display = 'none';
+        document.getElementById('dashboard').style.display = 'block';
+        document.getElementById('usernameDisplay').textContent = `👤 ${username} (${role})`;
+        if (role === 'admin') {
+          document.getElementById('sectionComptes').style.display = 'block';
+          chargerComptes();
         }
-      });
+        chargerStatut();
+        setInterval(chargerStatut, 10000);
+      }
+    });
   }
 
   function logout() {
-    password = '';
+    username = ''; password = ''; role = '';
     document.getElementById('loginScreen').style.display = 'flex';
     document.getElementById('dashboard').style.display = 'none';
-    document.getElementById('passwordInput').value = '';
+    document.getElementById('loginUsername').value = '';
+    document.getElementById('loginPassword').value = '';
+    document.getElementById('sectionComptes').style.display = 'none';
+  }
+
+  function headers() {
+    return { 'Content-Type': 'application/json', 'x-username': username, 'x-password': password };
   }
 
   function chargerStatut() {
-    fetch(`${BOT_URL}/status`, { headers: { 'x-password': password } })
+    fetch(`${BOT_URL}/status`, { headers: headers() })
       .then(r => r.json())
       .then(data => {
         const dot = document.getElementById('statusDot');
@@ -138,42 +227,124 @@
   }
 
   function envoyerMessage() {
-    const userId = document.getElementById('userId').value;
+    const ids = document.getElementById('userIds').value.split(',').map(id => id.trim()).filter(id => id);
     const message = document.getElementById('messageContent').value;
-    const feedback = document.getElementById('sendFeedback');
-    if (!userId || !message) {
-      feedback.textContent = "Remplis tous les champs !";
-      feedback.className = 'feedback error';
+    const results = document.getElementById('sendResults');
+
+    if (!ids.length || !message) {
+      results.innerHTML = '<div class="send-result-item ko">Remplis tous les champs !</div>';
       return;
     }
+
     fetch(`${BOT_URL}/send`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'x-password': password },
-      body: JSON.stringify({ userId, message })
+      headers: headers(),
+      body: JSON.stringify({ userIds: ids, message })
     })
     .then(r => r.json())
     .then(data => {
-      if (data.success) {
-        feedback.textContent = "✅ Message envoyé !";
-        feedback.className = 'feedback success';
-        document.getElementById('messageContent').value = '';
-      } else {
-        feedback.textContent = "❌ Erreur : " + data.error;
-        feedback.className = 'feedback error';
-      }
+      results.innerHTML = data.results.map(r =>
+        `<div class="send-result-item ${r.success ? 'ok' : 'ko'}">
+          ${r.success ? '✅' : '❌'} ID ${r.userId} — ${r.success ? 'Envoyé !' : r.error}
+        </div>`
+      ).join('');
+      if (data.results.every(r => r.success)) document.getElementById('messageContent').value = '';
     });
   }
 
   function restartBot() {
     if (!confirm("Redémarrer le bot ?")) return;
-    fetch(`${BOT_URL}/restart`, {
+    fetch(`${BOT_URL}/restart`, { method: 'POST', headers: headers() })
+      .then(r => r.json())
+      .then(data => {
+        if (data.success) alert("✅ Bot en cours de redémarrage !");
+        else alert("❌ Erreur : " + data.error);
+      });
+  }
+
+  function switchTab(tab) {
+    ['liste', 'creer', 'password'].forEach(t => {
+      document.getElementById('tab' + t.charAt(0).toUpperCase() + t.slice(1)).style.display = t === tab ? 'block' : 'none';
+    });
+    document.querySelectorAll('.tab').forEach((el, i) => {
+      el.classList.toggle('active', ['liste', 'creer', 'password'][i] === tab);
+    });
+    if (tab === 'liste') chargerComptes();
+  }
+
+  function chargerComptes() {
+    fetch(`${BOT_URL}/comptes`, { headers: headers() })
+      .then(r => r.json())
+      .then(data => {
+        document.getElementById('comptesList').innerHTML = data.map(c => `
+          <div class="compte-item">
+            <div class="compte-info">
+              <span>${c.username}</span>
+              <span class="role-badge role-${c.role}">${c.role}</span>
+            </div>
+            ${c.username !== 'admin' ? `<button class="btn-danger" onclick="supprimerCompte('${c.username}')">Supprimer</button>` : ''}
+          </div>
+        `).join('');
+      });
+  }
+
+  function creerCompte() {
+    const u = document.getElementById('newUsername').value;
+    const p = document.getElementById('newPassword').value;
+    const r = document.getElementById('newRole').value;
+    const feedback = document.getElementById('creerFeedback');
+
+    if (!u || !p) { feedback.textContent = "Remplis tous les champs !"; feedback.className = 'feedback error'; return; }
+
+    fetch(`${BOT_URL}/comptes`, {
       method: 'POST',
-      headers: { 'x-password': password }
+      headers: headers(),
+      body: JSON.stringify({ username: u, password: p, role: r })
     })
     .then(r => r.json())
     .then(data => {
-      if (data.success) alert("✅ Bot en cours de redémarrage !");
-      else alert("❌ Erreur : " + data.error);
+      if (data.success) {
+        feedback.textContent = "✅ Compte créé !";
+        feedback.className = 'feedback success';
+        document.getElementById('newUsername').value = '';
+        document.getElementById('newPassword').value = '';
+      } else {
+        feedback.textContent = "❌ " + data.error;
+        feedback.className = 'feedback error';
+      }
+    });
+  }
+
+  function supprimerCompte(u) {
+    if (!confirm(`Supprimer le compte "${u}" ?`)) return;
+    fetch(`${BOT_URL}/comptes/${u}`, { method: 'DELETE', headers: headers() })
+      .then(r => r.json())
+      .then(data => { if (data.success) chargerComptes(); });
+  }
+
+  function changerPassword() {
+    const u = document.getElementById('pwUsername').value;
+    const p = document.getElementById('pwNew').value;
+    const feedback = document.getElementById('passwordFeedback');
+
+    if (!u || !p) { feedback.textContent = "Remplis tous les champs !"; feedback.className = 'feedback error'; return; }
+
+    fetch(`${BOT_URL}/comptes/${u}/password`, {
+      method: 'PUT',
+      headers: headers(),
+      body: JSON.stringify({ newPassword: p })
+    })
+    .then(r => r.json())
+    .then(data => {
+      if (data.success) {
+        feedback.textContent = "✅ Mot de passe changé !";
+        feedback.className = 'feedback success';
+        document.getElementById('pwUsername').value = '';
+        document.getElementById('pwNew').value = '';
+      } else {
+        feedback.textContent = "❌ " + data.error;
+        feedback.className = 'feedback error';
+      }
     });
   }
 </script>
