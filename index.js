@@ -80,9 +80,10 @@ client.on('messageCreate', async (message) => {
   if (message.content.toLowerCase() === '!nation') {
     try {
       const nation = await ngApi.nation.get(NATION_NAME, SERVEUR);
+      console.log("Réponse API:", JSON.stringify(nation));
 
       if ('error' in nation) {
-        return message.reply("❌ Impossible de récupérer les données de la nation.");
+        return message.reply("❌ Impossible de récupérer les données : " + JSON.stringify(nation.error));
       }
 
       const embed = new EmbedBuilder()
@@ -101,110 +102,9 @@ client.on('messageCreate', async (message) => {
       message.reply({ embeds: [embed] });
     } catch (err) {
       console.error("Erreur NationsGlory:", err.message);
-      message.reply("❌ Erreur lors de la récupération des données.");
+      message.reply("❌ Erreur : " + err.message);
     }
   }
-});
-
-function auth(req, res, next) {
-  const username = req.headers['x-username'];
-  const password = req.headers['x-password'];
-  const compte = comptes.find(c => c.username === username && c.password === password);
-  if (!compte) return res.status(401).json({ error: "Non autorisé" });
-  req.compte = compte;
-  next();
-}
-
-function adminOnly(req, res, next) {
-  if (req.compte.role !== 'admin') return res.status(403).json({ error: "Réservé à l'admin" });
-  next();
-}
-
-app.post('/login', (req, res) => {
-  const { username, password } = req.body;
-  const compte = comptes.find(c => c.username === username && c.password === password);
-  if (!compte) {
-    envoyerLog("🔴 Tentative de connexion échouée", `Nom d'utilisateur : **${username}**`, 0xf44336);
-    return res.status(401).json({ error: "Identifiants incorrects" });
-  }
-  envoyerLog("🔵 Connexion au dashboard", `**${username}** (${compte.role}) s'est connecté`, 0x378ADD);
-  res.json({ success: true, role: compte.role, username: compte.username });
-});
-
-app.get('/status', auth, (req, res) => {
-  const uptime = Math.floor((new Date() - botStartTime) / 1000);
-  res.json({
-    online: client.isReady(),
-    tag: client.user ? client.user.tag : "Déconnecté",
-    uptime: uptime
-  });
-});
-
-app.post('/send', auth, async (req, res) => {
-  const { userIds, message } = req.body;
-  const ids = Array.isArray(userIds) ? userIds : [userIds];
-  const results = [];
-
-  for (const userId of ids) {
-    try {
-      const user = await client.users.fetch(userId.trim());
-      await user.send(message);
-      results.push({ userId, success: true });
-    } catch (err) {
-      results.push({ userId, success: false, error: err.message });
-    }
-  }
-
-  const succes = results.filter(r => r.success).length;
-  const echecs = results.filter(r => !r.success).length;
-  envoyerLog("💬 Message envoyé", `Par **${req.compte.username}**\n✅ ${succes} envoyé(s) — ❌ ${echecs} échoué(s)\n\n**Message :** ${message.substring(0, 100)}${message.length > 100 ? '...' : ''}`, 0xFFD700);
-
-  res.json({ results });
-});
-
-app.post('/restart', auth, async (req, res) => {
-  try {
-    const response = await fetch(`https://api.render.com/v1/services/${SERVICE_ID}/restart`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${RENDER_API_KEY}`,
-        'Content-Type': 'application/json'
-      }
-    });
-    if (response.ok) {
-      envoyerLog("🔄 MultiBOT redémarré", `Redémarrage lancé par **${req.compte.username}**`, 0xFF9800);
-      res.json({ success: true });
-    } else {
-      const data = await response.json();
-      res.status(500).json({ error: data.message });
-    }
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-app.post('/candidature', async (req, res) => {
-  const { fields, titre } = req.body;
-  if (!fields || fields.length === 0) {
-    return res.status(400).json({ error: "Aucun champ reçu" });
-  }
-
-  const embed = new EmbedBuilder()
-    .setTitle(titre || "📋 Nouvelle candidature reçue !")
-    .setColor(0xFFD700)
-    .setTimestamp()
-    .addFields(fields.map(f => ({ name: f.name, value: String(f.value) })));
-
-  for (const userId of USER_IDS) {
-    try {
-      const user = await client.users.fetch(userId);
-      await user.send({ embeds: [embed] });
-    } catch (err) {
-      console.error(`Erreur MP pour ${userId}:`, err.message);
-    }
-  }
-
-  res.json({ success: true });
 });
 
 // Stats NationsGlory via dashboard
