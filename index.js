@@ -38,7 +38,6 @@ function chargerStats() {
     charsDetruitTotal: 0,
     charsPerdusTotal: 0,
     recordRapport: 0,
-    recordMois: 0,
     tireurs: {},
     rapports: []
   };
@@ -152,13 +151,23 @@ app.post('/send', auth, async (req, res) => {
   const { userIds, message } = req.body;
   const ids = Array.isArray(userIds) ? userIds : [userIds];
   const results = [];
+
   for (const userId of ids) {
     try {
       const user = await client.users.fetch(userId.trim());
-      await user.send(message);
+      const embed = new EmbedBuilder()
+        .setTitle('📩 Message du Dashboard')
+        .setDescription(message)
+        .setColor(0xFFD700)
+        .setFooter({ text: `Envoyé par ${req.compte.username}` })
+        .setTimestamp();
+      await user.send({ embeds: [embed] });
       results.push({ userId, success: true });
-    } catch (err) { results.push({ userId, success: false, error: err.message }); }
+    } catch (err) {
+      results.push({ userId, success: false, error: err.message });
+    }
   }
+
   const succes = results.filter(r => r.success).length;
   const echecs = results.filter(r => !r.success).length;
   envoyerLog("💬 Message envoyé", `Par **${req.compte.username}**\n✅ ${succes} — ❌ ${echecs}\n**Message :** ${message.substring(0, 100)}`, 0xFFD700);
@@ -247,7 +256,6 @@ app.post('/rapport', async (req, res) => {
   res.json({ success: true });
 });
 
-// ===== ROUTES STATS =====
 app.get('/stats', auth, (req, res) => {
   const stats = chargerStats();
   res.json(stats);
@@ -260,7 +268,7 @@ app.put('/stats', auth, (req, res) => {
   if (charsPerdusTotal !== undefined) stats.charsPerdusTotal = parseInt(charsPerdusTotal);
   if (recordRapport !== undefined) stats.recordRapport = parseInt(recordRapport);
   sauvegarderStats(stats);
-  envoyerLog("✏️ Stats modifiées", `Par **${req.compte.username}**\n💥 Détruits: ${stats.charsDetruitTotal} | 💀 Perdus: ${stats.charsPerdusTotal} | 🏆 Record: ${stats.recordRapport}`, 0xFF9800);
+  envoyerLog("✏️ Stats modifiées", `Par **${req.compte.username}**\n💥 ${stats.charsDetruitTotal} | 💀 ${stats.charsPerdusTotal} | 🏆 ${stats.recordRapport}`, 0xFF9800);
   res.json({ success: true });
 });
 
@@ -269,14 +277,13 @@ app.delete('/stats/rapport/:id', auth, (req, res) => {
   const stats = chargerStats();
   const rapport = stats.rapports.find(r => r.id === id);
   if (!rapport) return res.status(404).json({ error: "Rapport introuvable" });
-
   stats.charsDetruitTotal -= rapport.detruits;
   stats.charsPerdusTotal -= rapport.perdus;
   if (stats.tireurs[rapport.tireur]) stats.tireurs[rapport.tireur] -= rapport.detruits;
   stats.rapports = stats.rapports.filter(r => r.id !== id);
   stats.recordRapport = stats.rapports.length > 0 ? Math.max(...stats.rapports.map(r => r.detruits)) : 0;
   sauvegarderStats(stats);
-  envoyerLog("🗑️ Rapport supprimé", `Par **${req.compte.username}** — Rapport de **${rapport.nom}** (${rapport.detruits} chars)`, 0xf44336);
+  envoyerLog("🗑️ Rapport supprimé", `Par **${req.compte.username}** — **${rapport.nom}** (${rapport.detruits} chars)`, 0xf44336);
   res.json({ success: true });
 });
 
@@ -293,7 +300,6 @@ app.post('/stats/reset', auth, adminOnly, async (req, res) => {
   res.json({ success: true });
 });
 
-// ===== COMPTES =====
 app.get('/comptes', auth, adminOnly, (req, res) => {
   res.json(comptes.map(c => ({ username: c.username, role: c.role })));
 });
