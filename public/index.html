@@ -39,7 +39,6 @@
     .feedback { margin-top: 12px; padding: 10px; border-radius: 8px; font-size: 14px; display: none; }
     .feedback.success { background: #1e4d2b; color: #4CAF50; display: block; }
     .feedback.error { background: #4d1e1e; color: #f44336; display: block; }
-    .action-btns { display: flex; gap: 8px; margin-top: 4px; flex-wrap: wrap; }
   </style>
 </head>
 <body>
@@ -76,10 +75,8 @@
     </div>
     <div class="card">
       <h3>Actions</h3>
-      <div class="action-btns">
-        <button class="btn" style="background:#4CAF50;color:#fff" onclick="startBot()">▶ Start</button>
+      <div style="margin-top:4px">
         <button class="btn" style="background:#FF9800;color:#fff" onclick="restartBot()">🔄 Restart</button>
-        <button class="btn" style="background:#f44336;color:#fff" onclick="stopBot()">⏹ Stop</button>
       </div>
     </div>
   </div>
@@ -167,19 +164,6 @@
     });
   }
 
-  function startBot() {
-    if (!confirm("Démarrer le bot ?")) return;
-    fetch(`${BOT_URL}/start`, {
-      method: 'POST',
-      headers: { 'x-password': password }
-    })
-    .then(r => r.json())
-    .then(data => {
-      if (data.success) alert("✅ Bot en cours de démarrage !");
-      else alert("❌ Erreur : " + data.error);
-    });
-  }
-
   function restartBot() {
     if (!confirm("Redémarrer le bot ?")) return;
     fetch(`${BOT_URL}/restart`, {
@@ -189,19 +173,6 @@
     .then(r => r.json())
     .then(data => {
       if (data.success) alert("✅ Bot en cours de redémarrage !");
-      else alert("❌ Erreur : " + data.error);
-    });
-  }
-
-  function stopBot() {
-    if (!confirm("Arrêter le bot ?")) return;
-    fetch(`${BOT_URL}/stop`, {
-      method: 'POST',
-      headers: { 'x-password': password }
-    })
-    .then(r => r.json())
-    .then(data => {
-      if (data.success) alert("✅ Bot arrêté !");
       else alert("❌ Erreur : " + data.error);
     });
   }
