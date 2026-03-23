@@ -49,6 +49,26 @@ app.post('/send', auth, async (req, res) => {
   }
 });
 
+app.post('/start', auth, async (req, res) => {
+  try {
+    const response = await fetch(`https://api.render.com/v1/services/${SERVICE_ID}/resume`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${RENDER_API_KEY}`,
+        'Content-Type': 'application/json'
+      }
+    });
+    if (response.ok) {
+      res.json({ success: true });
+    } else {
+      const data = await response.json();
+      res.status(500).json({ error: data.message });
+    }
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 app.post('/restart', auth, async (req, res) => {
   try {
     const response = await fetch(`https://api.render.com/v1/services/${SERVICE_ID}/restart`, {
