@@ -43,12 +43,6 @@
     .feedback.success { background: #1e4d2b; color: #4CAF50; display: block; }
     .feedback.error { background: #4d1e1e; color: #f44336; display: block; }
 
-    .nation-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 16px; margin-top: 16px; }
-    .nation-card { background: #0f3460; border-radius: 10px; padding: 16px; text-align: center; border: 1px solid #FFD700; }
-    .nation-card .emoji { font-size: 28px; margin-bottom: 8px; }
-    .nation-card .label { color: #aaa; font-size: 12px; text-transform: uppercase; margin-bottom: 4px; }
-    .nation-card .value { color: #FFD700; font-size: 18px; font-weight: bold; }
-
     .comptes-list { margin-top: 16px; }
     .compte-item { display: flex; align-items: center; justify-content: space-between; padding: 12px; background: #0f3460; border-radius: 8px; margin-bottom: 8px; }
     .compte-info { display: flex; align-items: center; gap: 12px; }
@@ -89,7 +83,6 @@
     </div>
   </div>
 
-  <!-- Statut bot -->
   <div class="cards">
     <div class="card">
       <h3>Statut</h3>
@@ -111,16 +104,6 @@
     </div>
   </div>
 
-  <!-- NationsGlory -->
-  <div class="section">
-    <h2>🌍 Cap Vert — NationsGlory</h2>
-    <button class="btn" onclick="chargerNation()">🔄 Actualiser</button>
-    <div class="nation-grid" id="nationGrid">
-      <div style="color:#aaa;margin-top:16px">Clique sur Actualiser pour charger les stats</div>
-    </div>
-  </div>
-
-  <!-- Envoyer un message -->
   <div class="section">
     <h2>💬 Envoyer un message</h2>
     <div class="form-row">
@@ -135,7 +118,6 @@
     <div class="send-results" id="sendResults"></div>
   </div>
 
-  <!-- Gestion des comptes (admin uniquement) -->
   <div class="section" id="sectionComptes" style="display:none">
     <h2>👥 Gestion des comptes</h2>
     <div class="tabs">
@@ -204,7 +186,6 @@
           chargerComptes();
         }
         chargerStatut();
-        chargerNation();
         setInterval(chargerStatut, 10000);
       }
     });
@@ -235,30 +216,6 @@
         const m = Math.floor((data.uptime % 3600) / 60);
         const s = data.uptime % 60;
         document.getElementById('uptime').textContent = `${h}h ${m}m ${s}s`;
-      });
-  }
-
-  function chargerNation() {
-    const grid = document.getElementById('nationGrid');
-    grid.innerHTML = '<div style="color:#aaa;margin-top:16px">Chargement...</div>';
-    fetch(`${BOT_URL}/nation`, { headers: headers() })
-      .then(r => r.json())
-      .then(data => {
-        if (data.error) {
-          grid.innerHTML = `<div style="color:#f44336">❌ ${data.error}</div>`;
-          return;
-        }
-        grid.innerHTML = `
-          <div class="nation-card"><div class="emoji">👥</div><div class="label">Membres</div><div class="value">${data.members || '?'}</div></div>
-          <div class="nation-card"><div class="emoji">💰</div><div class="label">Argent</div><div class="value">${data.bank ? data.bank.toLocaleString() + ' $' : '?'}</div></div>
-          <div class="nation-card"><div class="emoji">⚔️</div><div class="label">Power</div><div class="value">${data.power || '?'}/${data.maxPower || '?'}</div></div>
-          <div class="nation-card"><div class="emoji">📊</div><div class="label">MMR</div><div class="value">${data.mmr || '?'}</div></div>
-          <div class="nation-card"><div class="emoji">🗺️</div><div class="label">Claims</div><div class="value">${data.claims || '?'}</div></div>
-          <div class="nation-card"><div class="emoji">🖥️</div><div class="label">Serveur</div><div class="value">Mocha</div></div>
-        `;
-      })
-      .catch(() => {
-        grid.innerHTML = '<div style="color:#f44336">❌ Erreur de connexion à l\'API</div>';
       });
   }
 
