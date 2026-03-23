@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ARMORED.BOT Dashboard</title>
+  <title>MultiBOT Dashboard</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body { font-family: 'Segoe UI', sans-serif; background: #1a1a2e; color: #fff; min-height: 100vh; }
@@ -23,10 +23,10 @@
     .logout { background: transparent; border: 1px solid #FFD700; color: #FFD700; padding: 8px 16px; border-radius: 8px; cursor: pointer; }
     .logout:hover { background: #FFD700; color: #1a1a2e; }
 
-    .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 30px; }
+    .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 20px; margin-bottom: 30px; }
     .card { background: #16213e; border-radius: 12px; padding: 24px; border: 1px solid #0f3460; }
     .card h3 { color: #aaa; font-size: 13px; margin-bottom: 10px; text-transform: uppercase; }
-    .card p { font-size: 22px; font-weight: bold; color: #FFD700; }
+    .card p { font-size: 20px; font-weight: bold; color: #FFD700; word-break: break-all; }
     .status-dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 8px; }
     .online { background: #4CAF50; }
     .offline { background: #f44336; }
@@ -42,6 +42,12 @@
     .feedback { margin-top: 12px; padding: 10px; border-radius: 8px; font-size: 14px; display: none; }
     .feedback.success { background: #1e4d2b; color: #4CAF50; display: block; }
     .feedback.error { background: #4d1e1e; color: #f44336; display: block; }
+
+    .nation-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 16px; margin-top: 16px; }
+    .nation-card { background: #0f3460; border-radius: 10px; padding: 16px; text-align: center; border: 1px solid #FFD700; }
+    .nation-card .emoji { font-size: 28px; margin-bottom: 8px; }
+    .nation-card .label { color: #aaa; font-size: 12px; text-transform: uppercase; margin-bottom: 4px; }
+    .nation-card .value { color: #FFD700; font-size: 18px; font-weight: bold; }
 
     .comptes-list { margin-top: 16px; }
     .compte-item { display: flex; align-items: center; justify-content: space-between; padding: 12px; background: #0f3460; border-radius: 8px; margin-bottom: 8px; }
@@ -65,7 +71,7 @@
 <!-- Login -->
 <div class="login-screen" id="loginScreen">
   <div class="login-box">
-    <h2>🤖 ARMORED.BOT</h2>
+    <h2>⚡ MultiBOT</h2>
     <input type="text" id="loginUsername" placeholder="Nom d'utilisateur" onkeydown="if(event.key==='Enter') login()">
     <input type="password" id="loginPassword" placeholder="Mot de passe" onkeydown="if(event.key==='Enter') login()">
     <button onclick="login()">Se connecter</button>
@@ -76,13 +82,14 @@
 <!-- Dashboard -->
 <div class="dashboard" id="dashboard">
   <div class="header">
-    <h1>🤖 ARMORED.BOT</h1>
+    <h1>⚡ MultiBOT Dashboard</h1>
     <div class="header-right">
       <span class="username-badge" id="usernameDisplay"></span>
       <button class="logout" onclick="logout()">Se déconnecter</button>
     </div>
   </div>
 
+  <!-- Statut bot -->
   <div class="cards">
     <div class="card">
       <h3>Statut</h3>
@@ -104,6 +111,16 @@
     </div>
   </div>
 
+  <!-- NationsGlory -->
+  <div class="section">
+    <h2>🌍 Cap Vert — NationsGlory</h2>
+    <button class="btn" onclick="chargerNation()">🔄 Actualiser</button>
+    <div class="nation-grid" id="nationGrid">
+      <div style="color:#aaa;margin-top:16px">Clique sur Actualiser pour charger les stats</div>
+    </div>
+  </div>
+
+  <!-- Envoyer un message -->
   <div class="section">
     <h2>💬 Envoyer un message</h2>
     <div class="form-row">
@@ -118,6 +135,7 @@
     <div class="send-results" id="sendResults"></div>
   </div>
 
+  <!-- Gestion des comptes (admin uniquement) -->
   <div class="section" id="sectionComptes" style="display:none">
     <h2>👥 Gestion des comptes</h2>
     <div class="tabs">
@@ -167,7 +185,6 @@
   function login() {
     username = document.getElementById('loginUsername').value;
     password = document.getElementById('loginPassword').value;
-
     fetch(`${BOT_URL}/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -187,6 +204,7 @@
           chargerComptes();
         }
         chargerStatut();
+        chargerNation();
         setInterval(chargerStatut, 10000);
       }
     });
@@ -220,16 +238,38 @@
       });
   }
 
+  function chargerNation() {
+    const grid = document.getElementById('nationGrid');
+    grid.innerHTML = '<div style="color:#aaa;margin-top:16px">Chargement...</div>';
+    fetch(`${BOT_URL}/nation`, { headers: headers() })
+      .then(r => r.json())
+      .then(data => {
+        if (data.error) {
+          grid.innerHTML = `<div style="color:#f44336">❌ ${data.error}</div>`;
+          return;
+        }
+        grid.innerHTML = `
+          <div class="nation-card"><div class="emoji">👥</div><div class="label">Membres</div><div class="value">${data.members || '?'}</div></div>
+          <div class="nation-card"><div class="emoji">💰</div><div class="label">Argent</div><div class="value">${data.bank ? data.bank.toLocaleString() + ' $' : '?'}</div></div>
+          <div class="nation-card"><div class="emoji">⚔️</div><div class="label">Power</div><div class="value">${data.power || '?'}/${data.maxPower || '?'}</div></div>
+          <div class="nation-card"><div class="emoji">📊</div><div class="label">MMR</div><div class="value">${data.mmr || '?'}</div></div>
+          <div class="nation-card"><div class="emoji">🗺️</div><div class="label">Claims</div><div class="value">${data.claims || '?'}</div></div>
+          <div class="nation-card"><div class="emoji">🖥️</div><div class="label">Serveur</div><div class="value">Mocha</div></div>
+        `;
+      })
+      .catch(() => {
+        grid.innerHTML = '<div style="color:#f44336">❌ Erreur de connexion à l\'API</div>';
+      });
+  }
+
   function envoyerMessage() {
     const ids = document.getElementById('userIds').value.split(',').map(id => id.trim()).filter(id => id);
     const message = document.getElementById('messageContent').value;
     const results = document.getElementById('sendResults');
-
     if (!ids.length || !message) {
       results.innerHTML = '<div class="send-result-item ko">Remplis tous les champs !</div>';
       return;
     }
-
     fetch(`${BOT_URL}/send`, {
       method: 'POST',
       headers: headers(),
@@ -247,11 +287,11 @@
   }
 
   function restartBot() {
-    if (!confirm("Redémarrer le bot ?")) return;
+    if (!confirm("Redémarrer MultiBOT ?")) return;
     fetch(`${BOT_URL}/restart`, { method: 'POST', headers: headers() })
       .then(r => r.json())
       .then(data => {
-        if (data.success) alert("✅ Bot en cours de redémarrage !");
+        if (data.success) alert("✅ MultiBOT en cours de redémarrage !");
         else alert("❌ Erreur : " + data.error);
       });
   }
@@ -287,9 +327,7 @@
     const p = document.getElementById('newPassword').value;
     const r = document.getElementById('newRole').value;
     const feedback = document.getElementById('creerFeedback');
-
     if (!u || !p) { feedback.textContent = "Remplis tous les champs !"; feedback.className = 'feedback error'; return; }
-
     fetch(`${BOT_URL}/comptes`, {
       method: 'POST',
       headers: headers(),
@@ -320,9 +358,7 @@
     const u = document.getElementById('pwUsername').value;
     const p = document.getElementById('pwNew').value;
     const feedback = document.getElementById('passwordFeedback');
-
     if (!u || !p) { feedback.textContent = "Remplis tous les champs !"; feedback.className = 'feedback error'; return; }
-
     fetch(`${BOT_URL}/comptes/${u}/password`, {
       method: 'PUT',
       headers: headers(),
