@@ -50,7 +50,7 @@
     .role-admin { background: #FFD700; color: #1a1a2e; }
     .role-normal { background: #0f3460; color: #aaa; border: 1px solid #333; }
 
-    .tabs { display: flex; gap: 8px; margin-bottom: 20px; }
+    .tabs { display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; }
     .tab { padding: 8px 20px; border-radius: 8px; cursor: pointer; font-size: 14px; border: 1px solid #0f3460; color: #aaa; background: transparent; }
     .tab.active { background: #FFD700; color: #1a1a2e; border-color: #FFD700; font-weight: bold; }
 
@@ -83,7 +83,6 @@
     </div>
   </div>
 
-  <!-- Statut -->
   <div class="cards">
     <div class="card">
       <h3>Statut</h3>
@@ -105,7 +104,6 @@
     </div>
   </div>
 
-  <!-- Envoyer un message -->
   <div class="section">
     <h2>💬 Envoyer un message</h2>
     <div class="form-row">
@@ -120,7 +118,6 @@
     <div class="send-results" id="sendResults"></div>
   </div>
 
-  <!-- Gestion des comptes (admin uniquement) -->
   <div class="section" id="sectionComptes" style="display:none">
     <h2>👥 Gestion des comptes</h2>
     <div class="tabs">
@@ -129,12 +126,10 @@
       <button class="tab" onclick="switchTab('password')">Changer mot de passe</button>
     </div>
 
-    <!-- Liste -->
     <div id="tabListe">
       <div class="comptes-list" id="comptesList"></div>
     </div>
 
-    <!-- Créer -->
     <div id="tabCreer" style="display:none">
       <div class="form-row">
         <input type="text" id="newUsername" placeholder="Nom d'utilisateur">
@@ -150,7 +145,6 @@
       <div class="feedback" id="creerFeedback"></div>
     </div>
 
-    <!-- Changer mot de passe -->
     <div id="tabPassword" style="display:none">
       <div class="form-row">
         <input type="text" id="pwUsername" placeholder="Nom d'utilisateur">
