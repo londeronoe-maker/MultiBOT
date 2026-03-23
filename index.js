@@ -2,7 +2,7 @@ const { Client, GatewayIntentBits, EmbedBuilder } = require('discord.js');
 const express = require('express');
 const path = require('path');
 const fs = require('fs');
-const NationsAPI = require('@baba33mrt/nationsapi').default;
+const { default: NationsAPI } = require('@baba33mrt/nationsapi');
 
 const app = express();
 app.use(express.json());
