@@ -1,6 +1,7 @@
 const { Client, GatewayIntentBits, EmbedBuilder } = require('discord.js');
 const express = require('express');
 const path = require('path');
+const fs = require('fs');
 
 const app = express();
 app.use(express.json());
@@ -15,12 +16,23 @@ const USER_IDS = process.env.USER_IDS.split(',');
 const RENDER_API_KEY = process.env.RENDER_API_KEY;
 const SERVICE_ID = "srv-d70574i4d50c7393n1qg";
 const ADMIN_PASSWORD = process.env.DASHBOARD_PASSWORD || "admin";
+const COMPTES_FILE = path.join(__dirname, 'comptes.json');
 
-// Comptes stockés en mémoire
-let comptes = [
-  { username: "admin", password: ADMIN_PASSWORD, role: "admin" }
-];
+// Charger ou initialiser les comptes
+function chargerComptes() {
+  if (fs.existsSync(COMPTES_FILE)) {
+    return JSON.parse(fs.readFileSync(COMPTES_FILE, 'utf8'));
+  }
+  const initial = [{ username: "admin", password: ADMIN_PASSWORD, role: "admin" }];
+  sauvegarderComptes(initial);
+  return initial;
+}
 
+function sauvegarderComptes(comptes) {
+  fs.writeFileSync(COMPTES_FILE, JSON.stringify(comptes, null, 2));
+}
+
+let comptes = chargerComptes();
 let botStartTime = new Date();
 
 client.once('ready', () => {
@@ -28,7 +40,6 @@ client.once('ready', () => {
   botStartTime = new Date();
 });
 
-// Auth middleware
 function auth(req, res, next) {
   const username = req.headers['x-username'];
   const password = req.headers['x-password'];
@@ -43,7 +54,6 @@ function adminOnly(req, res, next) {
   next();
 }
 
-// Login
 app.post('/login', (req, res) => {
   const { username, password } = req.body;
   const compte = comptes.find(c => c.username === username && c.password === password);
@@ -51,7 +61,6 @@ app.post('/login', (req, res) => {
   res.json({ success: true, role: compte.role, username: compte.username });
 });
 
-// Statut
 app.get('/status', auth, (req, res) => {
   const uptime = Math.floor((new Date() - botStartTime) / 1000);
   res.json({
@@ -61,7 +70,6 @@ app.get('/status', auth, (req, res) => {
   });
 });
 
-// Envoyer message à plusieurs IDs
 app.post('/send', auth, async (req, res) => {
   const { userIds, message } = req.body;
   const ids = Array.isArray(userIds) ? userIds : [userIds];
@@ -80,7 +88,6 @@ app.post('/send', auth, async (req, res) => {
   res.json({ results });
 });
 
-// Restart
 app.post('/restart', auth, async (req, res) => {
   try {
     const response = await fetch(`https://api.render.com/v1/services/${SERVICE_ID}/restart`, {
@@ -100,7 +107,6 @@ app.post('/restart', auth, async (req, res) => {
   }
 });
 
-// Candidature
 app.post('/candidature', async (req, res) => {
   console.log("Requête reçue:", JSON.stringify(req.body));
   const { fields, titre } = req.body;
@@ -128,7 +134,6 @@ app.post('/candidature', async (req, res) => {
   res.json({ success: true });
 });
 
-// Gestion des comptes (admin uniquement)
 app.get('/comptes', auth, adminOnly, (req, res) => {
   res.json(comptes.map(c => ({ username: c.username, role: c.role })));
 });
@@ -138,6 +143,7 @@ app.post('/comptes', auth, adminOnly, (req, res) => {
   if (!username || !password || !role) return res.status(400).json({ error: "Champs manquants" });
   if (comptes.find(c => c.username === username)) return res.status(400).json({ error: "Nom d'utilisateur déjà pris" });
   comptes.push({ username, password, role });
+  sauvegarderComptes(comptes);
   res.json({ success: true });
 });
 
@@ -145,6 +151,7 @@ app.delete('/comptes/:username', auth, adminOnly, (req, res) => {
   const { username } = req.params;
   if (username === 'admin') return res.status(400).json({ error: "Impossible de supprimer l'admin" });
   comptes = comptes.filter(c => c.username !== username);
+  sauvegarderComptes(comptes);
   res.json({ success: true });
 });
 
@@ -157,6 +164,7 @@ app.put('/comptes/:username/password', auth, (req, res) => {
   const compte = comptes.find(c => c.username === username);
   if (!compte) return res.status(404).json({ error: "Compte introuvable" });
   compte.password = newPassword;
+  sauvegarderComptes(comptes);
   res.json({ success: true });
 });
 
