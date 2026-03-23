@@ -12,9 +12,14 @@ const client = new Client({
 
 const BOT_TOKEN = process.env.BOT_TOKEN;
 const USER_IDS = process.env.USER_IDS.split(',');
-const DASHBOARD_PASSWORD = process.env.DASHBOARD_PASSWORD || "admin";
 const RENDER_API_KEY = process.env.RENDER_API_KEY;
 const SERVICE_ID = "srv-d70574i4d50c7393n1qg";
+const ADMIN_PASSWORD = process.env.DASHBOARD_PASSWORD || "admin";
+
+// Comptes stockés en mémoire
+let comptes = [
+  { username: "admin", password: ADMIN_PASSWORD, role: "admin" }
+];
 
 let botStartTime = new Date();
 
@@ -23,12 +28,30 @@ client.once('ready', () => {
   botStartTime = new Date();
 });
 
+// Auth middleware
 function auth(req, res, next) {
+  const username = req.headers['x-username'];
   const password = req.headers['x-password'];
-  if (password !== DASHBOARD_PASSWORD) return res.status(401).json({ error: "Non autorisé" });
+  const compte = comptes.find(c => c.username === username && c.password === password);
+  if (!compte) return res.status(401).json({ error: "Non autorisé" });
+  req.compte = compte;
   next();
 }
 
+function adminOnly(req, res, next) {
+  if (req.compte.role !== 'admin') return res.status(403).json({ error: "Réservé à l'admin" });
+  next();
+}
+
+// Login
+app.post('/login', (req, res) => {
+  const { username, password } = req.body;
+  const compte = comptes.find(c => c.username === username && c.password === password);
+  if (!compte) return res.status(401).json({ error: "Identifiants incorrects" });
+  res.json({ success: true, role: compte.role, username: compte.username });
+});
+
+// Statut
 app.get('/status', auth, (req, res) => {
   const uptime = Math.floor((new Date() - botStartTime) / 1000);
   res.json({
@@ -38,17 +61,26 @@ app.get('/status', auth, (req, res) => {
   });
 });
 
+// Envoyer message à plusieurs IDs
 app.post('/send', auth, async (req, res) => {
-  const { userId, message } = req.body;
-  try {
-    const user = await client.users.fetch(userId);
-    await user.send(message);
-    res.json({ success: true });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
+  const { userIds, message } = req.body;
+  const ids = Array.isArray(userIds) ? userIds : [userIds];
+  const results = [];
+
+  for (const userId of ids) {
+    try {
+      const user = await client.users.fetch(userId.trim());
+      await user.send(message);
+      results.push({ userId, success: true });
+    } catch (err) {
+      results.push({ userId, success: false, error: err.message });
+    }
   }
+
+  res.json({ results });
 });
 
+// Restart
 app.post('/restart', auth, async (req, res) => {
   try {
     const response = await fetch(`https://api.render.com/v1/services/${SERVICE_ID}/restart`, {
@@ -58,9 +90,8 @@ app.post('/restart', auth, async (req, res) => {
         'Content-Type': 'application/json'
       }
     });
-    if (response.ok) {
-      res.json({ success: true });
-    } else {
+    if (response.ok) res.json({ success: true });
+    else {
       const data = await response.json();
       res.status(500).json({ error: data.message });
     }
@@ -69,6 +100,7 @@ app.post('/restart', auth, async (req, res) => {
   }
 });
 
+// Candidature
 app.post('/candidature', async (req, res) => {
   console.log("Requête reçue:", JSON.stringify(req.body));
   const { fields, titre } = req.body;
@@ -93,6 +125,38 @@ app.post('/candidature', async (req, res) => {
     }
   }
 
+  res.json({ success: true });
+});
+
+// Gestion des comptes (admin uniquement)
+app.get('/comptes', auth, adminOnly, (req, res) => {
+  res.json(comptes.map(c => ({ username: c.username, role: c.role })));
+});
+
+app.post('/comptes', auth, adminOnly, (req, res) => {
+  const { username, password, role } = req.body;
+  if (!username || !password || !role) return res.status(400).json({ error: "Champs manquants" });
+  if (comptes.find(c => c.username === username)) return res.status(400).json({ error: "Nom d'utilisateur déjà pris" });
+  comptes.push({ username, password, role });
+  res.json({ success: true });
+});
+
+app.delete('/comptes/:username', auth, adminOnly, (req, res) => {
+  const { username } = req.params;
+  if (username === 'admin') return res.status(400).json({ error: "Impossible de supprimer l'admin" });
+  comptes = comptes.filter(c => c.username !== username);
+  res.json({ success: true });
+});
+
+app.put('/comptes/:username/password', auth, (req, res) => {
+  const { username } = req.params;
+  const { newPassword } = req.body;
+  if (req.compte.role !== 'admin' && req.compte.username !== username) {
+    return res.status(403).json({ error: "Non autorisé" });
+  }
+  const compte = comptes.find(c => c.username === username);
+  if (!compte) return res.status(404).json({ error: "Compte introuvable" });
+  compte.password = newPassword;
   res.json({ success: true });
 });
 
