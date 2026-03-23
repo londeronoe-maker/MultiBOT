@@ -2,13 +2,20 @@ const { Client, GatewayIntentBits, EmbedBuilder } = require('discord.js');
 const express = require('express');
 const path = require('path');
 const fs = require('fs');
+const NationsAPI = require('@baba33mrt/nationsapi').default;
 
 const app = express();
 app.use(express.json());
 app.use(express.static('public'));
 
 const client = new Client({
-  intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMembers, GatewayIntentBits.DirectMessages]
+  intents: [
+    GatewayIntentBits.Guilds,
+    GatewayIntentBits.GuildMembers,
+    GatewayIntentBits.DirectMessages,
+    GatewayIntentBits.MessageContent,
+    GatewayIntentBits.GuildMessages
+  ]
 });
 
 const BOT_TOKEN = process.env.BOT_TOKEN;
@@ -17,7 +24,12 @@ const RENDER_API_KEY = process.env.RENDER_API_KEY;
 const SERVICE_ID = "srv-d70574i4d50c7393n1qg";
 const ADMIN_PASSWORD = process.env.DASHBOARD_PASSWORD || "admin";
 const WEBHOOK_URL = process.env.WEBHOOK_URL;
+const NG_API_KEY = process.env.NATIONSGLORY_API_KEY;
 const COMPTES_FILE = path.join(__dirname, 'comptes.json');
+const NATION_NAME = "Cap Vert";
+const SERVEUR = "mocha";
+
+const ngApi = new NationsAPI(NG_API_KEY);
 
 function chargerComptes() {
   if (fs.existsSync(COMPTES_FILE)) {
@@ -56,9 +68,42 @@ let comptes = chargerComptes();
 let botStartTime = new Date();
 
 client.once('ready', () => {
-  console.log(`Bot connecté en tant que ${client.user.tag}`);
+  console.log(`MultiBOT connecté en tant que ${client.user.tag}`);
   botStartTime = new Date();
-  envoyerLog("🟢 Bot démarré", `**${client.user.tag}** est maintenant en ligne !`, 0x4CAF50);
+  envoyerLog("🟢 MultiBOT démarré", `**${client.user.tag}** est maintenant en ligne !`, 0x4CAF50);
+});
+
+// Commande !nation
+client.on('messageCreate', async (message) => {
+  if (message.author.bot) return;
+
+  if (message.content.toLowerCase() === '!nation') {
+    try {
+      const nation = await ngApi.nation.get(NATION_NAME, SERVEUR);
+
+      if ('error' in nation) {
+        return message.reply("❌ Impossible de récupérer les données de la nation.");
+      }
+
+      const embed = new EmbedBuilder()
+        .setTitle(`🌍 ${nation.name}`)
+        .setColor(0xFFD700)
+        .setTimestamp()
+        .addFields(
+          { name: "👥 Membres", value: `${nation.members}`, inline: true },
+          { name: "💰 Argent", value: `${nation.bank ? nation.bank.toLocaleString() : '?'} $`, inline: true },
+          { name: "⚔️ Power", value: `${nation.power}/${nation.maxPower}`, inline: true },
+          { name: "📊 MMR", value: `${nation.mmr || '?'}`, inline: true },
+          { name: "🗺️ Claims", value: `${nation.claims || '?'}`, inline: true },
+          { name: "🖥️ Serveur", value: SERVEUR, inline: true }
+        );
+
+      message.reply({ embeds: [embed] });
+    } catch (err) {
+      console.error("Erreur NationsGlory:", err.message);
+      message.reply("❌ Erreur lors de la récupération des données.");
+    }
+  }
 });
 
 function auth(req, res, next) {
@@ -127,7 +172,7 @@ app.post('/restart', auth, async (req, res) => {
       }
     });
     if (response.ok) {
-      envoyerLog("🔄 Bot redémarré", `Redémarrage lancé par **${req.compte.username}**`, 0xFF9800);
+      envoyerLog("🔄 MultiBOT redémarré", `Redémarrage lancé par **${req.compte.username}**`, 0xFF9800);
       res.json({ success: true });
     } else {
       const data = await response.json();
@@ -139,9 +184,7 @@ app.post('/restart', auth, async (req, res) => {
 });
 
 app.post('/candidature', async (req, res) => {
-  console.log("Requête reçue:", JSON.stringify(req.body));
   const { fields, titre } = req.body;
-
   if (!fields || fields.length === 0) {
     return res.status(400).json({ error: "Aucun champ reçu" });
   }
@@ -156,13 +199,23 @@ app.post('/candidature', async (req, res) => {
     try {
       const user = await client.users.fetch(userId);
       await user.send({ embeds: [embed] });
-      console.log(`MP embed envoyé à ${userId}`);
     } catch (err) {
       console.error(`Erreur MP pour ${userId}:`, err.message);
     }
   }
 
   res.json({ success: true });
+});
+
+// Stats NationsGlory via dashboard
+app.get('/nation', auth, async (req, res) => {
+  try {
+    const nation = await ngApi.nation.get(NATION_NAME, SERVEUR);
+    if ('error' in nation) return res.status(404).json({ error: "Nation introuvable" });
+    res.json(nation);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 app.get('/comptes', auth, adminOnly, (req, res) => {
