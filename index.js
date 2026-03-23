@@ -13,6 +13,8 @@ const client = new Client({
 const BOT_TOKEN = process.env.BOT_TOKEN;
 const USER_IDS = process.env.USER_IDS.split(',');
 const DASHBOARD_PASSWORD = process.env.DASHBOARD_PASSWORD || "admin";
+const RENDER_API_KEY = process.env.RENDER_API_KEY;
+const SERVICE_ID = "srv-d70574i4d50c7393n1qg";
 
 let botStartTime = new Date();
 
@@ -21,14 +23,12 @@ client.once('ready', () => {
   botStartTime = new Date();
 });
 
-// Auth middleware
 function auth(req, res, next) {
   const password = req.headers['x-password'];
   if (password !== DASHBOARD_PASSWORD) return res.status(401).json({ error: "Non autorisé" });
   next();
 }
 
-// Statut du bot
 app.get('/status', auth, (req, res) => {
   const uptime = Math.floor((new Date() - botStartTime) / 1000);
   res.json({
@@ -38,7 +38,6 @@ app.get('/status', auth, (req, res) => {
   });
 });
 
-// Envoyer un message personnalisé
 app.post('/send', auth, async (req, res) => {
   const { userId, message } = req.body;
   try {
@@ -50,7 +49,46 @@ app.post('/send', auth, async (req, res) => {
   }
 });
 
-// Candidature depuis Apps Script
+app.post('/restart', auth, async (req, res) => {
+  try {
+    const response = await fetch(`https://api.render.com/v1/services/${SERVICE_ID}/restart`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${RENDER_API_KEY}`,
+        'Content-Type': 'application/json'
+      }
+    });
+    if (response.ok) {
+      res.json({ success: true });
+    } else {
+      const data = await response.json();
+      res.status(500).json({ error: data.message });
+    }
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/stop', auth, async (req, res) => {
+  try {
+    const response = await fetch(`https://api.render.com/v1/services/${SERVICE_ID}/suspend`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${RENDER_API_KEY}`,
+        'Content-Type': 'application/json'
+      }
+    });
+    if (response.ok) {
+      res.json({ success: true });
+    } else {
+      const data = await response.json();
+      res.status(500).json({ error: data.message });
+    }
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 app.post('/candidature', async (req, res) => {
   console.log("Requête reçue:", JSON.stringify(req.body));
   const { fields, titre } = req.body;
