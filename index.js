@@ -37,6 +37,7 @@ function chargerStats() {
     annee: new Date().getFullYear(),
     charsDetruitTotal: 0,
     charsPerdusTotal: 0,
+    charsCapturesTotal: 0,
     recordRapport: 0,
     tireurs: {},
     rapports: []
@@ -62,6 +63,7 @@ async function envoyerBilanMensuel(stats) {
       fields: [
         { name: '💥 Chars ennemis détruits', value: `**${stats.charsDetruitTotal}**`, inline: true },
         { name: '💀 Chars alliés perdus', value: `**${stats.charsPerdusTotal}**`, inline: true },
+        { name: '🚩 Chars capturés', value: `**${stats.charsCapturesTotal || 0}**`, inline: true },
         { name: '⚖️ Ratio', value: `**${ratio}**`, inline: true },
         { name: '🏆 Record du mois', value: `**${stats.recordRapport}** chars détruits en un rapport`, inline: false },
         { name: '🎯 Meilleur tireur', value: meilleurTireur ? `**${meilleurTireur[0]}** — **${meilleurTireur[1]}** chars` : 'Aucun', inline: false },
@@ -90,6 +92,7 @@ async function verifierReinitialisationMois(stats) {
     stats.annee = now.getFullYear();
     stats.charsDetruitTotal = 0;
     stats.charsPerdusTotal = 0;
+    stats.charsCapturesTotal = 0;
     stats.recordRapport = 0;
     stats.tireurs = {};
     stats.rapports = [];
@@ -214,13 +217,15 @@ app.post('/rapport', async (req, res) => {
 
   const detruits = parseInt(charsDetruit) || 0;
   const perdus = parseInt(charsPerdus) || 0;
+  const captures = parseInt(charsCaptures) || 0;
 
   stats.charsDetruitTotal += detruits;
   stats.charsPerdusTotal += perdus;
+  stats.charsCapturesTotal = (stats.charsCapturesTotal || 0) + captures;
   if (detruits > stats.recordRapport) stats.recordRapport = detruits;
   if (!stats.tireurs[tireur]) stats.tireurs[tireur] = 0;
   stats.tireurs[tireur] += detruits;
-  stats.rapports.push({ id: Date.now(), nom, tireur, detruits, perdus, date });
+  stats.rapports.push({ id: Date.now(), nom, tireur, detruits, perdus, captures, date });
   sauvegarderStats(stats);
 
   const ratio = perdus > 0 ? (detruits / perdus).toFixed(2) : detruits > 0 ? '∞' : '0';
@@ -239,11 +244,11 @@ app.post('/rapport', async (req, res) => {
       { name: '👥 Équipage', value: `**${autresPersonnes || 'Solo'}**`, inline: true },
       { name: '💥 Chars ennemis détruits', value: `**${detruits}**`, inline: true },
       { name: '💀 Chars alliés perdus', value: `**${perdus}**`, inline: true },
+      { name: '🚩 Chars capturés', value: `**${captures}**`, inline: true },
       { name: '⚖️ Ratio', value: `**${ratio}**`, inline: true },
       { name: '🔧 Réparations', value: `**${reparations || 0}**`, inline: true },
-      { name: '🚩 Chars capturés', value: `**${charsCaptures || 0}**`, inline: true },
       { name: '📅 Date', value: `**${date}**`, inline: true },
-      { name: `📊 Total ${nomMois}`, value: `**${stats.charsDetruitTotal}** chars détruits`, inline: true },
+      { name: `📊 Total ${nomMois}`, value: `**${stats.charsDetruitTotal}** détruits | **${stats.charsCapturesTotal}** capturés`, inline: false },
       { name: '🏆 Record par rapport', value: `**${stats.recordRapport}** chars détruits`, inline: true },
     );
 
@@ -262,13 +267,14 @@ app.get('/stats', auth, (req, res) => {
 });
 
 app.put('/stats', auth, (req, res) => {
-  const { charsDetruitTotal, charsPerdusTotal, recordRapport } = req.body;
+  const { charsDetruitTotal, charsPerdusTotal, recordRapport, charsCapturesTotal } = req.body;
   const stats = chargerStats();
   if (charsDetruitTotal !== undefined) stats.charsDetruitTotal = parseInt(charsDetruitTotal);
   if (charsPerdusTotal !== undefined) stats.charsPerdusTotal = parseInt(charsPerdusTotal);
   if (recordRapport !== undefined) stats.recordRapport = parseInt(recordRapport);
+  if (charsCapturesTotal !== undefined) stats.charsCapturesTotal = parseInt(charsCapturesTotal);
   sauvegarderStats(stats);
-  envoyerLog("✏️ Stats modifiées", `Par **${req.compte.username}**\n💥 ${stats.charsDetruitTotal} | 💀 ${stats.charsPerdusTotal} | 🏆 ${stats.recordRapport}`, 0xFF9800);
+  envoyerLog("✏️ Stats modifiées", `Par **${req.compte.username}**`, 0xFF9800);
   res.json({ success: true });
 });
 
@@ -279,6 +285,7 @@ app.delete('/stats/rapport/:id', auth, (req, res) => {
   if (!rapport) return res.status(404).json({ error: "Rapport introuvable" });
   stats.charsDetruitTotal -= rapport.detruits;
   stats.charsPerdusTotal -= rapport.perdus;
+  stats.charsCapturesTotal = (stats.charsCapturesTotal || 0) - (rapport.captures || 0);
   if (stats.tireurs[rapport.tireur]) stats.tireurs[rapport.tireur] -= rapport.detruits;
   stats.rapports = stats.rapports.filter(r => r.id !== id);
   stats.recordRapport = stats.rapports.length > 0 ? Math.max(...stats.rapports.map(r => r.detruits)) : 0;
@@ -292,6 +299,7 @@ app.post('/stats/reset', auth, adminOnly, async (req, res) => {
   await envoyerBilanMensuel(stats);
   stats.charsDetruitTotal = 0;
   stats.charsPerdusTotal = 0;
+  stats.charsCapturesTotal = 0;
   stats.recordRapport = 0;
   stats.tireurs = {};
   stats.rapports = [];
