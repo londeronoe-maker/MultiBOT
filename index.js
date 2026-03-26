@@ -84,7 +84,7 @@ async function enregistrerCommandes() {
   const rest = new REST({ version: '10' }).setToken(BOT_TOKEN);
   try {
     console.log('Enregistrement des commandes slash...');
-    await rest.put(Routes.applicationCommands(CLIENT_ID), { body: commands });
+    await rest.put(Routes.applicationGuildCommands(CLIENT_ID, '1479289389476610149'), { body: commands });
     console.log('Commandes slash enregistrées !');
   } catch (err) {
     console.error('Erreur enregistrement commandes:', err);
