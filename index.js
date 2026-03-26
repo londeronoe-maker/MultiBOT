@@ -542,7 +542,7 @@ app.post('/send', auth, async (req, res) => {
   for (const userId of ids) {
     try {
       const user = await client.users.fetch(userId.trim());
-      await user.send({ embeds: [new EmbedBuilder().setTitle('📩 Message du Dashboard').setDescription(req.body.message).setColor(0xFFD700).setFooter({ text: `Envoyé par ${req.compte.username}` }).setTimestamp()] });
+      await user.send({ embeds: [new EmbedBuilder().setTitle('📩 Message du BOT').setDescription(req.body.message).setColor(0xFFD700).setFooter({ text: `Envoyé par ${req.compte.username}` }).setTimestamp()] });
       results.push({ userId, success: true });
     } catch (err) { results.push({ userId, success: false, error: err.message }); }
   }
