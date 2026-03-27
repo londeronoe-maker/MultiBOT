@@ -31,13 +31,9 @@ async function connectMongo() {
   await mongoClient.connect();
   db = mongoClient.db('multibot');
   console.log('MongoDB connecté !');
-
-  // Initialiser admin si pas existant
   const comptes = db.collection('comptes');
   const admin = await comptes.findOne({ username: 'admin' });
   if (!admin) await comptes.insertOne({ username: 'admin', password: ADMIN_PASSWORD, role: 'admin' });
-
-  // Initialiser stats si pas existantes
   const stats = db.collection('stats');
   const s = await stats.findOne({ _id: 'current' });
   if (!s) await stats.insertOne({ _id: 'current', mois: new Date().getMonth(), annee: new Date().getFullYear(), charsDetruitTotal: 0, charsPerdusTotal: 0, charsCapturesTotal: 0, recordRapport: 0, tireurs: {}, rapports: [] });
@@ -365,6 +361,11 @@ function auth(req, res, next) {
   });
 }
 
+function adminOnly(req, res, next) {
+  if (req.compte.role !== 'admin') return res.status(403).json({ error: "Réservé à l'admin" });
+  next();
+}
+
 // ===== ROUTES =====
 app.post('/login', async (req, res) => {
   const comptes = await getComptes();
@@ -508,5 +509,3 @@ connectMongo().then(() => {
     app.listen(3000, () => console.log('Serveur démarré'));
   });
 });
-
-client.login(BOT_TOKEN).then(() => app.listen(3000, () => console.log('Serveur démarré')));
