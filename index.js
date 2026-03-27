@@ -352,16 +352,17 @@ client.once('ready', () => {
 
 // ===== AUTH =====
 function auth(req, res, next) {
-  const { 'x-username': username, 'x-password': password } = req.headers;
+  const username = req.headers['x-username'];
+  const password = req.headers['x-password'];
   getComptes().then(comptes => {
     const compte = comptes.find(c => c.username === username && c.password === password);
     if (!compte) return res.status(401).json({ error: "Non autorisé" });
-    req.compte = compte; next();
+    req.compte = compte;
+    next();
+  }).catch(err => {
+    console.error('Erreur auth:', err);
+    res.status(500).json({ error: "Erreur serveur" });
   });
-}
-function adminOnly(req, res, next) {
-  if (req.compte.role !== 'admin') return res.status(403).json({ error: "Réservé à l'admin" });
-  next();
 }
 
 // ===== ROUTES =====
