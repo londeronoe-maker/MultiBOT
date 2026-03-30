@@ -410,7 +410,7 @@ app.post('/rapport', async (req, res) => {
     { name: '🚩 Capturés', value: `**${captures}**`, inline: true }, { name: '⚖️ Ratio', value: `**${ratio}**`, inline: true },
     { name: '🔧 Réparations', value: `**${reparations||0}**`, inline: true }, { name: '📅 Date', value: `**${date}**`, inline: true },
     { name: `📊 Total ${MOIS[stats.mois]}`, value: `**${stats.charsDetruitTotal}** détruits | **${stats.charsPerdusTotal}** perdus | **${stats.charsCapturesTotal}** capturés`, inline: false },
-    { name: '🏆 Record', value: `**${stats.recordRapport}** chars`, inline: true },
+    { name: '🏆 Record', value: `**${stats.recordRapport}** chars Détruits`, inline: true },
   );
   for (const userId of USER_IDS) { try { const u = await client.users.fetch(userId.trim()); await u.send({ embeds: [embed] }); } catch (e) {} }
   res.json({ success: true });
