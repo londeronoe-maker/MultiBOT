@@ -318,14 +318,28 @@
     }).catch(() => {});
   }
 
-  function afficherDropdown(membres) {
+function afficherDropdown(membres) {
     const dd = document.getElementById('memberDropdown');
     dd.innerHTML = membres.map(m => `
       <div class="member-option" onclick="selectionnerMembre('${m.id}', '${m.displayName}', '${m.avatar}')">
         <img src="${m.avatar}" onerror="this.src='https://cdn.discordapp.com/embed/avatars/0.png'" alt="">
-        <span>${m.displayName}</span>
+        <div style="display:flex;flex-direction:column;gap:2px">
+          <span style="font-size:13px;color:var(--text)">${m.displayName}</span>
+          <span style="font-size:11px;color:var(--text2)">${m.id}</span>
+        </div>
       </div>
     `).join('');
+  }
+
+  function filtrerMembres() {
+    const q = document.getElementById('memberSearch').value.toLowerCase();
+    const filtres = tousLesMembres.filter(m =>
+      m.displayName.toLowerCase().includes(q) ||
+      m.username.toLowerCase().includes(q) ||
+      m.id.includes(q)
+    );
+    afficherDropdown(filtres);
+    ouvrirDropdown();
   }
 
   function filtrerMembres() {
