@@ -368,19 +368,6 @@ app.get('/membres', auth, async (req, res) => {
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-// Route pour récupérer un utilisateur par ID
-app.get('/user/:id', auth, async (req, res) => {
-  try {
-    const user = await client.users.fetch(req.params.id);
-    res.json({
-      id: user.id,
-      username: user.username,
-      displayName: user.displayName || user.username,
-      avatar: user.displayAvatarURL({ size: 128, extension: 'png' })
-    });
-  } catch (err) { res.status(404).json({ error: "Utilisateur introuvable" }); }
-});
-
 app.post('/send', auth, async (req, res) => {
   const ids = Array.isArray(req.body.userIds) ? req.body.userIds : [req.body.userIds];
   const results = [];
