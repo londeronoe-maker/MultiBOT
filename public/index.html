@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>MultiBOT Dashboard</title>
+  <link rel="icon" type="image/jpeg" id="faviconEl">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     :root {
@@ -24,7 +25,9 @@
 
     .login-screen { display: flex; align-items: center; justify-content: center; min-height: 100vh; }
     .login-box { background: var(--bg2); padding: 40px; border-radius: 16px; width: 340px; border: 2px solid var(--gold); box-shadow: 0 4px 24px var(--shadow); }
-    .login-box h2 { text-align: center; color: var(--text); margin-bottom: 24px; font-size: 22px; }
+    .login-logo { display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 24px; }
+    .login-logo img { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; }
+    .login-logo h2 { color: var(--text); font-size: 22px; }
     .login-box input { width: 100%; padding: 12px; border-radius: 8px; border: 1px solid var(--border2); background: var(--bg3); color: var(--text); font-size: 15px; margin-bottom: 12px; }
     .login-box input:focus { outline: none; border-color: var(--gold); }
     .login-box button { width: 100%; padding: 12px; background: var(--gold); color: #1a1a2e; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; }
@@ -32,12 +35,22 @@
 
     .dashboard { display: none; padding: 20px; max-width: 1000px; margin: 0 auto; }
     .header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; flex-wrap: wrap; gap: 12px; }
+    .header-left { display: flex; align-items: center; gap: 10px; }
+    .header-left img { width: 36px; height: 36px; border-radius: 50%; object-fit: cover; }
     .header h1 { color: var(--text); font-size: 22px; }
     .header-right { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
     .username-badge { background: var(--gold); padding: 6px 12px; border-radius: 8px; font-size: 13px; color: #1a1a2e; font-weight: bold; }
     .logout { background: transparent; border: 2px solid var(--text); color: var(--text); padding: 6px 14px; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 13px; }
     .logout:hover { background: var(--text); color: var(--bg); }
-    .theme-btn { background: var(--bg3); border: 1px solid var(--border2); color: var(--text); padding: 6px 12px; border-radius: 8px; cursor: pointer; font-size: 18px; }
+
+    /* Toggle switch */
+    .theme-toggle { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--text2); }
+    .switch { position: relative; width: 44px; height: 24px; }
+    .switch input { opacity: 0; width: 0; height: 0; }
+    .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background: var(--border2); border-radius: 24px; transition: .3s; }
+    .slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px; background: white; border-radius: 50%; transition: .3s; }
+    input:checked + .slider { background: var(--gold); }
+    input:checked + .slider:before { transform: translateX(20px); }
 
     .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 16px; margin-bottom: 24px; }
     .card { background: var(--bg2); border-radius: 12px; padding: 20px; border: 1px solid var(--border); box-shadow: 0 2px 12px var(--shadow); }
@@ -83,10 +96,13 @@
     .ratio-display { font-size: 13px; color: var(--text2); margin-top: 6px; }
     .ratio-display span { color: var(--text); font-weight: bold; }
 
-    .chart-tabs { display: flex; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; }
+    .chart-tabs { display: flex; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; align-items: center; justify-content: space-between; }
+    .chart-tabs-left { display: flex; gap: 8px; flex-wrap: wrap; }
     .chart-tab { padding: 6px 14px; border-radius: 8px; cursor: pointer; font-size: 13px; border: 1px solid var(--border2); color: var(--text2); background: var(--bg3); font-weight: bold; }
     .chart-tab.active { background: var(--gold); color: #1a1a2e; border-color: var(--gold); }
     .chart-container { position: relative; height: 260px; }
+    .btn-download { padding: 6px 14px; background: var(--bg3); border: 1px solid var(--border2); color: var(--text); border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: bold; }
+    .btn-download:hover { background: var(--gold); color: #1a1a2e; border-color: var(--gold); }
 
     .send-results { margin-top: 10px; }
     .send-result-item { padding: 8px 12px; border-radius: 6px; margin-bottom: 6px; font-size: 13px; }
@@ -102,11 +118,25 @@
     .member-option { display: flex; align-items: center; gap: 10px; padding: 8px 12px; cursor: pointer; transition: background 0.1s; }
     .member-option:hover { background: var(--bg3); }
     .member-option img { width: 32px; height: 32px; border-radius: 50%; }
-    .member-option span { font-size: 13px; color: var(--text); }
+    .member-option-info { display: flex; flex-direction: column; gap: 2px; }
+    .member-option-name { font-size: 13px; color: var(--text); }
+    .member-option-id { font-size: 11px; color: var(--text2); }
     .selected-members { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
     .selected-member { display: flex; align-items: center; gap: 6px; background: var(--bg3); border: 1px solid var(--border2); border-radius: 20px; padding: 4px 10px; font-size: 12px; }
     .selected-member img { width: 20px; height: 20px; border-radius: 50%; }
     .selected-member button { background: none; border: none; color: var(--text2); cursor: pointer; font-size: 14px; line-height: 1; padding: 0; }
+
+    /* Discussion */
+    .discussion-box { background: var(--bg3); border-radius: 12px; border: 1px solid var(--border2); height: 300px; overflow-y: auto; padding: 12px; margin-bottom: 12px; display: flex; flex-direction: column; gap: 8px; }
+    .msg { display: flex; gap: 8px; align-items: flex-start; }
+    .msg img { width: 28px; height: 28px; border-radius: 50%; flex-shrink: 0; }
+    .msg-content { background: var(--bg2); border-radius: 8px; padding: 8px 12px; font-size: 13px; max-width: 80%; border: 1px solid var(--border); }
+    .msg-author { font-size: 11px; color: var(--text2); margin-bottom: 2px; font-weight: bold; }
+    .msg-text { color: var(--text); }
+    .msg-time { font-size: 10px; color: var(--text2); margin-top: 2px; }
+    .msg.bot .msg-content { background: #fff3cd; border-color: var(--gold); }
+    [data-theme="dark"] .msg.bot .msg-content { background: #2a2000; }
+    .discussion-empty { color: var(--text2); font-size: 13px; text-align: center; margin: auto; }
 
     @media (max-width: 600px) {
       .dashboard { padding: 12px; }
@@ -118,9 +148,19 @@
 </head>
 <body>
 
+<script>
+  const BOT_ICON = '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';
+  // Set favicon
+  const favicon = document.getElementById('faviconEl');
+  favicon.href = 'data:image/jpeg;base64,' + BOT_ICON;
+</script>
+
 <div class="login-screen" id="loginScreen">
   <div class="login-box">
-    <h2>🤖 MultiBOT Dashboard</h2>
+    <div class="login-logo">
+      <img src="" id="loginLogo" alt="logo">
+      <h2>MultiBOT Dashboard</h2>
+    </div>
     <input type="text" id="loginUsername" placeholder="Nom d'utilisateur" onkeydown="if(event.key==='Enter') login()">
     <input type="password" id="loginPassword" placeholder="Mot de passe" onkeydown="if(event.key==='Enter') login()">
     <button onclick="login()">Se connecter</button>
@@ -130,9 +170,19 @@
 
 <div class="dashboard" id="dashboard">
   <div class="header">
-    <h1>🤖 MultiBOT Dashboard</h1>
+    <div class="header-left">
+      <img src="" id="headerLogo" alt="logo">
+      <h1>MultiBOT Dashboard</h1>
+    </div>
     <div class="header-right">
-      <button class="theme-btn" onclick="toggleTheme()" id="themeBtn">🌙</button>
+      <div class="theme-toggle">
+        <span>☀️</span>
+        <label class="switch">
+          <input type="checkbox" id="themeSwitch" onchange="toggleTheme()">
+          <span class="slider"></span>
+        </label>
+        <span>🌙</span>
+      </div>
       <span class="username-badge" id="usernameDisplay"></span>
       <button class="logout" onclick="logout()">Déconnexion</button>
     </div>
@@ -152,9 +202,12 @@
     </div>
     <div class="section-body" id="body-graphique">
       <div class="chart-tabs">
-        <button class="chart-tab active" onclick="switchChartView('jour')">Par jour</button>
-        <button class="chart-tab" onclick="switchChartView('semaine')">Par semaine</button>
-        <button class="chart-tab" onclick="switchChartView('mois')">Cumul mois</button>
+        <div class="chart-tabs-left">
+          <button class="chart-tab active" onclick="switchChartView('jour')">Par jour</button>
+          <button class="chart-tab" onclick="switchChartView('semaine')">Par semaine</button>
+          <button class="chart-tab" onclick="switchChartView('mois')">Cumul mois</button>
+        </div>
+        <button class="btn-download" onclick="telechargerGraphique()">⬇️ Télécharger</button>
       </div>
       <div class="chart-container"><canvas id="statsChart"></canvas></div>
     </div>
@@ -180,8 +233,13 @@
       </div>
       <div class="feedback" id="statsFeedback"></div>
       <div style="margin-top:20px">
-        <h3 style="color:var(--text);margin-bottom:10px;font-size:14px;border-left:4px solid var(--gold);padding-left:8px">📋 Rapports du mois</h3>
-        <div class="rapports-list" id="rapportsList"></div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+          <h3 style="color:var(--text);font-size:14px;border-left:4px solid var(--gold);padding-left:8px">📋 Rapports du mois</h3>
+          <button class="btn-download" onclick="toggleSection('rapports')" id="toggle-rapports-btn">Masquer</button>
+        </div>
+        <div id="body-rapports">
+          <div class="rapports-list" id="rapportsList"></div>
+        </div>
       </div>
     </div>
   </div>
@@ -194,7 +252,7 @@
     </div>
     <div class="section-body" id="body-message">
       <div class="member-select-wrapper">
-        <input type="text" class="member-search" id="memberSearch" placeholder="Rechercher un membre Discord..." autocomplete="off" oninput="filtrerMembres()" onfocus="ouvrirDropdown()" onblur="setTimeout(fermerDropdown, 200)">
+        <input type="text" class="member-search" id="memberSearch" placeholder="Rechercher par nom ou ID Discord..." autocomplete="off" oninput="filtrerMembres()" onfocus="ouvrirDropdown()" onblur="setTimeout(fermerDropdown, 200)">
         <div class="member-dropdown" id="memberDropdown"></div>
       </div>
       <div class="selected-members" id="selectedMembers"></div>
@@ -203,6 +261,31 @@
       </div>
       <div style="margin-top:10px"><button class="btn" onclick="envoyerMessage()">Envoyer</button></div>
       <div class="send-results" id="sendResults"></div>
+    </div>
+  </div>
+
+  <!-- Discussion -->
+  <div class="section">
+    <div class="section-header" onclick="toggleSection('discussion')">
+      <h2>💬 Discussion</h2>
+      <span class="section-toggle" id="toggle-discussion">▼</span>
+    </div>
+    <div class="section-body" id="body-discussion">
+      <div class="member-select-wrapper" style="margin-bottom:12px">
+        <input type="text" class="member-search" id="discMemberSearch" placeholder="Rechercher un membre par nom ou ID..." autocomplete="off" oninput="filtrerMembresDisc()" onfocus="ouvrirDropdownDisc()" onblur="setTimeout(fermerDropdownDisc, 200)">
+        <div class="member-dropdown" id="discMemberDropdown"></div>
+      </div>
+      <div id="discSelectedMember" style="display:none;align-items:center;gap:10px;margin-bottom:12px;padding:10px;background:var(--bg3);border-radius:8px;border:1px solid var(--border2)">
+        <img id="discMemberAvatar" src="" style="width:40px;height:40px;border-radius:50%" alt="">
+        <div>
+          <div id="discMemberName" style="font-weight:bold;font-size:14px;color:var(--text)"></div>
+          <div id="discMemberId" style="font-size:11px;color:var(--text2)"></div>
+        </div>
+        <button class="btn-danger" style="margin-left:auto" onclick="deselectionnerMembreDisc()">✕</button>
+      </div>
+      <div class="discussion-box" id="discussionBox">
+        <div class="discussion-empty">Sélectionne un membre pour voir la discussion</div>
+      </div>
     </div>
   </div>
 
@@ -229,6 +312,7 @@
         <div class="feedback" id="creerFeedback"></div>
       </div>
       <div id="tabModifier" style="display:none">
+        <p style="font-size:13px;color:var(--text2);margin-bottom:12px">Laisse un champ vide pour ne pas le modifier.</p>
         <div class="form-row">
           <input type="text" id="modUsername" placeholder="Nom d'utilisateur actuel">
           <input type="text" id="modNewUsername" placeholder="Nouveau nom (optionnel)">
@@ -236,7 +320,6 @@
         <div class="form-row" style="margin-top:10px">
           <input type="password" id="modNewPassword" placeholder="Nouveau mot de passe (optionnel)">
           <select id="modNewRole">
-            <option value="">Garder le rôle</option>
             <option value="normal">Normal</option>
             <option value="admin">Admin</option>
           </select>
@@ -254,18 +337,35 @@
   let statsData = null, chart = null, chartView = 'jour';
   let darkMode = localStorage.getItem('theme') === 'dark';
   let tousLesMembres = [], membresSelectionnes = [];
+  let membreDiscSelectionne = null;
+  let rapportsVisible = true;
+
+  const ICON_SRC = 'data:image/jpeg;base64,' + BOT_ICON;
+  document.getElementById('loginLogo').src = ICON_SRC;
+  document.getElementById('headerLogo').src = ICON_SRC;
 
   function applyTheme() {
     document.documentElement.setAttribute('data-theme', darkMode ? 'dark' : 'light');
-    document.getElementById('themeBtn').textContent = darkMode ? '☀️' : '🌙';
+    document.getElementById('themeSwitch').checked = darkMode;
     if (chart) majGraphique();
   }
-  function toggleTheme() { darkMode = !darkMode; localStorage.setItem('theme', darkMode ? 'dark' : 'light'); applyTheme(); }
+  function toggleTheme() {
+    darkMode = document.getElementById('themeSwitch').checked;
+    localStorage.setItem('theme', darkMode ? 'dark' : 'light');
+    applyTheme();
+  }
   applyTheme();
 
   function toggleSection(id) {
+    if (id === 'rapports') {
+      rapportsVisible = !rapportsVisible;
+      document.getElementById('body-rapports').style.display = rapportsVisible ? 'block' : 'none';
+      document.getElementById('toggle-rapports-btn').textContent = rapportsVisible ? 'Masquer' : 'Afficher';
+      return;
+    }
     const body = document.getElementById('body-' + id);
     const toggle = document.getElementById('toggle-' + id);
+    if (!body || !toggle) return;
     const collapsed = body.classList.toggle('collapsed');
     toggle.textContent = collapsed ? '▶' : '▼';
   }
@@ -288,7 +388,7 @@
 
   function logout() {
     username = ''; password = ''; role = '';
-    tousLesMembres = []; membresSelectionnes = [];
+    tousLesMembres = []; membresSelectionnes = []; membreDiscSelectionne = null;
     document.getElementById('loginScreen').style.display = 'flex';
     document.getElementById('dashboard').style.display = 'none';
     document.getElementById('loginUsername').value = '';
@@ -313,19 +413,20 @@
   // ===== MEMBRES =====
   function chargerMembres() {
     fetch(`${BOT_URL}/membres`, { headers: headers() }).then(r => r.json()).then(data => {
-      tousLesMembres = data;
-      afficherDropdown(data);
+      tousLesMembres = Array.isArray(data) ? data : [];
+      afficherDropdown(tousLesMembres);
+      afficherDropdownDisc(tousLesMembres);
     }).catch(() => {});
   }
 
-function afficherDropdown(membres) {
+  function afficherDropdown(membres) {
     const dd = document.getElementById('memberDropdown');
     dd.innerHTML = membres.map(m => `
-      <div class="member-option" onclick="selectionnerMembre('${m.id}', '${m.displayName}', '${m.avatar}')">
+      <div class="member-option" onclick="selectionnerMembre('${m.id}', '${encodeURIComponent(m.displayName)}', '${m.avatar}')">
         <img src="${m.avatar}" onerror="this.src='https://cdn.discordapp.com/embed/avatars/0.png'" alt="">
-        <div style="display:flex;flex-direction:column;gap:2px">
-          <span style="font-size:13px;color:var(--text)">${m.displayName}</span>
-          <span style="font-size:11px;color:var(--text2)">${m.id}</span>
+        <div class="member-option-info">
+          <span class="member-option-name">${m.displayName}</span>
+          <span class="member-option-id">${m.id}</span>
         </div>
       </div>
     `).join('');
@@ -342,17 +443,11 @@ function afficherDropdown(membres) {
     ouvrirDropdown();
   }
 
-  function filtrerMembres() {
-    const q = document.getElementById('memberSearch').value.toLowerCase();
-    const filtres = tousLesMembres.filter(m => m.displayName.toLowerCase().includes(q) || m.username.toLowerCase().includes(q));
-    afficherDropdown(filtres);
-    ouvrirDropdown();
-  }
-
   function ouvrirDropdown() { document.getElementById('memberDropdown').classList.add('open'); }
   function fermerDropdown() { document.getElementById('memberDropdown').classList.remove('open'); }
 
-  function selectionnerMembre(id, nom, avatar) {
+  function selectionnerMembre(id, nomEncode, avatar) {
+    const nom = decodeURIComponent(nomEncode);
     if (membresSelectionnes.find(m => m.id === id)) return;
     membresSelectionnes.push({ id, nom, avatar });
     majSelectedMembers();
@@ -373,6 +468,80 @@ function afficherDropdown(membres) {
         <button onclick="retirerMembre('${m.id}')">×</button>
       </div>
     `).join('');
+  }
+
+  // ===== DISCUSSION =====
+  function afficherDropdownDisc(membres) {
+    const dd = document.getElementById('discMemberDropdown');
+    dd.innerHTML = membres.map(m => `
+      <div class="member-option" onclick="selectionnerMembreDisc('${m.id}', '${encodeURIComponent(m.displayName)}', '${m.avatar}')">
+        <img src="${m.avatar}" onerror="this.src='https://cdn.discordapp.com/embed/avatars/0.png'" alt="">
+        <div class="member-option-info">
+          <span class="member-option-name">${m.displayName}</span>
+          <span class="member-option-id">${m.id}</span>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  function filtrerMembresDisc() {
+    const q = document.getElementById('discMemberSearch').value.toLowerCase();
+    const filtres = tousLesMembres.filter(m =>
+      m.displayName.toLowerCase().includes(q) ||
+      m.username.toLowerCase().includes(q) ||
+      m.id.includes(q)
+    );
+    afficherDropdownDisc(filtres);
+    ouvrirDropdownDisc();
+  }
+
+  function ouvrirDropdownDisc() { document.getElementById('discMemberDropdown').classList.add('open'); }
+  function fermerDropdownDisc() { document.getElementById('discMemberDropdown').classList.remove('open'); }
+
+  function selectionnerMembreDisc(id, nomEncode, avatar) {
+    const nom = decodeURIComponent(nomEncode);
+    membreDiscSelectionne = { id, nom, avatar };
+    document.getElementById('discMemberSearch').value = '';
+    fermerDropdownDisc();
+    const sel = document.getElementById('discSelectedMember');
+    sel.style.display = 'flex';
+    document.getElementById('discMemberAvatar').src = avatar;
+    document.getElementById('discMemberName').textContent = nom;
+    document.getElementById('discMemberId').textContent = 'ID : ' + id;
+    chargerDiscussion(id);
+  }
+
+  function deselectionnerMembreDisc() {
+    membreDiscSelectionne = null;
+    document.getElementById('discSelectedMember').style.display = 'none';
+    document.getElementById('discussionBox').innerHTML = '<div class="discussion-empty">Sélectionne un membre pour voir la discussion</div>';
+  }
+
+  function chargerDiscussion(userId) {
+    const box = document.getElementById('discussionBox');
+    box.innerHTML = '<div class="discussion-empty">Chargement...</div>';
+    fetch(`${BOT_URL}/discussion/${userId}`, { headers: headers() })
+    .then(r => r.json())
+    .then(data => {
+      if (!data.messages || data.messages.length === 0) {
+        box.innerHTML = '<div class="discussion-empty">Aucun message dans cette discussion</div>';
+        return;
+      }
+      box.innerHTML = data.messages.map(msg => `
+        <div class="msg ${msg.isBot ? 'bot' : ''}">
+          <img src="${msg.isBot ? ICON_SRC : (membreDiscSelectionne?.avatar || 'https://cdn.discordapp.com/embed/avatars/0.png')}" onerror="this.src='https://cdn.discordapp.com/embed/avatars/0.png'" alt="">
+          <div class="msg-content">
+            <div class="msg-author">${msg.isBot ? 'ARMORED.BOT' : (membreDiscSelectionne?.nom || 'Utilisateur')}</div>
+            <div class="msg-text">${msg.content}</div>
+            <div class="msg-time">${new Date(msg.timestamp).toLocaleString('fr-FR')}</div>
+          </div>
+        </div>
+      `).join('');
+      box.scrollTop = box.scrollHeight;
+    })
+    .catch(() => {
+      box.innerHTML = '<div class="discussion-empty">Impossible de charger la discussion (les DMs ne sont pas accessibles via l\'API Discord)</div>';
+    });
   }
 
   // ===== STATS =====
@@ -406,6 +575,14 @@ function afficherDropdown(membres) {
     chartView = view;
     document.querySelectorAll('.chart-tab').forEach((el, i) => el.classList.toggle('active', ['jour','semaine','mois'][i] === view));
     majGraphique();
+  }
+
+  function telechargerGraphique() {
+    if (!chart) return;
+    const link = document.createElement('a');
+    link.download = `graphique-${chartView}-${new Date().toISOString().slice(0,10)}.png`;
+    link.href = document.getElementById('statsChart').toDataURL('image/png');
+    link.click();
   }
 
   function majGraphique() {
@@ -462,7 +639,6 @@ function afficherDropdown(membres) {
     fetch(`${BOT_URL}/stats/rapport/${id}`, { method: 'DELETE', headers: headers() }).then(r => r.json()).then(data => { if (data.success) chargerStats(); });
   }
 
-  // ===== ENVOYER MESSAGE =====
   function envoyerMessage() {
     const message = document.getElementById('messageContent').value;
     const results = document.getElementById('sendResults');
@@ -474,7 +650,6 @@ function afficherDropdown(membres) {
     });
   }
 
-  // ===== COMPTES =====
   function switchTab(tab) {
     ['liste','creer','modifier'].forEach(t => { document.getElementById('tab'+t.charAt(0).toUpperCase()+t.slice(1)).style.display = t===tab?'block':'none'; });
     document.querySelectorAll('.tab').forEach((el,i) => el.classList.toggle('active', ['liste','creer','modifier'][i]===tab));
@@ -516,9 +691,13 @@ function afficherDropdown(membres) {
     const feedback = document.getElementById('modifierFeedback');
     if (!u) { feedback.textContent = "Remplis le nom d'utilisateur actuel !"; feedback.className = 'feedback error'; return; }
     if (!newU && !newP && !newR) { feedback.textContent = "Remplis au moins un champ à modifier !"; feedback.className = 'feedback error'; return; }
-    fetch(`${BOT_URL}/comptes/${u}`, { method: 'PUT', headers: headers(), body: JSON.stringify({ newUsername: newU||undefined, newPassword: newP||undefined, newRole: newR||undefined }) })
+    const body = {};
+    if (newU) body.newUsername = newU;
+    if (newP) body.newPassword = newP;
+    if (newR) body.newRole = newR;
+    fetch(`${BOT_URL}/comptes/${u}`, { method: 'PUT', headers: headers(), body: JSON.stringify(body) })
     .then(r => r.json()).then(data => {
-      if (data.success) { feedback.textContent = "✅ Compte modifié !"; feedback.className = 'feedback success'; document.getElementById('modUsername').value = ''; document.getElementById('modNewUsername').value = ''; document.getElementById('modNewPassword').value = ''; document.getElementById('modNewRole').value = ''; chargerComptes(); }
+      if (data.success) { feedback.textContent = "✅ Compte modifié !"; feedback.className = 'feedback success'; document.getElementById('modUsername').value = ''; document.getElementById('modNewUsername').value = ''; document.getElementById('modNewPassword').value = ''; chargerComptes(); }
       else { feedback.textContent = "❌ " + data.error; feedback.className = 'feedback error'; }
     });
   }
