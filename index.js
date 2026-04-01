@@ -488,23 +488,6 @@ app.delete('/comptes/:username', auth, adminOnly, async (req, res) => {
   res.json({ success: true });
 });
 
-app.get('/discussion/:userId', auth, async (req, res) => {
-  try {
-    const user = await client.users.fetch(req.params.userId);
-    const dmChannel = await user.createDM();
-    const messages = await dmChannel.messages.fetch({ limit: 50 });
-    const formatted = messages.reverse().map(m => ({
-      content: m.content || '[Embed ou fichier]',
-      isBot: m.author.bot,
-      timestamp: m.createdTimestamp,
-      author: m.author.username
-    }));
-    res.json({ messages: formatted });
-  } catch (err) {
-    res.status(500).json({ messages: [], error: err.message });
-  }
-});
-
 // Route salons
 app.get('/salons', auth, async (req, res) => {
   try {
@@ -543,10 +526,13 @@ app.get('/discussion/:userId', auth, async (req, res) => {
         fields: e.fields
       })),
       isBot: m.author.bot,
-      timestamp: m.createdTimestamp
+      timestamp: m.createdTimestamp,
+      author: m.author.username
     }));
     res.json({ messages: formatted });
-  } catch (err) { res.status(500).json({ messages: [], error: err.message }); }
+  } catch (err) {
+    res.status(500).json({ messages: [], error: err.message });
+  }
 });
 
 app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'public', 'index.html')));
