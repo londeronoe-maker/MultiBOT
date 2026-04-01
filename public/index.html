@@ -4,708 +4,646 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>MultiBOT Dashboard</title>
-  <link rel="icon" type="image/jpeg" id="faviconEl">
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"><\/script>
   <style>
-    :root {
-      --bg: #f5f5f5; --bg2: #fff; --bg3: #f9f9f9; --text: #1a1a2e; --text2: #888;
-      --border: #eee; --border2: #ddd; --shadow: rgba(0,0,0,0.06);
-      --gold: #FFD700; --gold2: #e6c200; --danger: #f44336; --warning: #FF9800;
-      --success-bg: #e8f5e9; --success-text: #2e7d32; --success-border: #a5d6a7;
-      --error-bg: #ffebee; --error-text: #c62828; --error-border: #ef9a9a;
-    }
-    [data-theme="dark"] {
-      --bg: #1a1a2e; --bg2: #16213e; --bg3: #0f3460; --text: #f0f0f0; --text2: #aaa;
-      --border: #0f3460; --border2: #333; --shadow: rgba(0,0,0,0.3);
-      --success-bg: #1e4d2b; --success-text: #4CAF50; --success-border: #2e7d32;
-      --error-bg: #4d1e1e; --error-text: #ef9a9a; --error-border: #c62828;
-    }
-    * { margin: 0; padding: 0; box-sizing: border-box; transition: background 0.2s, color 0.2s; }
-    body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
-
-    .login-screen { display: flex; align-items: center; justify-content: center; min-height: 100vh; }
-    .login-box { background: var(--bg2); padding: 40px; border-radius: 16px; width: 340px; border: 2px solid var(--gold); box-shadow: 0 4px 24px var(--shadow); }
-    .login-logo { display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 24px; }
-    .login-logo img { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; }
-    .login-logo h2 { color: var(--text); font-size: 22px; }
-    .login-box input { width: 100%; padding: 12px; border-radius: 8px; border: 1px solid var(--border2); background: var(--bg3); color: var(--text); font-size: 15px; margin-bottom: 12px; }
-    .login-box input:focus { outline: none; border-color: var(--gold); }
-    .login-box button { width: 100%; padding: 12px; background: var(--gold); color: #1a1a2e; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; }
-    .login-box button:hover { background: var(--gold2); }
-
-    .dashboard { display: none; padding: 20px; max-width: 1000px; margin: 0 auto; }
-    .header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; flex-wrap: wrap; gap: 12px; }
-    .header-left { display: flex; align-items: center; gap: 10px; }
-    .header-left img { width: 36px; height: 36px; border-radius: 50%; object-fit: cover; }
-    .header h1 { color: var(--text); font-size: 22px; }
-    .header-right { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-    .username-badge { background: var(--gold); padding: 6px 12px; border-radius: 8px; font-size: 13px; color: #1a1a2e; font-weight: bold; }
-    .logout { background: transparent; border: 2px solid var(--text); color: var(--text); padding: 6px 14px; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 13px; }
-    .logout:hover { background: var(--text); color: var(--bg); }
-
-    /* Toggle switch */
-    .theme-toggle { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--text2); }
-    .switch { position: relative; width: 44px; height: 24px; }
-    .switch input { opacity: 0; width: 0; height: 0; }
-    .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background: var(--border2); border-radius: 24px; transition: .3s; }
-    .slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px; background: white; border-radius: 50%; transition: .3s; }
-    input:checked + .slider { background: var(--gold); }
-    input:checked + .slider:before { transform: translateX(20px); }
-
-    .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 16px; margin-bottom: 24px; }
-    .card { background: var(--bg2); border-radius: 12px; padding: 20px; border: 1px solid var(--border); box-shadow: 0 2px 12px var(--shadow); }
-    .card h3 { color: var(--text2); font-size: 11px; margin-bottom: 8px; text-transform: uppercase; }
-    .card p { font-size: 18px; font-weight: bold; color: var(--text); }
-    .status-dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 6px; }
-    .online { background: #4CAF50; } .offline { background: #f44336; }
-
-    .section { background: var(--bg2); border-radius: 12px; margin-bottom: 16px; border: 1px solid var(--border); box-shadow: 0 2px 12px var(--shadow); overflow: hidden; }
-    .section-header { display: flex; align-items: center; justify-content: space-between; padding: 16px 20px; cursor: pointer; user-select: none; }
-    .section-header h2 { color: var(--text); font-size: 16px; border-left: 4px solid var(--gold); padding-left: 10px; }
-    .section-toggle { background: var(--bg3); border: 1px solid var(--border2); color: var(--text2); width: 28px; height: 28px; border-radius: 6px; cursor: pointer; font-size: 14px; display: flex; align-items: center; justify-content: center; }
-    .section-body { padding: 0 20px 20px; }
-    .section-body.collapsed { display: none; }
-
-    .form-row { display: flex; gap: 10px; flex-wrap: wrap; }
-    .form-row input, .form-row textarea, .form-row select { flex: 1; padding: 10px 12px; border-radius: 8px; border: 1px solid var(--border2); background: var(--bg3); color: var(--text); font-size: 14px; min-width: 140px; }
-    .form-row input:focus, .form-row textarea:focus { outline: none; border-color: var(--gold); }
-    .form-row textarea { height: 90px; resize: vertical; }
-    .btn { padding: 10px 20px; background: var(--gold); color: #1a1a2e; border: none; border-radius: 8px; font-size: 14px; font-weight: bold; cursor: pointer; }
-    .btn:hover { background: var(--gold2); }
-    .btn-danger { background: var(--danger); color: #fff; padding: 6px 12px; font-size: 12px; border: none; border-radius: 6px; cursor: pointer; }
-    .btn-warning { background: var(--warning); color: #fff; padding: 6px 12px; font-size: 12px; border: none; border-radius: 6px; cursor: pointer; }
-    .feedback { margin-top: 10px; padding: 10px; border-radius: 8px; font-size: 13px; display: none; }
-    .feedback.success { background: var(--success-bg); color: var(--success-text); display: block; border: 1px solid var(--success-border); }
-    .feedback.error { background: var(--error-bg); color: var(--error-text); display: block; border: 1px solid var(--error-border); }
-
-    .tabs { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
-    .tab { padding: 7px 16px; border-radius: 8px; cursor: pointer; font-size: 13px; border: 1px solid var(--border2); color: var(--text2); background: var(--bg3); }
-    .tab.active { background: var(--gold); color: #1a1a2e; border-color: var(--gold); font-weight: bold; }
-
-    .comptes-list, .rapports-list { margin-top: 12px; }
-    .compte-item, .rapport-item { display: flex; align-items: center; justify-content: space-between; padding: 10px 12px; background: var(--bg3); border-radius: 8px; margin-bottom: 8px; border: 1px solid var(--border); flex-wrap: wrap; gap: 8px; }
-    .compte-info, .rapport-info { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-    .role-badge { padding: 3px 10px; border-radius: 12px; font-size: 11px; font-weight: bold; }
-    .role-admin { background: var(--gold); color: #1a1a2e; }
-    .role-normal { background: var(--bg3); color: var(--text2); border: 1px solid var(--border2); }
-
-    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 14px; margin-bottom: 16px; }
-    .stat-edit { display: flex; flex-direction: column; gap: 5px; }
-    .stat-edit label { font-size: 11px; color: var(--text2); text-transform: uppercase; font-weight: bold; }
-    .stat-edit input { padding: 10px; border-radius: 8px; border: 1px solid var(--border2); background: var(--bg3); color: var(--text); font-size: 16px; font-weight: bold; width: 100%; }
-    .ratio-display { font-size: 13px; color: var(--text2); margin-top: 6px; }
-    .ratio-display span { color: var(--text); font-weight: bold; }
-
-    .chart-tabs { display: flex; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; align-items: center; justify-content: space-between; }
-    .chart-tabs-left { display: flex; gap: 8px; flex-wrap: wrap; }
-    .chart-tab { padding: 6px 14px; border-radius: 8px; cursor: pointer; font-size: 13px; border: 1px solid var(--border2); color: var(--text2); background: var(--bg3); font-weight: bold; }
-    .chart-tab.active { background: var(--gold); color: #1a1a2e; border-color: var(--gold); }
-    .chart-container { position: relative; height: 260px; }
-    .btn-download { padding: 6px 14px; background: var(--bg3); border: 1px solid var(--border2); color: var(--text); border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: bold; }
-    .btn-download:hover { background: var(--gold); color: #1a1a2e; border-color: var(--gold); }
-
-    .send-results { margin-top: 10px; }
-    .send-result-item { padding: 8px 12px; border-radius: 6px; margin-bottom: 6px; font-size: 13px; }
-    .send-result-item.ok { background: var(--success-bg); color: var(--success-text); border: 1px solid var(--success-border); }
-    .send-result-item.ko { background: var(--error-bg); color: var(--error-text); border: 1px solid var(--error-border); }
-
-    /* Menu déroulant membres */
-    .member-select-wrapper { position: relative; }
-    .member-search { width: 100%; padding: 10px 12px; border-radius: 8px; border: 1px solid var(--border2); background: var(--bg3); color: var(--text); font-size: 14px; }
-    .member-search:focus { outline: none; border-color: var(--gold); }
-    .member-dropdown { position: absolute; top: 100%; left: 0; right: 0; background: var(--bg2); border: 1px solid var(--border2); border-radius: 8px; max-height: 250px; overflow-y: auto; z-index: 100; box-shadow: 0 4px 12px var(--shadow); display: none; }
-    .member-dropdown.open { display: block; }
-    .member-option { display: flex; align-items: center; gap: 10px; padding: 8px 12px; cursor: pointer; transition: background 0.1s; }
-    .member-option:hover { background: var(--bg3); }
-    .member-option img { width: 32px; height: 32px; border-radius: 50%; }
-    .member-option-info { display: flex; flex-direction: column; gap: 2px; }
-    .member-option-name { font-size: 13px; color: var(--text); }
-    .member-option-id { font-size: 11px; color: var(--text2); }
-    .selected-members { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
-    .selected-member { display: flex; align-items: center; gap: 6px; background: var(--bg3); border: 1px solid var(--border2); border-radius: 20px; padding: 4px 10px; font-size: 12px; }
-    .selected-member img { width: 20px; height: 20px; border-radius: 50%; }
-    .selected-member button { background: none; border: none; color: var(--text2); cursor: pointer; font-size: 14px; line-height: 1; padding: 0; }
-
-    /* Discussion */
-    .discussion-box { background: var(--bg3); border-radius: 12px; border: 1px solid var(--border2); height: 300px; overflow-y: auto; padding: 12px; margin-bottom: 12px; display: flex; flex-direction: column; gap: 8px; }
-    .msg { display: flex; gap: 8px; align-items: flex-start; }
-    .msg img { width: 28px; height: 28px; border-radius: 50%; flex-shrink: 0; }
-    .msg-content { background: var(--bg2); border-radius: 8px; padding: 8px 12px; font-size: 13px; max-width: 80%; border: 1px solid var(--border); }
-    .msg-author { font-size: 11px; color: var(--text2); margin-bottom: 2px; font-weight: bold; }
-    .msg-text { color: var(--text); }
-    .msg-time { font-size: 10px; color: var(--text2); margin-top: 2px; }
-    .msg.bot .msg-content { background: #fff3cd; border-color: var(--gold); }
-    [data-theme="dark"] .msg.bot .msg-content { background: #2a2000; }
-    .discussion-empty { color: var(--text2); font-size: 13px; text-align: center; margin: auto; }
-
-    @media (max-width: 600px) {
-      .dashboard { padding: 12px; }
-      .cards { grid-template-columns: repeat(2, 1fr); }
-      .stats-grid { grid-template-columns: repeat(2, 1fr); }
-      .chart-container { height: 200px; }
-    }
+    :root{--bg:#f5f5f5;--bg2:#fff;--bg3:#f9f9f9;--text:#1a1a2e;--text2:#888;--border:#eee;--border2:#ddd;--shadow:rgba(0,0,0,0.06);--gold:#FFD700;--gold2:#e6c200;--danger:#f44336;--warning:#FF9800;--success-bg:#e8f5e9;--success-text:#2e7d32;--success-border:#a5d6a7;--error-bg:#ffebee;--error-text:#c62828;--error-border:#ef9a9a}
+    [data-theme="dark"]{--bg:#1a1a2e;--bg2:#16213e;--bg3:#0f3460;--text:#f0f0f0;--text2:#aaa;--border:#0f3460;--border2:#333;--shadow:rgba(0,0,0,0.3);--success-bg:#1e4d2b;--success-text:#4CAF50;--success-border:#2e7d32;--error-bg:#4d1e1e;--error-text:#ef9a9a;--error-border:#c62828}
+    *{margin:0;padding:0;box-sizing:border-box;transition:background .2s,color .2s}
+    body{font-family:'Segoe UI',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+    .login-screen{display:flex;align-items:center;justify-content:center;min-height:100vh}
+    .login-box{background:var(--bg2);padding:40px;border-radius:16px;width:340px;border:2px solid var(--gold);box-shadow:0 4px 24px var(--shadow)}
+    .login-logo{display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:24px}
+    .login-logo img{width:44px;height:44px;border-radius:50%;object-fit:cover;border:2px solid var(--gold)}
+    .login-logo h2{color:var(--text);font-size:20px}
+    .login-box input{width:100%;padding:12px;border-radius:8px;border:1px solid var(--border2);background:var(--bg3);color:var(--text);font-size:15px;margin-bottom:12px}
+    .login-box input:focus{outline:none;border-color:var(--gold)}
+    .login-box button{width:100%;padding:12px;background:var(--gold);color:#1a1a2e;border:none;border-radius:8px;font-size:16px;font-weight:bold;cursor:pointer}
+    .login-box button:hover{background:var(--gold2)}
+    .dashboard{display:none;min-height:100vh}
+    .sidebar{position:fixed;left:0;top:0;bottom:0;width:220px;background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;z-index:10;box-shadow:2px 0 12px var(--shadow)}
+    .sidebar-logo{display:flex;align-items:center;gap:10px;padding:20px 16px;border-bottom:1px solid var(--border)}
+    .sidebar-logo img{width:36px;height:36px;border-radius:50%;object-fit:cover;border:2px solid var(--gold)}
+    .sidebar-logo span{font-weight:bold;font-size:15px;color:var(--text)}
+    .sidebar-nav{flex:1;padding:12px 0;overflow-y:auto}
+    .nav-item{display:flex;align-items:center;gap:10px;padding:10px 16px;cursor:pointer;color:var(--text2);font-size:14px;border-left:3px solid transparent;transition:all .15s}
+    .nav-item:hover{background:var(--bg3);color:var(--text)}
+    .nav-item.active{background:var(--bg3);color:var(--gold);border-left-color:var(--gold);font-weight:bold}
+    .nav-icon{width:20px;text-align:center;font-size:16px}
+    .sidebar-bottom{padding:12px 16px;border-top:1px solid var(--border)}
+    .user-info{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+    .user-badge{background:var(--gold);padding:3px 8px;border-radius:6px;font-size:11px;color:#1a1a2e;font-weight:bold}
+    .theme-toggle{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text2);margin-bottom:8px}
+    .switch{position:relative;width:40px;height:22px}
+    .switch input{opacity:0;width:0;height:0}
+    .slider{position:absolute;cursor:pointer;top:0;left:0;right:0;bottom:0;background:var(--border2);border-radius:22px;transition:.3s}
+    .slider:before{position:absolute;content:"";height:16px;width:16px;left:3px;bottom:3px;background:white;border-radius:50%;transition:.3s}
+    input:checked+.slider{background:var(--gold)}
+    input:checked+.slider:before{transform:translateX(18px)}
+    .btn-logout{width:100%;padding:8px;background:transparent;border:1px solid var(--border2);color:var(--text2);border-radius:8px;cursor:pointer;font-size:13px}
+    .btn-logout:hover{background:var(--danger);color:#fff;border-color:var(--danger)}
+    .main{margin-left:220px;padding:24px;min-height:100vh}
+    .page{display:none}
+    .page.active{display:block}
+    .page-title{font-size:20px;font-weight:bold;color:var(--text);margin-bottom:20px;border-left:4px solid var(--gold);padding-left:12px}
+    .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:16px;margin-bottom:24px}
+    .card{background:var(--bg2);border-radius:12px;padding:20px;border:1px solid var(--border);box-shadow:0 2px 12px var(--shadow)}
+    .card h3{color:var(--text2);font-size:11px;margin-bottom:8px;text-transform:uppercase}
+    .card p{font-size:18px;font-weight:bold;color:var(--text)}
+    .status-dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px}
+    .online{background:#4CAF50}.offline{background:#f44336}
+    .section{background:var(--bg2);border-radius:12px;margin-bottom:16px;border:1px solid var(--border);box-shadow:0 2px 12px var(--shadow);overflow:hidden}
+    .section-header{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;cursor:pointer;user-select:none}
+    .section-header h2{color:var(--text);font-size:15px;border-left:3px solid var(--gold);padding-left:10px}
+    .section-toggle{background:var(--bg3);border:1px solid var(--border2);color:var(--text2);width:26px;height:26px;border-radius:6px;font-size:13px;display:flex;align-items:center;justify-content:center}
+    .section-body{padding:0 18px 18px}
+    .section-body.collapsed{display:none}
+    .form-row{display:flex;gap:10px;flex-wrap:wrap}
+    .form-row input,.form-row textarea,.form-row select{flex:1;padding:10px 12px;border-radius:8px;border:1px solid var(--border2);background:var(--bg3);color:var(--text);font-size:14px;min-width:140px}
+    .form-row input:focus,.form-row textarea:focus{outline:none;border-color:var(--gold)}
+    .form-row textarea{height:90px;resize:vertical}
+    .btn{padding:10px 20px;background:var(--gold);color:#1a1a2e;border:none;border-radius:8px;font-size:14px;font-weight:bold;cursor:pointer}
+    .btn:hover{background:var(--gold2)}
+    .btn-sm{padding:5px 12px;font-size:12px;border:none;border-radius:6px;cursor:pointer;font-weight:bold}
+    .btn-danger{background:var(--danger);color:#fff}
+    .btn-info{background:#1565c0;color:#fff}
+    .feedback{margin-top:10px;padding:10px;border-radius:8px;font-size:13px;display:none}
+    .feedback.success{background:var(--success-bg);color:var(--success-text);display:block;border:1px solid var(--success-border)}
+    .feedback.error{background:var(--error-bg);color:var(--error-text);display:block;border:1px solid var(--error-border)}
+    .tabs{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap}
+    .tab{padding:7px 16px;border-radius:8px;cursor:pointer;font-size:13px;border:1px solid var(--border2);color:var(--text2);background:var(--bg3)}
+    .tab.active{background:var(--gold);color:#1a1a2e;border-color:var(--gold);font-weight:bold}
+    .stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;margin-bottom:16px}
+    .stat-edit{display:flex;flex-direction:column;gap:5px}
+    .stat-edit label{font-size:11px;color:var(--text2);text-transform:uppercase;font-weight:bold}
+    .stat-edit input{padding:10px;border-radius:8px;border:1px solid var(--border2);background:var(--bg3);color:var(--text);font-size:16px;font-weight:bold;width:100%}
+    .ratio-display{font-size:13px;color:var(--text2);margin-top:6px}
+    .ratio-display span{color:var(--text);font-weight:bold}
+    .chart-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px}
+    .chart-tabs{display:flex;gap:8px;flex-wrap:wrap}
+    .chart-tab{padding:6px 14px;border-radius:8px;cursor:pointer;font-size:13px;border:1px solid var(--border2);color:var(--text2);background:var(--bg3);font-weight:bold}
+    .chart-tab.active{background:var(--gold);color:#1a1a2e;border-color:var(--gold)}
+    .chart-container{position:relative;height:260px}
+    .btn-dl{padding:6px 14px;background:var(--bg3);border:1px solid var(--border2);color:var(--text);border-radius:8px;cursor:pointer;font-size:13px;font-weight:bold}
+    .btn-dl:hover{background:var(--gold);color:#1a1a2e;border-color:var(--gold)}
+    .rapport-item{display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:var(--bg3);border-radius:8px;margin-bottom:8px;border:1px solid var(--border);flex-wrap:wrap;gap:8px}
+    .rapport-info{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+    .send-results{margin-top:10px}
+    .send-result-item{padding:8px 12px;border-radius:6px;margin-bottom:6px;font-size:13px}
+    .send-result-item.ok{background:var(--success-bg);color:var(--success-text);border:1px solid var(--success-border)}
+    .send-result-item.ko{background:var(--error-bg);color:var(--error-text);border:1px solid var(--error-border)}
+    .member-select-wrapper{position:relative;margin-bottom:10px}
+    .member-search{width:100%;padding:10px 12px;border-radius:8px;border:1px solid var(--border2);background:var(--bg3);color:var(--text);font-size:14px}
+    .member-search:focus{outline:none;border-color:var(--gold)}
+    .member-dropdown{position:absolute;top:100%;left:0;right:0;background:var(--bg2);border:1px solid var(--border2);border-radius:8px;max-height:220px;overflow-y:auto;z-index:100;box-shadow:0 4px 12px var(--shadow);display:none}
+    .member-dropdown.open{display:block}
+    .member-option{display:flex;align-items:center;gap:10px;padding:8px 12px;cursor:pointer}
+    .member-option:hover{background:var(--bg3)}
+    .member-option img{width:30px;height:30px;border-radius:50%}
+    .member-opt-info{display:flex;flex-direction:column}
+    .member-opt-name{font-size:13px;color:var(--text)}
+    .member-opt-id{font-size:11px;color:var(--text2)}
+    .selected-members{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
+    .sel-member{display:flex;align-items:center;gap:6px;background:var(--bg3);border:1px solid var(--border2);border-radius:20px;padding:4px 10px;font-size:12px}
+    .sel-member img{width:18px;height:18px;border-radius:50%}
+    .sel-member button{background:none;border:none;color:var(--text2);cursor:pointer;font-size:13px;padding:0;line-height:1}
+    .channel-select{width:100%;padding:10px 12px;border-radius:8px;border:1px solid var(--border2);background:var(--bg3);color:var(--text);font-size:14px;margin-bottom:10px}
+    .channel-select:focus{outline:none;border-color:var(--gold)}
+    .disc-box{background:var(--bg3);border-radius:12px;border:1px solid var(--border2);height:320px;overflow-y:auto;padding:12px;margin-bottom:12px;display:flex;flex-direction:column;gap:8px}
+    .msg{display:flex;gap:8px;align-items:flex-start}
+    .msg img{width:28px;height:28px;border-radius:50%;flex-shrink:0}
+    .msg-bubble{background:var(--bg2);border-radius:10px;padding:8px 12px;font-size:13px;max-width:82%;border:1px solid var(--border)}
+    .msg-author{font-size:11px;color:var(--gold);font-weight:bold;margin-bottom:3px}
+    .msg-text{color:var(--text);line-height:1.5}
+    .msg-embed{background:var(--bg3);border-left:3px solid var(--gold);border-radius:4px;padding:8px;margin-top:4px;font-size:12px}
+    .msg-embed-title{font-weight:bold;color:var(--text);margin-bottom:4px}
+    .msg-embed-fname{font-size:11px;color:var(--text2);font-weight:bold}
+    .msg-embed-fval{color:var(--text);font-size:12px}
+    .msg-time{font-size:10px;color:var(--text2);margin-top:3px}
+    .msg.bot .msg-bubble{border-left:3px solid var(--gold)}
+    .disc-empty{color:var(--text2);font-size:13px;text-align:center;margin:auto;padding:20px}
+    .disc-member-bar{display:flex;align-items:center;gap:10px;margin-bottom:12px;padding:10px;background:var(--bg3);border-radius:8px;border:1px solid var(--border2)}
+    .disc-member-bar img{width:36px;height:36px;border-radius:50%}
+    .disc-member-info{flex:1}
+    .disc-member-name{font-weight:bold;font-size:14px;color:var(--text)}
+    .disc-member-id{font-size:11px;color:var(--text2)}
+    .compte-item{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:var(--bg3);border-radius:10px;margin-bottom:8px;border:1px solid var(--border);gap:8px}
+    .compte-left{display:flex;align-items:center;gap:10px}
+    .compte-avatar{width:38px;height:38px;border-radius:50%;background:var(--gold);display:flex;align-items:center;justify-content:center;font-weight:bold;color:#1a1a2e;font-size:16px;flex-shrink:0}
+    .compte-name{font-weight:bold;font-size:14px;color:var(--text)}
+    .role-badge{padding:2px 8px;border-radius:10px;font-size:11px;font-weight:bold}
+    .role-admin{background:var(--gold);color:#1a1a2e}
+    .role-normal{background:var(--bg3);color:var(--text2);border:1px solid var(--border2)}
+    .compte-actions{display:flex;gap:6px;align-items:center}
+    .modal-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.55);z-index:1000;display:none;align-items:center;justify-content:center}
+    .modal-overlay.open{display:flex}
+    .modal{background:var(--bg2);border-radius:16px;padding:28px;width:400px;max-width:90vw;border:1px solid var(--border2);box-shadow:0 8px 32px var(--shadow)}
+    .modal h3{font-size:17px;color:var(--text);margin-bottom:20px;border-left:3px solid var(--gold);padding-left:10px}
+    .modal-field{margin-bottom:14px}
+    .modal-field label{font-size:12px;color:var(--text2);text-transform:uppercase;font-weight:bold;display:block;margin-bottom:5px}
+    .modal-field-row{display:flex;align-items:center;gap:8px}
+    .modal-input{width:100%;padding:10px;border-radius:8px;border:1px solid var(--border2);background:var(--bg3);color:var(--text);font-size:14px}
+    .modal-input:focus{outline:none;border-color:var(--gold)}
+    .modal-actions{display:flex;gap:10px;margin-top:20px;justify-content:flex-end}
+    .btn-eye{background:var(--bg3);border:1px solid var(--border2);color:var(--text2);padding:8px 10px;border-radius:6px;cursor:pointer;font-size:14px}
+    @media(max-width:700px){.sidebar{width:200px}.main{margin-left:0;padding:12px}}
   </style>
 </head>
 <body>
 
-<script>
-  const BOT_ICON = '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';
-  // Set favicon
-  const favicon = document.getElementById('faviconEl');
-  favicon.href = 'data:image/jpeg;base64,' + BOT_ICON;
-</script>
-
 <div class="login-screen" id="loginScreen">
   <div class="login-box">
     <div class="login-logo">
-      <img src="" id="loginLogo" alt="logo">
-      <h2>MultiBOT Dashboard</h2>
+      <img id="loginLogo" src="" alt="logo">
+      <h2>MultiBOT</h2>
     </div>
-    <input type="text" id="loginUsername" placeholder="Nom d'utilisateur" onkeydown="if(event.key==='Enter') login()">
-    <input type="password" id="loginPassword" placeholder="Mot de passe" onkeydown="if(event.key==='Enter') login()">
+    <input type="text" id="loginUsername" placeholder="Nom d'utilisateur" onkeydown="if(event.key==='Enter')login()">
+    <input type="password" id="loginPassword" placeholder="Mot de passe" onkeydown="if(event.key==='Enter')login()">
     <button onclick="login()">Se connecter</button>
     <div class="feedback error" id="loginError" style="display:none;margin-top:12px">Identifiants incorrects</div>
   </div>
 </div>
 
 <div class="dashboard" id="dashboard">
-  <div class="header">
-    <div class="header-left">
-      <img src="" id="headerLogo" alt="logo">
-      <h1>MultiBOT Dashboard</h1>
-    </div>
-    <div class="header-right">
-      <div class="theme-toggle">
-        <span>☀️</span>
-        <label class="switch">
-          <input type="checkbox" id="themeSwitch" onchange="toggleTheme()">
-          <span class="slider"></span>
-        </label>
-        <span>🌙</span>
-      </div>
-      <span class="username-badge" id="usernameDisplay"></span>
-      <button class="logout" onclick="logout()">Déconnexion</button>
+  <div class="sidebar">
+    <div class="sidebar-logo"><img id="sidebarLogo" src="" alt=""><span>MultiBOT</span></div>
+    <nav class="sidebar-nav">
+      <div class="nav-item active" onclick="goPage('accueil')"><span class="nav-icon">🏠</span> Accueil</div>
+      <div class="nav-item" onclick="goPage('stats')"><span class="nav-icon">📊</span> Statistiques</div>
+      <div class="nav-item" onclick="goPage('messages')"><span class="nav-icon">💬</span> Messages</div>
+      <div class="nav-item" id="navComptes" style="display:none" onclick="goPage('comptes')"><span class="nav-icon">👥</span> Comptes</div>
+    </nav>
+    <div class="sidebar-bottom">
+      <div class="user-info"><span id="sidebarUser" style="font-size:13px;color:var(--text)"></span><span class="user-badge" id="sidebarRole"></span></div>
+      <div class="theme-toggle"><span>☀️</span><label class="switch"><input type="checkbox" id="themeSwitch" onchange="toggleTheme()"><span class="slider"></span></label><span>🌙</span></div>
+      <button class="btn-logout" onclick="logout()">Se déconnecter</button>
     </div>
   </div>
-
-  <div class="cards">
-    <div class="card"><h3>Statut</h3><p><span class="status-dot" id="statusDot"></span><span id="statusText">...</span></p></div>
-    <div class="card"><h3>Bot</h3><p id="botTag" style="font-size:13px">...</p></div>
-    <div class="card"><h3>Uptime</h3><p id="uptime" style="font-size:14px">...</p></div>
-  </div>
-
-  <!-- Graphique -->
-  <div class="section">
-    <div class="section-header" onclick="toggleSection('graphique')">
-      <h2>📈 Évolution du mois</h2>
-      <span class="section-toggle" id="toggle-graphique">▼</span>
-    </div>
-    <div class="section-body" id="body-graphique">
-      <div class="chart-tabs">
-        <div class="chart-tabs-left">
-          <button class="chart-tab active" onclick="switchChartView('jour')">Par jour</button>
-          <button class="chart-tab" onclick="switchChartView('semaine')">Par semaine</button>
-          <button class="chart-tab" onclick="switchChartView('mois')">Cumul mois</button>
-        </div>
-        <button class="btn-download" onclick="telechargerGraphique()">⬇️ Télécharger</button>
+  <div class="main">
+    <div class="page active" id="page-accueil">
+      <div class="page-title">🏠 Accueil</div>
+      <div class="cards">
+        <div class="card"><h3>Statut</h3><p><span class="status-dot" id="statusDot"></span><span id="statusText">...</span></p></div>
+        <div class="card"><h3>Bot</h3><p id="botTag" style="font-size:13px">...</p></div>
+        <div class="card"><h3>Uptime</h3><p id="uptime" style="font-size:14px">...</p></div>
+        <div class="card"><h3>Chars détruits</h3><p id="homeDetruits">...</p></div>
+        <div class="card"><h3>Chars perdus</h3><p id="homePerdus">...</p></div>
+        <div class="card"><h3>Ratio</h3><p id="homeRatio">...</p></div>
       </div>
-      <div class="chart-container"><canvas id="statsChart"></canvas></div>
     </div>
-  </div>
-
-  <!-- Stats -->
-  <div class="section">
-    <div class="section-header" onclick="toggleSection('stats')">
-      <h2>📊 Statistiques du mois</h2>
-      <span class="section-toggle" id="toggle-stats">▼</span>
-    </div>
-    <div class="section-body" id="body-stats">
-      <div class="stats-grid">
-        <div class="stat-edit"><label>💥 Chars détruits</label><input type="number" id="statDetruits" min="0"></div>
-        <div class="stat-edit"><label>💀 Chars perdus</label><input type="number" id="statPerdus" min="0"></div>
-        <div class="stat-edit"><label>🚩 Chars capturés</label><input type="number" id="statCaptures" min="0"></div>
-        <div class="stat-edit"><label>🏆 Record rapport</label><input type="number" id="statRecord" min="0"></div>
-      </div>
-      <div class="ratio-display">Ratio : <span id="ratioDisplay">—</span></div>
-      <div style="display:flex;gap:10px;margin-top:14px;flex-wrap:wrap">
-        <button class="btn" onclick="sauvegarderStats()">💾 Sauvegarder</button>
-        <button class="btn btn-danger" onclick="resetStats()">🔁 Réinitialiser</button>
-      </div>
-      <div class="feedback" id="statsFeedback"></div>
-      <div style="margin-top:20px">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
-          <h3 style="color:var(--text);font-size:14px;border-left:4px solid var(--gold);padding-left:8px">📋 Rapports du mois</h3>
-          <button class="btn-download" onclick="toggleSection('rapports')" id="toggle-rapports-btn">Masquer</button>
-        </div>
-        <div id="body-rapports">
-          <div class="rapports-list" id="rapportsList"></div>
+    <div class="page" id="page-stats">
+      <div class="page-title">📊 Statistiques du mois</div>
+      <div class="section">
+        <div class="section-header" onclick="toggleSec('graphique')"><h2>📈 Évolution</h2><span class="section-toggle" id="t-graphique">▼</span></div>
+        <div class="section-body" id="b-graphique">
+          <div class="chart-top"><div class="chart-tabs"><button class="chart-tab active" onclick="switchChart('jour')">Par jour</button><button class="chart-tab" onclick="switchChart('semaine')">Par semaine</button><button class="chart-tab" onclick="switchChart('mois')">Cumul</button></div><button class="btn-dl" onclick="dlChart()">⬇️ Télécharger</button></div>
+          <div class="chart-container"><canvas id="statsChart"></canvas></div>
         </div>
       </div>
-    </div>
-  </div>
-
-  <!-- Envoyer un message -->
-  <div class="section">
-    <div class="section-header" onclick="toggleSection('message')">
-      <h2>💬 Envoyer un message</h2>
-      <span class="section-toggle" id="toggle-message">▼</span>
-    </div>
-    <div class="section-body" id="body-message">
-      <div class="member-select-wrapper">
-        <input type="text" class="member-search" id="memberSearch" placeholder="Rechercher par nom ou ID Discord..." autocomplete="off" oninput="filtrerMembres()" onfocus="ouvrirDropdown()" onblur="setTimeout(fermerDropdown, 200)">
-        <div class="member-dropdown" id="memberDropdown"></div>
-      </div>
-      <div class="selected-members" id="selectedMembers"></div>
-      <div class="form-row" style="margin-top:10px">
-        <textarea id="messageContent" placeholder="Ton message..."></textarea>
-      </div>
-      <div style="margin-top:10px"><button class="btn" onclick="envoyerMessage()">Envoyer</button></div>
-      <div class="send-results" id="sendResults"></div>
-    </div>
-  </div>
-
-  <!-- Discussion -->
-  <div class="section">
-    <div class="section-header" onclick="toggleSection('discussion')">
-      <h2>💬 Discussion</h2>
-      <span class="section-toggle" id="toggle-discussion">▼</span>
-    </div>
-    <div class="section-body" id="body-discussion">
-      <div class="member-select-wrapper" style="margin-bottom:12px">
-        <input type="text" class="member-search" id="discMemberSearch" placeholder="Rechercher un membre par nom ou ID..." autocomplete="off" oninput="filtrerMembresDisc()" onfocus="ouvrirDropdownDisc()" onblur="setTimeout(fermerDropdownDisc, 200)">
-        <div class="member-dropdown" id="discMemberDropdown"></div>
-      </div>
-      <div id="discSelectedMember" style="display:none;align-items:center;gap:10px;margin-bottom:12px;padding:10px;background:var(--bg3);border-radius:8px;border:1px solid var(--border2)">
-        <img id="discMemberAvatar" src="" style="width:40px;height:40px;border-radius:50%" alt="">
-        <div>
-          <div id="discMemberName" style="font-weight:bold;font-size:14px;color:var(--text)"></div>
-          <div id="discMemberId" style="font-size:11px;color:var(--text2)"></div>
+      <div class="section">
+        <div class="section-header" onclick="toggleSec('edits')"><h2>✏️ Modifier les stats</h2><span class="section-toggle" id="t-edits">▼</span></div>
+        <div class="section-body" id="b-edits">
+          <div class="stats-grid">
+            <div class="stat-edit"><label>💥 Chars détruits</label><input type="number" id="statDetruits" min="0"></div>
+            <div class="stat-edit"><label>💀 Chars perdus</label><input type="number" id="statPerdus" min="0"></div>
+            <div class="stat-edit"><label>🚩 Chars capturés</label><input type="number" id="statCaptures" min="0"></div>
+            <div class="stat-edit"><label>🏆 Record rapport</label><input type="number" id="statRecord" min="0"></div>
+          </div>
+          <div class="ratio-display">Ratio : <span id="ratioDisplay">—</span></div>
+          <div style="display:flex;gap:10px;margin-top:14px;flex-wrap:wrap"><button class="btn" onclick="saveStats()">💾 Sauvegarder</button><button class="btn btn-sm btn-danger" style="padding:10px 20px;font-size:14px" onclick="resetStats()">🔁 Réinitialiser</button></div>
+          <div class="feedback" id="statsFeedback"></div>
         </div>
-        <button class="btn-danger" style="margin-left:auto" onclick="deselectionnerMembreDisc()">✕</button>
       </div>
-      <div class="discussion-box" id="discussionBox">
-        <div class="discussion-empty">Sélectionne un membre pour voir la discussion</div>
+      <div class="section">
+        <div class="section-header" onclick="toggleSec('rapports')"><h2>📋 Rapports du mois</h2><span class="section-toggle" id="t-rapports">▼</span></div>
+        <div class="section-body" id="b-rapports"><div id="rapportsList"></div></div>
       </div>
     </div>
-  </div>
-
-  <!-- Comptes (admin) -->
-  <div class="section" id="sectionComptes" style="display:none">
-    <div class="section-header" onclick="toggleSection('comptes')">
-      <h2>👥 Gestion des comptes</h2>
-      <span class="section-toggle" id="toggle-comptes">▼</span>
+    <div class="page" id="page-messages">
+      <div class="page-title">💬 Messages</div>
+      <div class="tabs" style="margin-bottom:20px">
+        <button class="tab active" onclick="switchMsgTab('mp')">📩 MP Membre</button>
+        <button class="tab" onclick="switchMsgTab('salon')">📢 Salon Discord</button>
+        <button class="tab" onclick="switchMsgTab('disc')">💬 Discussion</button>
+      </div>
+      <div id="msgTab-mp">
+        <div class="section"><div class="section-header" onclick="toggleSec('mp')"><h2>📩 Envoyer un MP</h2><span class="section-toggle" id="t-mp">▼</span></div>
+        <div class="section-body" id="b-mp">
+          <div class="member-select-wrapper"><input class="member-search" id="memberSearch" placeholder="Rechercher par nom ou ID Discord..." autocomplete="off" oninput="filtrerMembres()" onfocus="ouvrirDD('memberDropdown')" onblur="setTimeout(()=>fermerDD('memberDropdown'),200)"><div class="member-dropdown" id="memberDropdown"></div></div>
+          <div class="selected-members" id="selectedMembers"></div>
+          <div class="form-row"><textarea id="messageContent" placeholder="Ton message..."></textarea></div>
+          <div style="margin-top:10px"><button class="btn" onclick="envoyerMP()">Envoyer</button></div>
+          <div class="send-results" id="sendResults"></div>
+        </div></div>
+      </div>
+      <div id="msgTab-salon" style="display:none">
+        <div class="section"><div class="section-header" onclick="toggleSec('salon')"><h2>📢 Envoyer dans un salon</h2><span class="section-toggle" id="t-salon">▼</span></div>
+        <div class="section-body" id="b-salon">
+          <select class="channel-select" id="channelSelect"><option value="">Chargement des salons...</option></select>
+          <div class="form-row"><textarea id="salonContent" placeholder="Ton message..."></textarea></div>
+          <div style="margin-top:10px"><button class="btn" onclick="envoyerSalon()">Envoyer</button></div>
+          <div class="send-results" id="salonResults"></div>
+        </div></div>
+      </div>
+      <div id="msgTab-disc" style="display:none">
+        <div class="section"><div class="section-header" onclick="toggleSec('disc')"><h2>💬 Discussion DM</h2><span class="section-toggle" id="t-disc">▼</span></div>
+        <div class="section-body" id="b-disc">
+          <div class="member-select-wrapper"><input class="member-search" id="discSearch" placeholder="Rechercher par nom ou ID..." autocomplete="off" oninput="filtrerDisc()" onfocus="ouvrirDD('discDropdown')" onblur="setTimeout(()=>fermerDD('discDropdown'),200)"><div class="member-dropdown" id="discDropdown"></div></div>
+          <div id="discMemberBar" style="display:none" class="disc-member-bar">
+            <img id="discMemberAvatar" src="" onerror="this.src='https://cdn.discordapp.com/embed/avatars/0.png'" alt="">
+            <div class="disc-member-info"><div class="disc-member-name" id="discMemberName"></div><div class="disc-member-id" id="discMemberId"></div></div>
+            <button class="btn-sm btn-danger" onclick="clearDisc()">✕</button>
+          </div>
+          <div class="disc-box" id="discBox"><div class="disc-empty">Sélectionne un membre pour voir la discussion</div></div>
+        </div></div>
+      </div>
     </div>
-    <div class="section-body" id="body-comptes">
-      <div class="tabs">
-        <button class="tab active" onclick="switchTab('liste')">Liste</button>
-        <button class="tab" onclick="switchTab('creer')">Créer</button>
-        <button class="tab" onclick="switchTab('modifier')">Modifier</button>
-      </div>
-      <div id="tabListe"><div class="comptes-list" id="comptesList"></div></div>
-      <div id="tabCreer" style="display:none">
-        <div class="form-row">
-          <input type="text" id="newUsername" placeholder="Nom d'utilisateur">
-          <input type="password" id="newPassword" placeholder="Mot de passe">
-          <select id="newRole"><option value="normal">Normal</option><option value="admin">Admin</option></select>
-        </div>
-        <div style="margin-top:10px"><button class="btn" onclick="creerCompte()">Créer</button></div>
-        <div class="feedback" id="creerFeedback"></div>
-      </div>
-      <div id="tabModifier" style="display:none">
-        <p style="font-size:13px;color:var(--text2);margin-bottom:12px">Laisse un champ vide pour ne pas le modifier.</p>
-        <div class="form-row">
-          <input type="text" id="modUsername" placeholder="Nom d'utilisateur actuel">
-          <input type="text" id="modNewUsername" placeholder="Nouveau nom (optionnel)">
-        </div>
-        <div class="form-row" style="margin-top:10px">
-          <input type="password" id="modNewPassword" placeholder="Nouveau mot de passe (optionnel)">
-          <select id="modNewRole">
-            <option value="normal">Normal</option>
-            <option value="admin">Admin</option>
-          </select>
-        </div>
-        <div style="margin-top:10px"><button class="btn" onclick="modifierCompte()">Modifier</button></div>
-        <div class="feedback" id="modifierFeedback"></div>
-      </div>
+    <div class="page" id="page-comptes">
+      <div class="page-title">👥 Gestion des comptes</div>
+      <div style="margin-bottom:16px"><button class="btn" onclick="ouvrirModalCreer()">+ Créer un compte</button></div>
+      <div id="comptesList"></div>
     </div>
   </div>
 </div>
 
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <h3 id="modalTitle">Modifier le compte</h3>
+    <div class="modal-field"><label>Nom d'utilisateur</label><input class="modal-input" id="modalUsername" placeholder="Nom d'utilisateur"></div>
+    <div class="modal-field"><label>Mot de passe</label><div class="modal-field-row"><input class="modal-input" id="modalPassword" type="password" placeholder="Mot de passe (laisser vide = inchangé)"><button class="btn-eye" onclick="togglePwd()">👁</button></div></div>
+    <div class="modal-field"><label>Rôle</label><select class="modal-input" id="modalRole"><option value="normal">Normal</option><option value="admin">Admin</option></select></div>
+    <div class="feedback" id="modalFeedback"></div>
+    <div class="modal-actions"><button class="btn btn-sm btn-danger" style="padding:10px 16px" onclick="fermerModal()">Annuler</button><button class="btn" onclick="sauvegarderModal()">Sauvegarder</button></div>
+  </div>
+</div>
+
 <script>
-  const BOT_URL = window.location.origin;
-  let username = '', password = '', role = '';
-  let statsData = null, chart = null, chartView = 'jour';
-  let darkMode = localStorage.getItem('theme') === 'dark';
-  let tousLesMembres = [], membresSelectionnes = [];
-  let membreDiscSelectionne = null;
-  let rapportsVisible = true;
 
-  const ICON_SRC = 'data:image/jpeg;base64,' + BOT_ICON;
-  document.getElementById('loginLogo').src = ICON_SRC;
-  document.getElementById('headerLogo').src = ICON_SRC;
+const BOT_URL = window.location.origin;
+const HEAD_ICON = 'data:image/png;base64,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';
+document.getElementById('loginLogo').src = HEAD_ICON;
+document.getElementById('sidebarLogo').src = HEAD_ICON;
+const fav = document.createElement('link');
+fav.rel='icon'; fav.href=HEAD_ICON; document.head.appendChild(fav);
 
-  function applyTheme() {
-    document.documentElement.setAttribute('data-theme', darkMode ? 'dark' : 'light');
-    document.getElementById('themeSwitch').checked = darkMode;
-    if (chart) majGraphique();
-  }
-  function toggleTheme() {
-    darkMode = document.getElementById('themeSwitch').checked;
-    localStorage.setItem('theme', darkMode ? 'dark' : 'light');
-    applyTheme();
-  }
-  applyTheme();
+let username='',password='',role='';
+let statsData=null,chart=null,chartView='jour';
+let darkMode=localStorage.getItem('theme')==='dark';
+let tousLesMembres=[],membresSelectionnes=[];
+let discMembre=null,modalMode='creer',modalOldUsername='';
 
-  function toggleSection(id) {
-    if (id === 'rapports') {
-      rapportsVisible = !rapportsVisible;
-      document.getElementById('body-rapports').style.display = rapportsVisible ? 'block' : 'none';
-      document.getElementById('toggle-rapports-btn').textContent = rapportsVisible ? 'Masquer' : 'Afficher';
-      return;
-    }
-    const body = document.getElementById('body-' + id);
-    const toggle = document.getElementById('toggle-' + id);
-    if (!body || !toggle) return;
-    const collapsed = body.classList.toggle('collapsed');
-    toggle.textContent = collapsed ? '▶' : '▼';
-  }
+function applyTheme(){
+  document.documentElement.setAttribute('data-theme',darkMode?'dark':'light');
+  document.getElementById('themeSwitch').checked=darkMode;
+  if(chart)majChart();
+}
+function toggleTheme(){darkMode=document.getElementById('themeSwitch').checked;localStorage.setItem('theme',darkMode?'dark':'light');applyTheme();}
+applyTheme();
 
-  function login() {
-    username = document.getElementById('loginUsername').value;
-    password = document.getElementById('loginPassword').value;
-    fetch(`${BOT_URL}/login`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username, password }) })
-    .then(r => r.json()).then(data => {
-      if (data.error) { document.getElementById('loginError').style.display = 'block'; return; }
-      role = data.role;
-      document.getElementById('loginScreen').style.display = 'none';
-      document.getElementById('dashboard').style.display = 'block';
-      document.getElementById('usernameDisplay').textContent = `👤 ${username} (${role})`;
-      if (role === 'admin') { document.getElementById('sectionComptes').style.display = 'block'; chargerComptes(); }
-      chargerStatut(); chargerStats(); chargerMembres();
-      setInterval(chargerStatut, 10000);
-    });
-  }
+function goPage(p){
+  document.querySelectorAll('.page').forEach(el=>el.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(el=>el.classList.remove('active'));
+  document.getElementById('page-'+p).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(el=>{if(el.getAttribute('onclick')&&el.getAttribute('onclick').includes("'"+p+"'"))el.classList.add('active');});
+  if(p==='stats')chargerStats();
+  if(p==='messages'){chargerMembres();chargerSalons();}
+  if(p==='comptes')chargerComptes();
+}
 
-  function logout() {
-    username = ''; password = ''; role = '';
-    tousLesMembres = []; membresSelectionnes = []; membreDiscSelectionne = null;
-    document.getElementById('loginScreen').style.display = 'flex';
-    document.getElementById('dashboard').style.display = 'none';
-    document.getElementById('loginUsername').value = '';
-    document.getElementById('loginPassword').value = '';
-    document.getElementById('sectionComptes').style.display = 'none';
-    if (chart) { chart.destroy(); chart = null; }
-  }
+function toggleSec(id){
+  const b=document.getElementById('b-'+id),t=document.getElementById('t-'+id);
+  if(!b||!t)return;
+  const c=b.classList.toggle('collapsed');
+  t.textContent=c?'▶':'▼';
+}
 
-  function headers() { return { 'Content-Type': 'application/json', 'x-username': username, 'x-password': password }; }
+function login(){
+  username=document.getElementById('loginUsername').value;
+  password=document.getElementById('loginPassword').value;
+  fetch(BOT_URL+'/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username,password})})
+  .then(r=>r.json()).then(data=>{
+    if(data.error){document.getElementById('loginError').style.display='block';return;}
+    role=data.role;
+    document.getElementById('loginScreen').style.display='none';
+    document.getElementById('dashboard').style.display='block';
+    document.getElementById('sidebarUser').textContent=username;
+    document.getElementById('sidebarRole').textContent=role;
+    if(role==='admin')document.getElementById('navComptes').style.display='flex';
+    chargerStatut();chargerStats();
+    setInterval(chargerStatut,10000);
+  });
+}
 
-  function chargerStatut() {
-    fetch(`${BOT_URL}/status`, { headers: headers() }).then(r => r.json()).then(data => {
-      const dot = document.getElementById('statusDot');
-      dot.className = 'status-dot ' + (data.online ? 'online' : 'offline');
-      document.getElementById('statusText').textContent = data.online ? 'En ligne' : 'Hors ligne';
-      document.getElementById('botTag').textContent = data.tag;
-      const h = Math.floor(data.uptime/3600), m = Math.floor((data.uptime%3600)/60), s = data.uptime%60;
-      document.getElementById('uptime').textContent = `${h}h ${m}m ${s}s`;
-    });
-  }
+function logout(){
+  username='';password='';role='';tousLesMembres=[];membresSelectionnes=[];discMembre=null;
+  document.getElementById('loginScreen').style.display='flex';
+  document.getElementById('dashboard').style.display='none';
+  document.getElementById('loginUsername').value='';
+  document.getElementById('loginPassword').value='';
+  document.getElementById('navComptes').style.display='none';
+  if(chart){chart.destroy();chart=null;}
+}
 
-  // ===== MEMBRES =====
-  function chargerMembres() {
-    fetch(`${BOT_URL}/membres`, { headers: headers() }).then(r => r.json()).then(data => {
-      tousLesMembres = Array.isArray(data) ? data : [];
-      afficherDropdown(tousLesMembres);
-      afficherDropdownDisc(tousLesMembres);
-    }).catch(() => {});
-  }
+function hdr(){return {'Content-Type':'application/json','x-username':username,'x-password':password};}
 
-  function afficherDropdown(membres) {
-    const dd = document.getElementById('memberDropdown');
-    dd.innerHTML = membres.map(m => `
-      <div class="member-option" onclick="selectionnerMembre('${m.id}', '${encodeURIComponent(m.displayName)}', '${m.avatar}')">
-        <img src="${m.avatar}" onerror="this.src='https://cdn.discordapp.com/embed/avatars/0.png'" alt="">
-        <div class="member-option-info">
-          <span class="member-option-name">${m.displayName}</span>
-          <span class="member-option-id">${m.id}</span>
-        </div>
+function chargerStatut(){
+  fetch(BOT_URL+'/status',{headers:hdr()}).then(r=>r.json()).then(data=>{
+    document.getElementById('statusDot').className='status-dot '+(data.online?'online':'offline');
+    document.getElementById('statusText').textContent=data.online?'En ligne':'Hors ligne';
+    document.getElementById('botTag').textContent=data.tag;
+    const h=Math.floor(data.uptime/3600),m=Math.floor((data.uptime%3600)/60),s=data.uptime%60;
+    document.getElementById('uptime').textContent=h+'h '+m+'m '+s+'s';
+  });
+}
+
+function chargerMembres(){
+  fetch(BOT_URL+'/membres',{headers:hdr()}).then(r=>r.json()).then(data=>{
+    tousLesMembres=Array.isArray(data)?data:[];
+    rndDD('memberDropdown',tousLesMembres,'selMembre');
+    rndDD('discDropdown',tousLesMembres,'selDisc');
+  }).catch(()=>{});
+}
+
+function rndDD(ddId,membres,fn){
+  const dd=document.getElementById(ddId);if(!dd)return;
+  dd.innerHTML=membres.map(m=>`
+    <div class="member-option" onclick="${fn}('${m.id}','${encodeURIComponent(m.displayName)}','${m.avatar}')">
+      <img src="${m.avatar}" onerror="this.src='https://cdn.discordapp.com/embed/avatars/0.png'" alt="">
+      <div class="member-opt-info">
+        <span class="member-opt-name">${m.displayName}</span>
+        <span class="member-opt-id">${m.id}</span>
       </div>
-    `).join('');
-  }
+    </div>`).join('');
+}
 
-  function filtrerMembres() {
-    const q = document.getElementById('memberSearch').value.toLowerCase();
-    const filtres = tousLesMembres.filter(m =>
-      m.displayName.toLowerCase().includes(q) ||
-      m.username.toLowerCase().includes(q) ||
-      m.id.includes(q)
-    );
-    afficherDropdown(filtres);
-    ouvrirDropdown();
-  }
+function ouvrirDD(id){document.getElementById(id).classList.add('open');}
+function fermerDD(id){document.getElementById(id).classList.remove('open');}
 
-  function ouvrirDropdown() { document.getElementById('memberDropdown').classList.add('open'); }
-  function fermerDropdown() { document.getElementById('memberDropdown').classList.remove('open'); }
+function filtrerMembres(){
+  const q=document.getElementById('memberSearch').value.toLowerCase();
+  const f=tousLesMembres.filter(m=>m.displayName.toLowerCase().includes(q)||m.username.toLowerCase().includes(q)||m.id.includes(q));
+  rndDD('memberDropdown',f,'selMembre');ouvrirDD('memberDropdown');
+}
+function filtrerDisc(){
+  const q=document.getElementById('discSearch').value.toLowerCase();
+  const f=tousLesMembres.filter(m=>m.displayName.toLowerCase().includes(q)||m.username.toLowerCase().includes(q)||m.id.includes(q));
+  rndDD('discDropdown',f,'selDisc');ouvrirDD('discDropdown');
+}
 
-  function selectionnerMembre(id, nomEncode, avatar) {
-    const nom = decodeURIComponent(nomEncode);
-    if (membresSelectionnes.find(m => m.id === id)) return;
-    membresSelectionnes.push({ id, nom, avatar });
-    majSelectedMembers();
-    document.getElementById('memberSearch').value = '';
-    fermerDropdown();
-  }
+function selMembre(id,nomEnc,avatar){
+  const nom=decodeURIComponent(nomEnc);
+  if(membresSelectionnes.find(m=>m.id===id))return;
+  membresSelectionnes.push({id,nom,avatar});
+  majSelMembres();
+  document.getElementById('memberSearch').value='';fermerDD('memberDropdown');
+}
+function retirerMembre(id){membresSelectionnes=membresSelectionnes.filter(m=>m.id!==id);majSelMembres();}
+function majSelMembres(){
+  document.getElementById('selectedMembers').innerHTML=membresSelectionnes.map(m=>`
+    <div class="sel-member">
+      <img src="${m.avatar}" onerror="this.src='https://cdn.discordapp.com/embed/avatars/0.png'" alt="">
+      <span>${m.nom}</span>
+      <button onclick="retirerMembre('${m.id}')">×</button>
+    </div>`).join('');
+}
 
-  function retirerMembre(id) {
-    membresSelectionnes = membresSelectionnes.filter(m => m.id !== id);
-    majSelectedMembers();
-  }
+function selDisc(id,nomEnc,avatar){
+  const nom=decodeURIComponent(nomEnc);
+  discMembre={id,nom,avatar};
+  document.getElementById('discSearch').value='';fermerDD('discDropdown');
+  const bar=document.getElementById('discMemberBar');
+  bar.style.display='flex';
+  document.getElementById('discMemberAvatar').src=avatar;
+  document.getElementById('discMemberName').textContent=nom;
+  document.getElementById('discMemberId').textContent='ID : '+id;
+  chargerDisc(id);
+}
+function clearDisc(){
+  discMembre=null;
+  document.getElementById('discMemberBar').style.display='none';
+  document.getElementById('discBox').innerHTML='<div class="disc-empty">Sélectionne un membre pour voir la discussion</div>';
+}
 
-  function majSelectedMembers() {
-    document.getElementById('selectedMembers').innerHTML = membresSelectionnes.map(m => `
-      <div class="selected-member">
-        <img src="${m.avatar}" onerror="this.src='https://cdn.discordapp.com/embed/avatars/0.png'" alt="">
-        <span>${m.nom}</span>
-        <button onclick="retirerMembre('${m.id}')">×</button>
-      </div>
-    `).join('');
-  }
-
-  // ===== DISCUSSION =====
-  function afficherDropdownDisc(membres) {
-    const dd = document.getElementById('discMemberDropdown');
-    dd.innerHTML = membres.map(m => `
-      <div class="member-option" onclick="selectionnerMembreDisc('${m.id}', '${encodeURIComponent(m.displayName)}', '${m.avatar}')">
-        <img src="${m.avatar}" onerror="this.src='https://cdn.discordapp.com/embed/avatars/0.png'" alt="">
-        <div class="member-option-info">
-          <span class="member-option-name">${m.displayName}</span>
-          <span class="member-option-id">${m.id}</span>
-        </div>
-      </div>
-    `).join('');
-  }
-
-  function filtrerMembresDisc() {
-    const q = document.getElementById('discMemberSearch').value.toLowerCase();
-    const filtres = tousLesMembres.filter(m =>
-      m.displayName.toLowerCase().includes(q) ||
-      m.username.toLowerCase().includes(q) ||
-      m.id.includes(q)
-    );
-    afficherDropdownDisc(filtres);
-    ouvrirDropdownDisc();
-  }
-
-  function ouvrirDropdownDisc() { document.getElementById('discMemberDropdown').classList.add('open'); }
-  function fermerDropdownDisc() { document.getElementById('discMemberDropdown').classList.remove('open'); }
-
-  function selectionnerMembreDisc(id, nomEncode, avatar) {
-    const nom = decodeURIComponent(nomEncode);
-    membreDiscSelectionne = { id, nom, avatar };
-    document.getElementById('discMemberSearch').value = '';
-    fermerDropdownDisc();
-    const sel = document.getElementById('discSelectedMember');
-    sel.style.display = 'flex';
-    document.getElementById('discMemberAvatar').src = avatar;
-    document.getElementById('discMemberName').textContent = nom;
-    document.getElementById('discMemberId').textContent = 'ID : ' + id;
-    chargerDiscussion(id);
-  }
-
-  function deselectionnerMembreDisc() {
-    membreDiscSelectionne = null;
-    document.getElementById('discSelectedMember').style.display = 'none';
-    document.getElementById('discussionBox').innerHTML = '<div class="discussion-empty">Sélectionne un membre pour voir la discussion</div>';
-  }
-
-  function chargerDiscussion(userId) {
-    const box = document.getElementById('discussionBox');
-    box.innerHTML = '<div class="discussion-empty">Chargement...</div>';
-    fetch(`${BOT_URL}/discussion/${userId}`, { headers: headers() })
-    .then(r => r.json())
-    .then(data => {
-      if (!data.messages || data.messages.length === 0) {
-        box.innerHTML = '<div class="discussion-empty">Aucun message dans cette discussion</div>';
-        return;
+function chargerDisc(userId){
+  const box=document.getElementById('discBox');
+  box.innerHTML='<div class="disc-empty">Chargement...</div>';
+  fetch(BOT_URL+'/discussion/'+userId,{headers:hdr()})
+  .then(r=>r.json()).then(data=>{
+    if(!data.messages||data.messages.length===0){box.innerHTML='<div class="disc-empty">Aucun message trouvé</div>';return;}
+    box.innerHTML=data.messages.map(msg=>{
+      const avatar=msg.isBot?HEAD_ICON:(discMembre?.avatar||'https://cdn.discordapp.com/embed/avatars/0.png');
+      const author=msg.isBot?'ARMORED.BOT':(discMembre?.nom||'Utilisateur');
+      let content='';
+      if(msg.content&&msg.content!='[Embed]')content=`<div class="msg-text">${msg.content}</div>`;
+      if(msg.embeds&&msg.embeds.length>0){
+        msg.embeds.forEach(e=>{
+          content+=`<div class="msg-embed">`;
+          if(e.title)content+=`<div class="msg-embed-title">${e.title}</div>`;
+          if(e.description)content+=`<div class="msg-text" style="font-size:12px;margin-top:3px">${e.description}</div>`;
+          if(e.fields&&e.fields.length>0)e.fields.forEach(f=>{content+=`<div style="margin-top:4px"><div class="msg-embed-fname">${f.name}</div><div class="msg-embed-fval">${f.value}</div></div>`;});
+          content+=`</div>`;
+        });
       }
-      box.innerHTML = data.messages.map(msg => `
-        <div class="msg ${msg.isBot ? 'bot' : ''}">
-          <img src="${msg.isBot ? ICON_SRC : (membreDiscSelectionne?.avatar || 'https://cdn.discordapp.com/embed/avatars/0.png')}" onerror="this.src='https://cdn.discordapp.com/embed/avatars/0.png'" alt="">
-          <div class="msg-content">
-            <div class="msg-author">${msg.isBot ? 'ARMORED.BOT' : (membreDiscSelectionne?.nom || 'Utilisateur')}</div>
-            <div class="msg-text">${msg.content}</div>
-            <div class="msg-time">${new Date(msg.timestamp).toLocaleString('fr-FR')}</div>
-          </div>
+      return `<div class="msg ${msg.isBot?'bot':''}">
+        <img src="${avatar}" onerror="this.src='https://cdn.discordapp.com/embed/avatars/0.png'" alt="">
+        <div class="msg-bubble">
+          <div class="msg-author">${author}</div>
+          ${content||'<div class="msg-text">[Fichier ou contenu non supporté]</div>'}
+          <div class="msg-time">${new Date(msg.timestamp).toLocaleString('fr-FR')}</div>
         </div>
-      `).join('');
-      box.scrollTop = box.scrollHeight;
-    })
-    .catch(() => {
-      box.innerHTML = '<div class="discussion-empty">Impossible de charger la discussion (les DMs ne sont pas accessibles via l\'API Discord)</div>';
-    });
-  }
+      </div>`;
+    }).join('');
+    box.scrollTop=box.scrollHeight;
+  }).catch(()=>{box.innerHTML='<div class="disc-empty">Impossible de charger (API Discord limitée pour les DMs)</div>';});
+}
 
-  // ===== STATS =====
-  function chargerStats() {
-    fetch(`${BOT_URL}/stats`, { headers: headers() }).then(r => r.json()).then(data => {
-      statsData = data;
-      document.getElementById('statDetruits').value = data.charsDetruitTotal || 0;
-      document.getElementById('statPerdus').value = data.charsPerdusTotal || 0;
-      document.getElementById('statCaptures').value = data.charsCapturesTotal || 0;
-      document.getElementById('statRecord').value = data.recordRapport || 0;
-      majRatio(); majGraphique();
-      const list = document.getElementById('rapportsList');
-      if (!data.rapports?.length) { list.innerHTML = '<div style="color:var(--text2);font-size:13px;padding:10px">Aucun rapport ce mois-ci</div>'; return; }
-      list.innerHTML = data.rapports.map(r => `
-        <div class="rapport-item">
-          <div class="rapport-info">
-            <span>📋 <strong>${r.nom}</strong></span>
-            <span style="color:var(--text2);font-size:12px">🎯 ${r.tireur}</span>
-            <span style="color:#e65100;font-weight:bold">💥 ${r.detruits}</span>
-            <span style="color:#c62828;font-weight:bold">💀 ${r.perdus}</span>
-            <span style="color:#1565c0;font-weight:bold">🚩 ${r.captures||0}</span>
-            <span style="color:var(--text2);font-size:12px">${r.date}</span>
-          </div>
-          <button class="btn-danger" onclick="supprimerRapport(${r.id})">Supprimer</button>
+function chargerSalons(){
+  fetch(BOT_URL+'/salons',{headers:hdr()}).then(r=>r.json()).then(data=>{
+    const sel=document.getElementById('channelSelect');
+    sel.innerHTML=data.map(c=>`<option value="${c.id}">#${c.name}</option>`).join('');
+  }).catch(()=>{document.getElementById('channelSelect').innerHTML='<option value="">Erreur chargement</option>';});
+}
+
+function envoyerSalon(){
+  const channelId=document.getElementById('channelSelect').value;
+  const message=document.getElementById('salonContent').value;
+  const results=document.getElementById('salonResults');
+  if(!channelId||!message){results.innerHTML='<div class="send-result-item ko">Sélectionne un salon et écris un message !</div>';return;}
+  fetch(BOT_URL+'/send-salon',{method:'POST',headers:hdr(),body:JSON.stringify({channelId,message})})
+  .then(r=>r.json()).then(data=>{
+    if(data.success){results.innerHTML='<div class="send-result-item ok">✅ Message envoyé dans le salon !</div>';document.getElementById('salonContent').value='';}
+    else{results.innerHTML='<div class="send-result-item ko">❌ '+data.error+'</div>';}
+  });
+}
+
+function envoyerMP(){
+  const message=document.getElementById('messageContent').value;
+  const results=document.getElementById('sendResults');
+  if(!membresSelectionnes.length||!message){results.innerHTML='<div class="send-result-item ko">Sélectionne au moins un membre et écris un message !</div>';return;}
+  fetch(BOT_URL+'/send',{method:'POST',headers:hdr(),body:JSON.stringify({userIds:membresSelectionnes.map(m=>m.id),message})})
+  .then(r=>r.json()).then(data=>{
+    results.innerHTML=data.results.map(r=>`<div class="send-result-item ${r.success?'ok':'ko'}">${r.success?'✅':'❌'} ${membresSelectionnes.find(m=>m.id===r.userId)?.nom||r.userId} — ${r.success?'Envoyé !':r.error}</div>`).join('');
+    if(data.results.every(r=>r.success)){document.getElementById('messageContent').value='';membresSelectionnes=[];majSelMembres();}
+  });
+}
+
+function switchMsgTab(t){
+  ['mp','salon','disc'].forEach(x=>{document.getElementById('msgTab-'+x).style.display=x===t?'block':'none';});
+  document.querySelectorAll('#page-messages .tabs .tab').forEach((el,i)=>{el.classList.toggle('active',['mp','salon','disc'][i]===t);});
+  if(t==='salon')chargerSalons();
+  if(t==='disc')chargerMembres();
+}
+
+function chargerStats(){
+  fetch(BOT_URL+'/stats',{headers:hdr()}).then(r=>r.json()).then(data=>{
+    statsData=data;
+    document.getElementById('statDetruits').value=data.charsDetruitTotal||0;
+    document.getElementById('statPerdus').value=data.charsPerdusTotal||0;
+    document.getElementById('statCaptures').value=data.charsCapturesTotal||0;
+    document.getElementById('statRecord').value=data.recordRapport||0;
+    document.getElementById('homeDetruits').textContent=data.charsDetruitTotal||0;
+    document.getElementById('homePerdus').textContent=data.charsPerdusTotal||0;
+    const d=data.charsDetruitTotal||0,p=data.charsPerdusTotal||0;
+    document.getElementById('homeRatio').textContent=p>0?(d/p).toFixed(2):d>0?'∞':'0';
+    majRatio();majChart();
+    const list=document.getElementById('rapportsList');
+    if(!data.rapports?.length){list.innerHTML='<div style="color:var(--text2);font-size:13px;padding:10px">Aucun rapport ce mois-ci</div>';return;}
+    list.innerHTML=data.rapports.map(r=>`
+      <div class="rapport-item">
+        <div class="rapport-info">
+          <span>📋 <strong>${r.nom}</strong></span>
+          <span style="color:var(--text2);font-size:12px">🎯 ${r.tireur}</span>
+          <span style="color:#e65100;font-weight:bold">💥 ${r.detruits}</span>
+          <span style="color:#c62828;font-weight:bold">💀 ${r.perdus}</span>
+          <span style="color:#1565c0;font-weight:bold">🚩 ${r.captures||0}</span>
+          <span style="color:var(--text2);font-size:12px">${r.date}</span>
         </div>
-      `).join('');
-    });
-  }
+        <button class="btn-sm btn-danger" onclick="supprimerRapport(${r.id})">Supprimer</button>
+      </div>`).join('');
+  });
+}
 
-  function switchChartView(view) {
-    chartView = view;
-    document.querySelectorAll('.chart-tab').forEach((el, i) => el.classList.toggle('active', ['jour','semaine','mois'][i] === view));
-    majGraphique();
+function switchChart(v){
+  chartView=v;
+  document.querySelectorAll('.chart-tab').forEach((el,i)=>el.classList.toggle('active',['jour','semaine','mois'][i]===v));
+  majChart();
+}
+function dlChart(){
+  if(!chart)return;
+  const a=document.createElement('a');
+  a.download='graphique-'+chartView+'-'+new Date().toISOString().slice(0,10)+'.png';
+  a.href=document.getElementById('statsChart').toDataURL('image/png');
+  a.click();
+}
+function majChart(){
+  if(!statsData?.rapports)return;
+  const raps=statsData.rapports;
+  let labels=[],detruits=[],perdus=[],captures=[];
+  if(chartView==='jour'){
+    const pj={};
+    raps.forEach(r=>{const d=r.date||'?';if(!pj[d])pj[d]={d:0,p:0,c:0};pj[d].d+=r.detruits||0;pj[d].p+=r.perdus||0;pj[d].c+=r.captures||0;});
+    const j=Object.keys(pj).sort();labels=j;detruits=j.map(x=>pj[x].d);perdus=j.map(x=>pj[x].p);captures=j.map(x=>pj[x].c);
+  }else if(chartView==='semaine'){
+    const ps={};
+    raps.forEach(r=>{const parts=(r.date||'').split('/');const s=parts.length>=1?'S'+Math.ceil(parseInt(parts[0])/7):'S?';if(!ps[s])ps[s]={d:0,p:0,c:0};ps[s].d+=r.detruits||0;ps[s].p+=r.perdus||0;ps[s].c+=r.captures||0;});
+    const ss=Object.keys(ps).sort();labels=ss;detruits=ss.map(x=>ps[x].d);perdus=ss.map(x=>ps[x].p);captures=ss.map(x=>ps[x].c);
+  }else{
+    let cd=0,cp=0,cc=0;
+    [...raps].sort((a,b)=>a.date>b.date?1:-1).forEach(r=>{cd+=r.detruits||0;cp+=r.perdus||0;cc+=r.captures||0;labels.push(r.date||'?');detruits.push(cd);perdus.push(cp);captures.push(cc);});
   }
+  const tc=darkMode?'#aaa':'#888',gc=darkMode?'#0f3460':'#eee';
+  if(chart)chart.destroy();
+  chart=new Chart(document.getElementById('statsChart').getContext('2d'),{
+    type:'line',
+    data:{labels,datasets:[
+      {label:'💥 Détruits',data:detruits,borderColor:'#FFD700',backgroundColor:'rgba(255,215,0,0.1)',tension:.3,fill:true,pointBackgroundColor:'#FFD700',pointRadius:5},
+      {label:'💀 Perdus',data:perdus,borderColor:'#f44336',backgroundColor:'rgba(244,67,54,0.1)',tension:.3,fill:true,pointBackgroundColor:'#f44336',pointRadius:5},
+      {label:'🚩 Capturés',data:captures,borderColor:'#1565c0',backgroundColor:'rgba(21,101,192,0.1)',tension:.3,fill:true,pointBackgroundColor:'#1565c0',pointRadius:5}
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top',labels:{color:tc,font:{size:12}}},tooltip:{mode:'index',intersect:false}},scales:{x:{ticks:{color:tc},grid:{color:gc}},y:{beginAtZero:true,ticks:{color:tc,stepSize:1},grid:{color:gc}}}}
+  });
+}
+function majRatio(){
+  const d=parseInt(document.getElementById('statDetruits').value)||0;
+  const p=parseInt(document.getElementById('statPerdus').value)||0;
+  document.getElementById('ratioDisplay').textContent=p>0?(d/p).toFixed(2):d>0?'∞':'0';
+}
+document.addEventListener('input',e=>{if(['statDetruits','statPerdus'].includes(e.target.id))majRatio();});
 
-  function telechargerGraphique() {
-    if (!chart) return;
-    const link = document.createElement('a');
-    link.download = `graphique-${chartView}-${new Date().toISOString().slice(0,10)}.png`;
-    link.href = document.getElementById('statsChart').toDataURL('image/png');
-    link.click();
-  }
+function saveStats(){
+  const fb=document.getElementById('statsFeedback');
+  fetch(BOT_URL+'/stats',{method:'PUT',headers:hdr(),body:JSON.stringify({charsDetruitTotal:document.getElementById('statDetruits').value,charsPerdusTotal:document.getElementById('statPerdus').value,charsCapturesTotal:document.getElementById('statCaptures').value,recordRapport:document.getElementById('statRecord').value})})
+  .then(r=>r.json()).then(data=>{fb.textContent=data.success?'✅ Stats sauvegardées !':'❌ '+data.error;fb.className='feedback '+(data.success?'success':'error');});
+}
+function resetStats(){
+  if(!confirm('Réinitialiser les stats du mois ? Un bilan sera envoyé avant.'))return;
+  fetch(BOT_URL+'/stats/reset',{method:'POST',headers:hdr()}).then(r=>r.json()).then(data=>{if(data.success){alert('✅ Stats réinitialisées !');chargerStats();}else alert('❌ '+data.error);});
+}
+function supprimerRapport(id){
+  if(!confirm('Supprimer ce rapport ?'))return;
+  fetch(BOT_URL+'/stats/rapport/'+id,{method:'DELETE',headers:hdr()}).then(r=>r.json()).then(data=>{if(data.success)chargerStats();});
+}
 
-  function majGraphique() {
-    if (!statsData?.rapports) return;
-    const rapports = statsData.rapports;
-    let labels = [], detruits = [], perdus = [], captures = [];
-    if (chartView === 'jour') {
-      const parJour = {};
-      rapports.forEach(r => { const d = r.date||'?'; if (!parJour[d]) parJour[d] = {detruits:0,perdus:0,captures:0}; parJour[d].detruits+=r.detruits||0; parJour[d].perdus+=r.perdus||0; parJour[d].captures+=r.captures||0; });
-      const jours = Object.keys(parJour).sort();
-      labels = jours; detruits = jours.map(j => parJour[j].detruits); perdus = jours.map(j => parJour[j].perdus); captures = jours.map(j => parJour[j].captures);
-    } else if (chartView === 'semaine') {
-      const parSemaine = {};
-      rapports.forEach(r => { const parts = (r.date||'').split('/'); const s = parts.length>=1?`S${Math.ceil(parseInt(parts[0])/7)}`:'S?'; if (!parSemaine[s]) parSemaine[s]={detruits:0,perdus:0,captures:0}; parSemaine[s].detruits+=r.detruits||0; parSemaine[s].perdus+=r.perdus||0; parSemaine[s].captures+=r.captures||0; });
-      const semaines = Object.keys(parSemaine).sort();
-      labels = semaines; detruits = semaines.map(s => parSemaine[s].detruits); perdus = semaines.map(s => parSemaine[s].perdus); captures = semaines.map(s => parSemaine[s].captures);
-    } else {
-      let cumD=0,cumP=0,cumC=0;
-      [...rapports].sort((a,b)=>a.date>b.date?1:-1).forEach(r => { cumD+=r.detruits||0; cumP+=r.perdus||0; cumC+=r.captures||0; labels.push(r.date||'?'); detruits.push(cumD); perdus.push(cumP); captures.push(cumC); });
-    }
-    const tc = darkMode?'#aaa':'#888', gc = darkMode?'#0f3460':'#eee';
-    if (chart) chart.destroy();
-    chart = new Chart(document.getElementById('statsChart').getContext('2d'), {
-      type: 'line',
-      data: { labels, datasets: [
-        { label: '💥 Détruits', data: detruits, borderColor: '#FFD700', backgroundColor: 'rgba(255,215,0,0.1)', tension: 0.3, fill: true, pointBackgroundColor: '#FFD700', pointRadius: 5 },
-        { label: '💀 Perdus', data: perdus, borderColor: '#f44336', backgroundColor: 'rgba(244,67,54,0.1)', tension: 0.3, fill: true, pointBackgroundColor: '#f44336', pointRadius: 5 },
-        { label: '🚩 Capturés', data: captures, borderColor: '#1565c0', backgroundColor: 'rgba(21,101,192,0.1)', tension: 0.3, fill: true, pointBackgroundColor: '#1565c0', pointRadius: 5 }
-      ]},
-      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'top', labels: { color: tc, font: { size: 12 } } }, tooltip: { mode: 'index', intersect: false } }, scales: { x: { ticks: { color: tc }, grid: { color: gc } }, y: { beginAtZero: true, ticks: { color: tc, stepSize: 1 }, grid: { color: gc } } } }
-    });
-  }
-
-  function majRatio() {
-    const d = parseInt(document.getElementById('statDetruits').value)||0;
-    const p = parseInt(document.getElementById('statPerdus').value)||0;
-    document.getElementById('ratioDisplay').textContent = p>0?(d/p).toFixed(2):d>0?'∞':'0';
-  }
-  document.addEventListener('input', e => { if (['statDetruits','statPerdus'].includes(e.target.id)) majRatio(); });
-
-  function sauvegarderStats() {
-    const feedback = document.getElementById('statsFeedback');
-    fetch(`${BOT_URL}/stats`, { method: 'PUT', headers: headers(), body: JSON.stringify({ charsDetruitTotal: document.getElementById('statDetruits').value, charsPerdusTotal: document.getElementById('statPerdus').value, charsCapturesTotal: document.getElementById('statCaptures').value, recordRapport: document.getElementById('statRecord').value }) })
-    .then(r => r.json()).then(data => { feedback.textContent = data.success ? "✅ Stats sauvegardées !" : "❌ " + data.error; feedback.className = 'feedback ' + (data.success ? 'success' : 'error'); });
-  }
-
-  function resetStats() {
-    if (!confirm("Réinitialiser les stats du mois ? Un bilan sera envoyé avant.")) return;
-    fetch(`${BOT_URL}/stats/reset`, { method: 'POST', headers: headers() }).then(r => r.json()).then(data => { if (data.success) { alert("✅ Stats réinitialisées !"); chargerStats(); } else alert("❌ " + data.error); });
-  }
-
-  function supprimerRapport(id) {
-    if (!confirm("Supprimer ce rapport ?")) return;
-    fetch(`${BOT_URL}/stats/rapport/${id}`, { method: 'DELETE', headers: headers() }).then(r => r.json()).then(data => { if (data.success) chargerStats(); });
-  }
-
-  function envoyerMessage() {
-    const message = document.getElementById('messageContent').value;
-    const results = document.getElementById('sendResults');
-    if (!membresSelectionnes.length || !message) { results.innerHTML = '<div class="send-result-item ko">Sélectionne au moins un membre et écris un message !</div>'; return; }
-    fetch(`${BOT_URL}/send`, { method: 'POST', headers: headers(), body: JSON.stringify({ userIds: membresSelectionnes.map(m => m.id), message }) })
-    .then(r => r.json()).then(data => {
-      results.innerHTML = data.results.map(r => `<div class="send-result-item ${r.success?'ok':'ko'}">${r.success?'✅':'❌'} ${membresSelectionnes.find(m=>m.id===r.userId)?.nom||r.userId} — ${r.success?'Envoyé !':r.error}</div>`).join('');
-      if (data.results.every(r => r.success)) { document.getElementById('messageContent').value = ''; membresSelectionnes = []; majSelectedMembers(); }
-    });
-  }
-
-  function switchTab(tab) {
-    ['liste','creer','modifier'].forEach(t => { document.getElementById('tab'+t.charAt(0).toUpperCase()+t.slice(1)).style.display = t===tab?'block':'none'; });
-    document.querySelectorAll('.tab').forEach((el,i) => el.classList.toggle('active', ['liste','creer','modifier'][i]===tab));
-    if (tab==='liste') chargerComptes();
-  }
-
-  function chargerComptes() {
-    fetch(`${BOT_URL}/comptes`, { headers: headers() }).then(r => r.json()).then(data => {
-      document.getElementById('comptesList').innerHTML = data.map(c => `
-        <div class="compte-item">
-          <div class="compte-info">
-            <span>${c.username}</span>
-            <span class="role-badge role-${c.role}">${c.role}</span>
-          </div>
-          ${c.username !== 'admin' ? `<button class="btn-danger" onclick="supprimerCompte('${c.username}')">Supprimer</button>` : ''}
+function chargerComptes(){
+  fetch(BOT_URL+'/comptes',{headers:hdr()}).then(r=>r.json()).then(data=>{
+    document.getElementById('comptesList').innerHTML=data.map(c=>`
+      <div class="compte-item">
+        <div class="compte-left">
+          <div class="compte-avatar">${c.username[0].toUpperCase()}</div>
+          <div><div class="compte-name">${c.username}</div><span class="role-badge role-${c.role}">${c.role}</span></div>
         </div>
-      `).join('');
-    });
-  }
+        <div class="compte-actions">
+          <button class="btn-sm btn-info" onclick="ouvrirModalModifier('${c.username}','${c.role}')" title="Modifier">⚙️ Modifier</button>
+          ${c.username!=='admin'?`<button class="btn-sm btn-danger" onclick="supprimerCompte('${c.username}')">🗑️</button>`:''}
+        </div>
+      </div>`).join('');
+  });
+}
 
-  function creerCompte() {
-    const u = document.getElementById('newUsername').value;
-    const p = document.getElementById('newPassword').value;
-    const r = document.getElementById('newRole').value;
-    const feedback = document.getElementById('creerFeedback');
-    if (!u||!p) { feedback.textContent = "Remplis tous les champs !"; feedback.className = 'feedback error'; return; }
-    fetch(`${BOT_URL}/comptes`, { method: 'POST', headers: headers(), body: JSON.stringify({ username: u, password: p, role: r }) })
-    .then(r => r.json()).then(data => {
-      if (data.success) { feedback.textContent = "✅ Compte créé !"; feedback.className = 'feedback success'; document.getElementById('newUsername').value = ''; document.getElementById('newPassword').value = ''; chargerComptes(); }
-      else { feedback.textContent = "❌ " + data.error; feedback.className = 'feedback error'; }
-    });
+function ouvrirModalCreer(){
+  modalMode='creer';
+  document.getElementById('modalTitle').textContent='Créer un compte';
+  document.getElementById('modalUsername').value='';
+  document.getElementById('modalPassword').value='';
+  document.getElementById('modalRole').value='normal';
+  document.getElementById('modalFeedback').style.display='none';
+  document.getElementById('modalOverlay').classList.add('open');
+}
+function ouvrirModalModifier(username,role){
+  modalMode='modifier';modalOldUsername=username;
+  document.getElementById('modalTitle').textContent='Modifier : '+username;
+  document.getElementById('modalUsername').value=username;
+  document.getElementById('modalPassword').value='';
+  document.getElementById('modalRole').value=role;
+  document.getElementById('modalFeedback').style.display='none';
+  document.getElementById('modalOverlay').classList.add('open');
+}
+function fermerModal(){document.getElementById('modalOverlay').classList.remove('open');}
+function togglePwd(){const inp=document.getElementById('modalPassword');inp.type=inp.type==='password'?'text':'password';}
+function sauvegarderModal(){
+  const fb=document.getElementById('modalFeedback');
+  const u=document.getElementById('modalUsername').value;
+  const p=document.getElementById('modalPassword').value;
+  const r=document.getElementById('modalRole').value;
+  if(!u){fb.textContent="Nom d'utilisateur requis !";fb.className='feedback error';return;}
+  if(modalMode==='creer'){
+    if(!p){fb.textContent='Mot de passe requis !';fb.className='feedback error';return;}
+    fetch(BOT_URL+'/comptes',{method:'POST',headers:hdr(),body:JSON.stringify({username:u,password:p,role:r})})
+    .then(x=>x.json()).then(data=>{if(data.success){fermerModal();chargerComptes();}else{fb.textContent='❌ '+data.error;fb.className='feedback error';}});
+  }else{
+    const body={};
+    if(u!==modalOldUsername)body.newUsername=u;
+    if(p)body.newPassword=p;
+    if(r)body.newRole=r;
+    fetch(BOT_URL+'/comptes/'+modalOldUsername,{method:'PUT',headers:hdr(),body:JSON.stringify(body)})
+    .then(x=>x.json()).then(data=>{if(data.success){fermerModal();chargerComptes();}else{fb.textContent='❌ '+data.error;fb.className='feedback error';}});
   }
+}
+function supprimerCompte(u){
+  if(!confirm('Supprimer le compte "'+u+'" ?'))return;
+  fetch(BOT_URL+'/comptes/'+u,{method:'DELETE',headers:hdr()}).then(r=>r.json()).then(data=>{if(data.success)chargerComptes();});
+}
+document.getElementById('modalOverlay').addEventListener('click',function(e){if(e.target===this)fermerModal();});
 
-  function modifierCompte() {
-    const u = document.getElementById('modUsername').value;
-    const newU = document.getElementById('modNewUsername').value;
-    const newP = document.getElementById('modNewPassword').value;
-    const newR = document.getElementById('modNewRole').value;
-    const feedback = document.getElementById('modifierFeedback');
-    if (!u) { feedback.textContent = "Remplis le nom d'utilisateur actuel !"; feedback.className = 'feedback error'; return; }
-    if (!newU && !newP && !newR) { feedback.textContent = "Remplis au moins un champ à modifier !"; feedback.className = 'feedback error'; return; }
-    const body = {};
-    if (newU) body.newUsername = newU;
-    if (newP) body.newPassword = newP;
-    if (newR) body.newRole = newR;
-    fetch(`${BOT_URL}/comptes/${u}`, { method: 'PUT', headers: headers(), body: JSON.stringify(body) })
-    .then(r => r.json()).then(data => {
-      if (data.success) { feedback.textContent = "✅ Compte modifié !"; feedback.className = 'feedback success'; document.getElementById('modUsername').value = ''; document.getElementById('modNewUsername').value = ''; document.getElementById('modNewPassword').value = ''; chargerComptes(); }
-      else { feedback.textContent = "❌ " + data.error; feedback.className = 'feedback error'; }
-    });
-  }
-
-  function supprimerCompte(u) {
-    if (!confirm(`Supprimer le compte "${u}" ?`)) return;
-    fetch(`${BOT_URL}/comptes/${u}`, { method: 'DELETE', headers: headers() }).then(r => r.json()).then(data => { if (data.success) chargerComptes(); });
-  }
-</script>
+<\/script>
 </body>
 </html>
