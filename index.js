@@ -505,6 +505,50 @@ app.get('/discussion/:userId', auth, async (req, res) => {
   }
 });
 
+// Route salons
+app.get('/salons', auth, async (req, res) => {
+  try {
+    const guild = await client.guilds.fetch(GUILD_ID);
+    await guild.channels.fetch();
+    const salons = guild.channels.cache
+      .filter(c => c.type === 0) // TextChannel
+      .map(c => ({ id: c.id, name: c.name }))
+      .sort((a, b) => a.name.localeCompare(b.name));
+    res.json(salons);
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+// Route envoyer dans un salon
+app.post('/send-salon', auth, async (req, res) => {
+  const { channelId, message } = req.body;
+  try {
+    const channel = await client.channels.fetch(channelId);
+    await channel.send(message);
+    envoyerLog("📢 Message salon", `Par **${req.compte.username}** dans <#${channelId}>`, 0xFFD700);
+    res.json({ success: true });
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+// Route discussion DM
+app.get('/discussion/:userId', auth, async (req, res) => {
+  try {
+    const user = await client.users.fetch(req.params.userId);
+    const dmChannel = await user.createDM();
+    const messages = await dmChannel.messages.fetch({ limit: 50 });
+    const formatted = messages.reverse().map(m => ({
+      content: m.content || '',
+      embeds: m.embeds.map(e => ({
+        title: e.title,
+        description: e.description,
+        fields: e.fields
+      })),
+      isBot: m.author.bot,
+      timestamp: m.createdTimestamp
+    }));
+    res.json({ messages: formatted });
+  } catch (err) { res.status(500).json({ messages: [], error: err.message }); }
+});
+
 app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'public', 'index.html')));
 
 connectMongo().then(() => {
