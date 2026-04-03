@@ -4,110 +4,79 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>MultiBOT Dashboard</title>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
-    :root{--bg:#f5f5f5;--bg2:#fff;--bg3:#f9f9f9;--text:#1a1a2e;--text2:#888;--border:#eee;--border2:#ddd;--shadow:rgba(0,0,0,0.06);--gold:#FFD700;--gold2:#e6c200;--danger:#f44336;--warning:#FF9800;--success-bg:#e8f5e9;--success-text:#2e7d32;--success-border:#a5d6a7;--error-bg:#ffebee;--error-text:#c62828;--error-border:#ef9a9a}
-    [data-theme="dark"]{--bg:#1a1a2e;--bg2:#16213e;--bg3:#0f3460;--text:#f0f0f0;--text2:#aaa;--border:#0f3460;--border2:#333;--shadow:rgba(0,0,0,0.3);--success-bg:#1e4d2b;--success-text:#4CAF50;--success-border:#2e7d32;--error-bg:#4d1e1e;--error-text:#ef9a9a;--error-border:#c62828}
-    *{margin:0;padding:0;box-sizing:border-box;transition:background .2s,color .2s}
+    :root{--bg:#1a1a2e;--bg2:#16213e;--bg3:#0f3460;--text:#f0f0f0;--text2:#aaa;--border:#0f3460;--border2:#333;--shadow:rgba(0,0,0,0.3);--gold:#FFD700;--gold2:#e6c200;--danger:#f44336;--success:#4CAF50}
+    *{margin:0;padding:0;box-sizing:border-box}
     body{font-family:'Segoe UI',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
     
-    /* Écran de connexion */
+    /* Login */
     .login-screen{display:flex;align-items:center;justify-content:center;min-height:100vh}
     .login-box{background:var(--bg2);padding:40px;border-radius:16px;width:340px;border:2px solid var(--gold);box-shadow:0 4px 24px var(--shadow)}
-    .login-logo{display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:24px}
-    .login-logo img{width:44px;height:44px;border-radius:50%;object-fit:cover;border:2px solid var(--gold)}
-    .login-logo h2{color:var(--text);font-size:20px}
-    .login-box input{width:100%;padding:12px;border-radius:8px;border:1px solid var(--border2);background:var(--bg3);color:var(--text);font-size:15px;margin-bottom:12px}
-    .login-box input:focus{outline:none;border-color:var(--gold)}
-    .login-box button{width:100%;padding:12px;background:var(--gold);color:#1a1a2e;border:none;border-radius:8px;font-size:16px;font-weight:bold;cursor:pointer}
-    .login-box button:hover{background:var(--gold2)}
+    .login-box h2{text-align:center;margin-bottom:20px;color:var(--gold)}
+    .login-box input{width:100%;padding:12px;border-radius:8px;border:1px solid var(--border2);background:var(--bg3);color:var(--text);margin-bottom:12px}
+    .login-box button{width:100%;padding:12px;background:var(--gold);color:#1a1a2e;border:none;border-radius:8px;font-weight:bold;cursor:pointer;width:100%}
     
-    /* Dashboard Main */
+    /* Dashboard */
     .dashboard{display:none;min-height:100vh}
-    .sidebar{position:fixed;left:0;top:0;bottom:0;width:220px;background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;z-index:10;box-shadow:2px 0 12px var(--shadow)}
-    .sidebar-logo{display:flex;align-items:center;gap:10px;padding:20px 16px;border-bottom:1px solid var(--border)}
-    .sidebar-logo img{width:36px;height:36px;border-radius:50%;object-fit:cover;border:2px solid var(--gold)}
-    .sidebar-logo span{font-weight:bold;font-size:15px;color:var(--text)}
-    .sidebar-nav{flex:1;padding:12px 0;overflow-y:auto}
-    .nav-item{display:flex;align-items:center;gap:10px;padding:10px 16px;cursor:pointer;color:var(--text2);font-size:14px;border-left:3px solid transparent;transition:all .15s}
-    .nav-item:hover{background:var(--bg3);color:var(--text)}
-    .nav-item.active{background:var(--bg3);color:var(--gold);border-left-color:var(--gold);font-weight:bold}
-    .nav-icon{width:20px;text-align:center;font-size:16px}
-    .sidebar-bottom{padding:12px 16px;border-top:1px solid var(--border)}
-    .user-info{display:flex;align-items:center;gap:8px;margin-bottom:10px}
-    .user-badge{background:var(--gold);padding:3px 8px;border-radius:6px;font-size:11px;color:#1a1a2e;font-weight:bold}
-    .btn-logout{width:100%;padding:8px;background:transparent;border:1px solid var(--border2);color:var(--text2);border-radius:8px;cursor:pointer;font-size:13px}
-    .btn-logout:hover{background:var(--danger);color:#fff;border-color:var(--danger)}
+    .sidebar{position:fixed;left:0;top:0;bottom:0;width:220px;background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;padding:20px}
+    .nav-item{padding:12px;cursor:pointer;color:var(--text2);border-radius:8px;margin-bottom:5px}
+    .nav-item:hover, .nav-item.active{background:var(--bg3);color:var(--gold)}
     
-    .main{margin-left:220px;padding:24px;min-height:100vh}
+    .main{margin-left:220px;padding:24px}
     .page{display:none}
     .page.active{display:block}
-    .page-title{font-size:20px;font-weight:bold;color:var(--text);margin-bottom:20px;border-left:4px solid var(--gold);padding-left:12px}
     
-    /* Stats Cards */
-    .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:16px;margin-bottom:24px}
-    .card{background:var(--bg2);border-radius:12px;padding:20px;border:1px solid var(--border);box-shadow:0 2px 12px var(--shadow)}
-    .card h3{color:var(--text2);font-size:11px;margin-bottom:8px;text-transform:uppercase}
-    .card p{font-size:18px;font-weight:bold;color:var(--text)}
-    .status-dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px}
-    .online{background:#4CAF50}.offline{background:#f44336}
-
-    /* Gestion des comptes */
-    .compte-item{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:var(--bg3);border-radius:10px;margin-bottom:8px;border:1px solid var(--border)}
-    .compte-left{display:flex;align-items:center;gap:10px}
-    .compte-avatar{width:38px;height:38px;border-radius:50%;background:var(--gold);display:flex;align-items:center;justify-content:center;font-weight:bold;color:#1a1a2e}
-    .role-badge{padding:2px 8px;border-radius:10px;font-size:11px;font-weight:bold}
-    .role-admin{background:var(--gold);color:#1a1a2e}
-    .role-normal{background:var(--border2);color:var(--text)}
+    .card{background:var(--bg2);padding:20px;border-radius:12px;border:1px solid var(--border);margin-bottom:20px}
+    .status-dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:8px}
+    .online{background:var(--success)}.offline{background:var(--danger)}
     
-    .btn{padding:10px 20px;background:var(--gold);color:#1a1a2e;border:none;border-radius:8px;font-size:14px;font-weight:bold;cursor:pointer}
-    .btn-sm{padding:5px 12px;font-size:12px;border-radius:6px;cursor:pointer}
-    .btn-danger{background:var(--danger);color:#fff}
-    
-    .feedback{margin-top:10px;padding:10px;border-radius:8px;font-size:13px;display:none}
-    .feedback.error{background:var(--error-bg);color:var(--error-text);display:block;border:1px solid var(--error-border)}
-    
-    @media(max-width:700px){.sidebar{width:200px}.main{margin-left:0;padding:12px}}
+    .feedback{padding:10px;border-radius:8px;margin-top:10px;display:none;font-size:14px}
+    .error{background:rgba(244,67,54,0.2);color:var(--danger);border:1px solid var(--danger);display:block}
   </style>
 </head>
-<body data-theme="dark">
+<body>
 
 <div class="login-screen" id="loginScreen">
-  <div class="login-box">
-    <div class="login-logo"><h2>MultiBOT</h2></div>
-    <input type="text" id="loginUsername" placeholder="Nom d'utilisateur">
-    <input type="password" id="loginPassword" placeholder="Mot de passe">
-    <button onclick="login()">Se connecter</button>
-    <div class="feedback error" id="loginError"></div>
-  </div>
+  <form class="login-box" onsubmit="login(event)">
+    <h2>MultiBOT</h2>
+    <input type="text" id="loginUsername" placeholder="Nom d'utilisateur" required>
+    <input type="password" id="loginPassword" placeholder="Mot de passe" required>
+    <button type="submit">Se connecter</button>
+    <div class="feedback" id="loginError"></div>
+  </form>
 </div>
 
 <div class="dashboard" id="dashboard">
   <div class="sidebar">
-    <div class="sidebar-logo"><span>MultiBOT</span></div>
-    <nav class="sidebar-nav">
-      <div class="nav-item active" onclick="goPage('accueil')"><span class="nav-icon">🏠</span> Accueil</div>
-      <div class="nav-item" id="navComptes" style="display:none" onclick="goPage('comptes')"><span class="nav-icon">👥</span> Comptes</div>
-    </nav>
-    <div class="sidebar-bottom">
-      <div class="user-info"><span id="sidebarUser"></span><span class="user-badge" id="sidebarRole"></span></div>
-      <button class="btn-logout" onclick="logout()">Se déconnecter</button>
+    <h3 style="color:var(--gold);margin-bottom:20px">Dashboard</h3>
+    <div class="nav-item active" onclick="goPage('accueil')">🏠 Accueil</div>
+    <div class="nav-item" id="navComptes" style="display:none" onclick="goPage('comptes')">👥 Comptes</div>
+    <div style="margin-top:auto">
+      <p id="sidebarUser" style="font-size:14px;font-weight:bold"></p>
+      <p id="sidebarRole" style="font-size:12px;color:var(--text2);margin-bottom:10px"></p>
+      <button onclick="logout()" style="background:none;border:1px solid var(--danger);color:var(--danger);padding:5px 10px;border-radius:5px;cursor:pointer;width:100%">Déconnexion</button>
     </div>
   </div>
   
   <div class="main">
     <div class="page active" id="page-accueil">
-      <div class="page-title">🏠 Accueil</div>
-      <div class="cards">
-        <div class="card"><h3>Statut</h3><p><span class="status-dot offline" id="statusDot"></span><span id="statusText">Hors ligne</span></p></div>
-        <div class="card"><h3>Chars détruits</h3><p id="homeDetruits">0</p></div>
-        <div class="card"><h3>Ratio</h3><p id="homeRatio">0.00</p></div>
+      <h2 style="margin-bottom:20px">Statut du Bot</h2>
+      <div class="card">
+        <p><span id="statusDot" class="status-dot offline"></span> Statut: <span id="statusText">Déconnecté</span></p>
+        <p style="margin-top:10px">Tag: <span id="botTag">...</span></p>
+        <p>Uptime: <span id="uptime">0s</span></p>
+      </div>
+      
+      <h2 style="margin-bottom:20px">Statistiques Globales</h2>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+        <div class="card"><h3>Détruits</h3><p id="statDetruits" style="font-size:24px;color:var(--gold)">0</p></div>
+        <div class="card"><h3>Perdus</h3><p id="statPerdus" style="font-size:24px;color:var(--danger)">0</p></div>
       </div>
     </div>
 
     <div class="page" id="page-comptes">
-      <div class="page-title">👥 Gestion des comptes</div>
-      <div id="comptesList"></div>
+      <h2>Gestion des Comptes</h2>
+      <div id="listComptes" style="margin-top:20px"></div>
     </div>
   </div>
 </div>
@@ -115,9 +84,9 @@
 <script>
 const BOT_URL = window.location.origin;
 
-// Fonction pour créer les Headers de sécurité (x-username et x-password)
+// Prépare les headers x-username et x-password pour index.js
 function hdr() {
-  const user = JSON.parse(localStorage.getItem('bot_user_data'));
+  const user = JSON.parse(localStorage.getItem('bot_auth'));
   return {
     'Content-Type': 'application/json',
     'x-username': user ? user.username : '',
@@ -125,31 +94,36 @@ function hdr() {
   };
 }
 
-// Connexion
-async function login() {
+async function login(event) {
+  event.preventDefault();
   const u = document.getElementById('loginUsername').value;
   const p = document.getElementById('loginPassword').value;
   const err = document.getElementById('loginError');
 
   try {
-    const res = await fetch(BOT_URL + '/login', {
+    const res = await fetch('/login', {
       method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({username: u, password: p})
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username: u, password: p })
     });
+
     const data = await res.json();
 
-    if(data.success) {
-      // On stocke les infos utilisateur ET le mot de passe pour les headers
-      localStorage.setItem('bot_user_data', JSON.stringify({username: u, password: p, role: data.user.role}));
-      initDashboard();
+    if (data.success) {
+      // Sauvegarde exactement ce que le serveur renvoie
+      localStorage.setItem('bot_auth', JSON.stringify({
+        username: u, 
+        password: p, 
+        role: data.role 
+      }));
+      showDashboard();
     } else {
       err.textContent = data.error || "Identifiants incorrects";
-      err.style.display = 'block';
+      err.className = "feedback error";
     }
-  } catch(e) {
+  } catch (e) {
     err.textContent = "Erreur de connexion au serveur";
-    err.style.display = 'block';
+    err.className = "feedback error";
   }
 }
 
@@ -158,76 +132,69 @@ function logout() {
   location.reload();
 }
 
-function initDashboard() {
-  const data = JSON.parse(localStorage.getItem('bot_user_data'));
-  if(!data) return;
+function showDashboard() {
+  const user = JSON.parse(localStorage.getItem('bot_auth'));
+  if (!user) return;
 
   document.getElementById('loginScreen').style.display = 'none';
   document.getElementById('dashboard').style.display = 'flex';
-  document.getElementById('sidebarUser').textContent = data.username;
-  document.getElementById('sidebarRole').textContent = data.role.toUpperCase();
+  document.getElementById('sidebarUser').textContent = user.username;
+  document.getElementById('sidebarRole').textContent = "Rôle: " + user.role;
 
-  if(data.role === 'admin') document.getElementById('navComptes').style.display = 'flex';
+  if (user.role === 'admin') {
+    document.getElementById('navComptes').style.display = 'block';
+  }
 
-  chargerInfos();
-  setInterval(chargerInfos, 5000); // Rafraîchir le statut toutes les 5s
+  updateStatus();
+  updateStats();
+  setInterval(updateStatus, 10000); // Update toutes les 10s
 }
 
-function goPage(pageId) {
+async function updateStatus() {
+  try {
+    const res = await fetch('/status', { headers: hdr() });
+    if (res.status === 401) return logout();
+    const data = await res.json();
+    
+    document.getElementById('statusText').textContent = data.online ? "En ligne" : "Hors ligne";
+    document.getElementById('statusDot').className = "status-dot " + (data.online ? "online" : "offline");
+    document.getElementById('botTag').textContent = data.tag;
+    document.getElementById('uptime').textContent = data.uptime + "s";
+  } catch (e) {}
+}
+
+async function updateStats() {
+  try {
+    const res = await fetch('/stats', { headers: hdr() });
+    const data = await res.json();
+    document.getElementById('statDetruits').textContent = data.charsDetruitTotal || 0;
+    document.getElementById('statPerdus').textContent = data.charsPerdusTotal || 0;
+  } catch (e) {}
+}
+
+function goPage(id) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-  document.getElementById('page-' + pageId).classList.add('active');
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-  if(pageId === 'comptes') chargerComptes();
+  document.getElementById('page-' + id).classList.add('active');
+  if(id === 'comptes') loadComptes();
 }
 
-// Charger le statut du bot
-async function chargerInfos() {
-  try {
-    const res = await fetch(BOT_URL + '/status', { headers: hdr() });
-    const data = await res.json();
-    if(data.success) {
-      const dot = document.getElementById('statusDot');
-      dot.className = 'status-dot ' + (data.status === 'En ligne' ? 'online' : 'offline');
-      document.getElementById('statusText').textContent = data.status;
-      document.getElementById('homeDetruits').textContent = data.stats.detruits;
-      document.getElementById('homeRatio').textContent = data.stats.ratio;
-    }
-  } catch(e) {}
-}
-
-// Charger les comptes (Admin)
-async function chargerComptes() {
-  try {
-    const res = await fetch(BOT_URL + '/comptes', { headers: hdr() });
-    const data = await res.json();
-    if(data.success) {
-      const list = document.getElementById('comptesList');
-      list.innerHTML = data.comptes.map(c => `
-        <div class="compte-item">
-          <div class="compte-left">
-            <div class="compte-avatar">${c.username[0].toUpperCase()}</div>
-            <div>
-              <div style="font-weight:bold">${c.username}</div>
-              <span class="role-badge role-${c.role}">${c.role}</span>
-            </div>
-          </div>
-          <button class="btn-sm btn-danger" onclick="supprimerCompte('${c.username}')">Supprimer</button>
-        </div>
-      `).join('');
-    }
-  } catch(e) {}
-}
-
-async function supprimerCompte(username) {
-  if(!confirm(`Supprimer ${username} ?`)) return;
-  const res = await fetch(BOT_URL + '/comptes/' + username, { method: 'DELETE', headers: hdr() });
+async function loadComptes() {
+  const res = await fetch('/comptes', { headers: hdr() });
   const data = await res.json();
-  if(data.success) chargerComptes();
+  const container = document.getElementById('listComptes');
+  container.innerHTML = data.map(c => `
+    <div class="card" style="display:flex; justify-content:space-between; align-items:center">
+      <span><strong>${c.username}</strong> (${c.role})</span>
+      ${c.username !== 'admin' ? `<button onclick="deleteCompte('${c.username}')" style="color:red; background:none; border:none; cursor:pointer">Supprimer</button>` : ''}
+    </div>
+  `).join('');
 }
 
-window.onload = () => {
-  if(localStorage.getItem('bot_user_data')) initDashboard();
-};
+// Au chargement, on vérifie si on est déjà connecté
+if (localStorage.getItem('bot_auth')) {
+  showDashboard();
+}
 </script>
 </body>
 </html>
