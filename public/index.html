@@ -22,7 +22,7 @@
     .login-box button{width:100%;padding:12px;background:var(--gold);color:#1a1a2e;border:none;border-radius:8px;font-size:16px;font-weight:bold;cursor:pointer}
     .login-box button:hover{background:var(--gold2)}
     
-    /* Dashboard */
+    /* Dashboard Main */
     .dashboard{display:none;min-height:100vh}
     .sidebar{position:fixed;left:0;top:0;bottom:0;width:220px;background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;z-index:10;box-shadow:2px 0 12px var(--shadow)}
     .sidebar-logo{display:flex;align-items:center;gap:10px;padding:20px 16px;border-bottom:1px solid var(--border)}
@@ -36,15 +36,6 @@
     .sidebar-bottom{padding:12px 16px;border-top:1px solid var(--border)}
     .user-info{display:flex;align-items:center;gap:8px;margin-bottom:10px}
     .user-badge{background:var(--gold);padding:3px 8px;border-radius:6px;font-size:11px;color:#1a1a2e;font-weight:bold}
-    
-    .theme-toggle{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text2);margin-bottom:8px}
-    .switch{position:relative;width:40px;height:22px}
-    .switch input{opacity:0;width:0;height:0}
-    .slider{position:absolute;cursor:pointer;top:0;left:0;right:0;bottom:0;background:var(--border2);border-radius:22px;transition:.3s}
-    .slider:before{position:absolute;content:"";height:16px;width:16px;left:3px;bottom:3px;background:white;border-radius:50%;transition:.3s}
-    input:checked+.slider{background:var(--gold)}
-    input:checked+.slider:before{transform:translateX(18px)}
-    
     .btn-logout{width:100%;padding:8px;background:transparent;border:1px solid var(--border2);color:var(--text2);border-radius:8px;cursor:pointer;font-size:13px}
     .btn-logout:hover{background:var(--danger);color:#fff;border-color:var(--danger)}
     
@@ -53,86 +44,53 @@
     .page.active{display:block}
     .page-title{font-size:20px;font-weight:bold;color:var(--text);margin-bottom:20px;border-left:4px solid var(--gold);padding-left:12px}
     
-    /* Grille de stats */
+    /* Stats Cards */
     .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:16px;margin-bottom:24px}
     .card{background:var(--bg2);border-radius:12px;padding:20px;border:1px solid var(--border);box-shadow:0 2px 12px var(--shadow)}
     .card h3{color:var(--text2);font-size:11px;margin-bottom:8px;text-transform:uppercase}
     .card p{font-size:18px;font-weight:bold;color:var(--text)}
     .status-dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px}
     .online{background:#4CAF50}.offline{background:#f44336}
-    
-    /* Sections repliables */
-    .section{background:var(--bg2);border-radius:12px;margin-bottom:16px;border:1px solid var(--border);box-shadow:0 2px 12px var(--shadow);overflow:hidden}
-    .section-header{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;cursor:pointer;user-select:none}
-    .section-header h2{color:var(--text);font-size:15px;border-left:3px solid var(--gold);padding-left:10px}
-    .section-toggle{background:var(--bg3);border:1px solid var(--border2);color:var(--text2);width:26px;height:26px;border-radius:6px;font-size:13px;display:flex;align-items:center;justify-content:center}
-    .section-body{padding:0 18px 18px}
-    .section-body.collapsed{display:none}
-    
-    /* Formulaires */
-    .form-row{display:flex;gap:10px;flex-wrap:wrap}
-    .form-row input, .form-row textarea, .form-row select{flex:1;padding:10px 12px;border-radius:8px;border:1px solid var(--border2);background:var(--bg3);color:var(--text);font-size:14px;min-width:140px}
-    .form-row input:focus, .form-row textarea:focus{outline:none;border-color:var(--gold)}
-    .form-row textarea{height:90px;resize:vertical}
+
+    /* Gestion des comptes */
+    .compte-item{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:var(--bg3);border-radius:10px;margin-bottom:8px;border:1px solid var(--border)}
+    .compte-left{display:flex;align-items:center;gap:10px}
+    .compte-avatar{width:38px;height:38px;border-radius:50%;background:var(--gold);display:flex;align-items:center;justify-content:center;font-weight:bold;color:#1a1a2e}
+    .role-badge{padding:2px 8px;border-radius:10px;font-size:11px;font-weight:bold}
+    .role-admin{background:var(--gold);color:#1a1a2e}
+    .role-normal{background:var(--border2);color:var(--text)}
     
     .btn{padding:10px 20px;background:var(--gold);color:#1a1a2e;border:none;border-radius:8px;font-size:14px;font-weight:bold;cursor:pointer}
-    .btn:hover{background:var(--gold2)}
-    .btn-sm{padding:5px 12px;font-size:12px;border:none;border-radius:6px;cursor:pointer;font-weight:bold}
+    .btn-sm{padding:5px 12px;font-size:12px;border-radius:6px;cursor:pointer}
     .btn-danger{background:var(--danger);color:#fff}
     
     .feedback{margin-top:10px;padding:10px;border-radius:8px;font-size:13px;display:none}
-    .feedback.success{background:var(--success-bg);color:var(--success-text);display:block;border:1px solid var(--success-border)}
     .feedback.error{background:var(--error-bg);color:var(--error-text);display:block;border:1px solid var(--error-border)}
-
-    /* Gestion des comptes */
-    .compte-item{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:var(--bg3);border-radius:10px;margin-bottom:8px;border:1px solid var(--border);gap:8px}
-    .compte-left{display:flex;align-items:center;gap:10px}
-    .compte-avatar{width:38px;height:38px;border-radius:50%;background:var(--gold);display:flex;align-items:center;justify-content:center;font-weight:bold;color:#1a1a2e;font-size:16px;flex-shrink:0}
-    .compte-name{font-weight:bold;font-size:14px;color:var(--text)}
-    .role-badge{padding:2px 8px;border-radius:10px;font-size:11px;font-weight:bold}
-    .role-admin{background:var(--gold);color:#1a1a2e}
-    .role-normal{background:var(--bg3);color:var(--text2);border:1px solid var(--border2)}
-    
-    /* Modales */
-    .modal-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.55);z-index:1000;display:none;align-items:center;justify-content:center}
-    .modal-overlay.open{display:flex}
-    .modal{background:var(--bg2);border-radius:16px;padding:28px;width:400px;max-width:90vw;border:1px solid var(--border2);box-shadow:0 8px 32px var(--shadow)}
-    .modal h3{font-size:17px;color:var(--text);margin-bottom:20px;border-left:3px solid var(--gold);padding-left:10px}
-    .modal-field{margin-bottom:14px}
-    .modal-field label{font-size:12px;color:var(--text2);text-transform:uppercase;font-weight:bold;display:block;margin-bottom:5px}
-    .modal-input{width:100%;padding:10px;border-radius:8px;border:1px solid var(--border2);background:var(--bg3);color:var(--text);font-size:14px}
-    .modal-actions{display:flex;gap:10px;margin-top:20px;justify-content:flex-end}
     
     @media(max-width:700px){.sidebar{width:200px}.main{margin-left:0;padding:12px}}
   </style>
 </head>
-<body>
+<body data-theme="dark">
 
 <div class="login-screen" id="loginScreen">
   <div class="login-box">
-    <div class="login-logo">
-      <img id="loginLogo" src="https://via.placeholder.com/44" alt="logo">
-      <h2>MultiBOT</h2>
-    </div>
-    <input type="text" id="loginUsername" placeholder="Nom d'utilisateur" onkeydown="if(event.key==='Enter')login()">
-    <input type="password" id="loginPassword" placeholder="Mot de passe" onkeydown="if(event.key==='Enter')login()">
+    <div class="login-logo"><h2>MultiBOT</h2></div>
+    <input type="text" id="loginUsername" placeholder="Nom d'utilisateur">
+    <input type="password" id="loginPassword" placeholder="Mot de passe">
     <button onclick="login()">Se connecter</button>
-    <div class="feedback error" id="loginError" style="display:none;margin-top:12px">Identifiants incorrects</div>
+    <div class="feedback error" id="loginError"></div>
   </div>
 </div>
 
 <div class="dashboard" id="dashboard">
   <div class="sidebar">
-    <div class="sidebar-logo"><img id="sidebarLogo" src="https://via.placeholder.com/36" alt=""><span>MultiBOT</span></div>
+    <div class="sidebar-logo"><span>MultiBOT</span></div>
     <nav class="sidebar-nav">
       <div class="nav-item active" onclick="goPage('accueil')"><span class="nav-icon">🏠</span> Accueil</div>
-      <div class="nav-item" onclick="goPage('stats')"><span class="nav-icon">📊</span> Statistiques</div>
-      <div class="nav-item" onclick="goPage('messages')"><span class="nav-icon">💬</span> Messages</div>
       <div class="nav-item" id="navComptes" style="display:none" onclick="goPage('comptes')"><span class="nav-icon">👥</span> Comptes</div>
     </nav>
     <div class="sidebar-bottom">
-      <div class="user-info"><span id="sidebarUser" style="font-size:13px;color:var(--text)"></span><span class="user-badge" id="sidebarRole"></span></div>
-      <div class="theme-toggle"><span>☀️</span><label class="switch"><input type="checkbox" id="themeSwitch" onchange="toggleTheme()"><span class="slider"></span></label><span>🌙</span></div>
+      <div class="user-info"><span id="sidebarUser"></span><span class="user-badge" id="sidebarRole"></span></div>
       <button class="btn-logout" onclick="logout()">Se déconnecter</button>
     </div>
   </div>
@@ -141,72 +99,58 @@
     <div class="page active" id="page-accueil">
       <div class="page-title">🏠 Accueil</div>
       <div class="cards">
-        <div class="card"><h3>Statut</h3><p><span class="status-dot" id="statusDot"></span><span id="statusText">Hors ligne</span></p></div>
-        <div class="card"><h3>Bot</h3><p id="botTag" style="font-size:13px">...</p></div>
-        <div class="card"><h3>Uptime</h3><p id="uptime" style="font-size:14px">...</p></div>
+        <div class="card"><h3>Statut</h3><p><span class="status-dot offline" id="statusDot"></span><span id="statusText">Hors ligne</span></p></div>
         <div class="card"><h3>Chars détruits</h3><p id="homeDetruits">0</p></div>
         <div class="card"><h3>Ratio</h3><p id="homeRatio">0.00</p></div>
       </div>
     </div>
 
-    <div class="page" id="page-stats">
-      <div class="page-title">📊 Statistiques</div>
-      <p>Section des statistiques en cours de développement...</p>
-    </div>
-
     <div class="page" id="page-comptes">
       <div class="page-title">👥 Gestion des comptes</div>
-      <div style="margin-bottom:16px"><button class="btn" onclick="ouvrirModalCreer()">+ Créer un compte</button></div>
       <div id="comptesList"></div>
     </div>
-  </div>
-</div>
-
-<div class="modal-overlay" id="modalOverlay">
-  <div class="modal">
-    <h3 id="modalTitle">Gérer le compte</h3>
-    <div class="modal-field"><label>Nom d'utilisateur</label><input class="modal-input" id="modalUsername"></div>
-    <div class="modal-field"><label>Mot de passe</label><input class="modal-input" id="modalPassword" type="password"></div>
-    <div class="modal-field"><label>Rôle</label><select class="modal-input" id="modalRole"><option value="normal">Normal</option><option value="admin">Admin</option></select></div>
-    <div class="feedback" id="modalFeedback"></div>
-    <div class="modal-actions"><button class="btn btn-sm btn-danger" onclick="fermerModal()">Annuler</button><button class="btn" onclick="sauvegarderModal()">Sauvegarder</button></div>
   </div>
 </div>
 
 <script>
 const BOT_URL = window.location.origin;
 
-// Gestion du Token
-function getToken() { return localStorage.getItem('bot_token'); }
-function hdr() { 
-  return { 
+// Fonction pour créer les Headers de sécurité (x-username et x-password)
+function hdr() {
+  const user = JSON.parse(localStorage.getItem('bot_user_data'));
+  return {
     'Content-Type': 'application/json',
-    'Authorization': 'Bearer ' + getToken() 
-  }; 
+    'x-username': user ? user.username : '',
+    'x-password': user ? user.password : ''
+  };
 }
 
 // Connexion
-function login() {
+async function login() {
   const u = document.getElementById('loginUsername').value;
   const p = document.getElementById('loginPassword').value;
   const err = document.getElementById('loginError');
 
-  fetch(BOT_URL + '/login', {
-    method: 'POST',
-    headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify({username: u, password: p})
-  })
-  .then(r => r.json())
-  .then(data => {
+  try {
+    const res = await fetch(BOT_URL + '/login', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({username: u, password: p})
+    });
+    const data = await res.json();
+
     if(data.success) {
-      localStorage.setItem('bot_token', data.token);
-      localStorage.setItem('bot_user', JSON.stringify(data.user));
+      // On stocke les infos utilisateur ET le mot de passe pour les headers
+      localStorage.setItem('bot_user_data', JSON.stringify({username: u, password: p, role: data.user.role}));
       initDashboard();
     } else {
+      err.textContent = data.error || "Identifiants incorrects";
       err.style.display = 'block';
-      err.textContent = data.error || 'Erreur de connexion';
     }
-  });
+  } catch(e) {
+    err.textContent = "Erreur de connexion au serveur";
+    err.style.display = 'block';
+  }
 }
 
 function logout() {
@@ -215,16 +159,18 @@ function logout() {
 }
 
 function initDashboard() {
-  const user = JSON.parse(localStorage.getItem('bot_user'));
-  if(!user) return;
-  
+  const data = JSON.parse(localStorage.getItem('bot_user_data'));
+  if(!data) return;
+
   document.getElementById('loginScreen').style.display = 'none';
   document.getElementById('dashboard').style.display = 'flex';
-  document.getElementById('sidebarUser').textContent = user.username;
-  document.getElementById('sidebarRole').textContent = user.role.toUpperCase();
-  
-  if(user.role === 'admin') document.getElementById('navComptes').style.display = 'flex';
+  document.getElementById('sidebarUser').textContent = data.username;
+  document.getElementById('sidebarRole').textContent = data.role.toUpperCase();
+
+  if(data.role === 'admin') document.getElementById('navComptes').style.display = 'flex';
+
   chargerInfos();
+  setInterval(chargerInfos, 5000); // Rafraîchir le statut toutes les 5s
 }
 
 function goPage(pageId) {
@@ -234,30 +180,53 @@ function goPage(pageId) {
   if(pageId === 'comptes') chargerComptes();
 }
 
-// Exemple de chargement des comptes (Admin)
-function chargerComptes() {
-  fetch(BOT_URL + '/comptes', { headers: hdr() })
-  .then(r => r.json())
-  .then(data => {
+// Charger le statut du bot
+async function chargerInfos() {
+  try {
+    const res = await fetch(BOT_URL + '/status', { headers: hdr() });
+    const data = await res.json();
+    if(data.success) {
+      const dot = document.getElementById('statusDot');
+      dot.className = 'status-dot ' + (data.status === 'En ligne' ? 'online' : 'offline');
+      document.getElementById('statusText').textContent = data.status;
+      document.getElementById('homeDetruits').textContent = data.stats.detruits;
+      document.getElementById('homeRatio').textContent = data.stats.ratio;
+    }
+  } catch(e) {}
+}
+
+// Charger les comptes (Admin)
+async function chargerComptes() {
+  try {
+    const res = await fetch(BOT_URL + '/comptes', { headers: hdr() });
+    const data = await res.json();
     if(data.success) {
       const list = document.getElementById('comptesList');
       list.innerHTML = data.comptes.map(c => `
         <div class="compte-item">
           <div class="compte-left">
             <div class="compte-avatar">${c.username[0].toUpperCase()}</div>
-            <span class="compte-name">${c.username}</span>
-            <span class="role-badge role-${c.role}">${c.role}</span>
+            <div>
+              <div style="font-weight:bold">${c.username}</div>
+              <span class="role-badge role-${c.role}">${c.role}</span>
+            </div>
           </div>
           <button class="btn-sm btn-danger" onclick="supprimerCompte('${c.username}')">Supprimer</button>
         </div>
       `).join('');
     }
-  });
+  } catch(e) {}
 }
 
-// Vérification auto au chargement
+async function supprimerCompte(username) {
+  if(!confirm(`Supprimer ${username} ?`)) return;
+  const res = await fetch(BOT_URL + '/comptes/' + username, { method: 'DELETE', headers: hdr() });
+  const data = await res.json();
+  if(data.success) chargerComptes();
+}
+
 window.onload = () => {
-  if(getToken()) initDashboard();
+  if(localStorage.getItem('bot_user_data')) initDashboard();
 };
 </script>
 </body>
