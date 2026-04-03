@@ -10,6 +10,8 @@
     [data-theme="dark"]{--bg:#1a1a2e;--bg2:#16213e;--bg3:#0f3460;--text:#f0f0f0;--text2:#aaa;--border:#0f3460;--border2:#333;--shadow:rgba(0,0,0,0.3);--success-bg:#1e4d2b;--success-text:#4CAF50;--success-border:#2e7d32;--error-bg:#4d1e1e;--error-text:#ef9a9a;--error-border:#c62828}
     *{margin:0;padding:0;box-sizing:border-box;transition:background .2s,color .2s}
     body{font-family:'Segoe UI',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+    
+    /* Écran de connexion */
     .login-screen{display:flex;align-items:center;justify-content:center;min-height:100vh}
     .login-box{background:var(--bg2);padding:40px;border-radius:16px;width:340px;border:2px solid var(--gold);box-shadow:0 4px 24px var(--shadow)}
     .login-logo{display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:24px}
@@ -19,6 +21,8 @@
     .login-box input:focus{outline:none;border-color:var(--gold)}
     .login-box button{width:100%;padding:12px;background:var(--gold);color:#1a1a2e;border:none;border-radius:8px;font-size:16px;font-weight:bold;cursor:pointer}
     .login-box button:hover{background:var(--gold2)}
+    
+    /* Dashboard */
     .dashboard{display:none;min-height:100vh}
     .sidebar{position:fixed;left:0;top:0;bottom:0;width:220px;background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;z-index:10;box-shadow:2px 0 12px var(--shadow)}
     .sidebar-logo{display:flex;align-items:center;gap:10px;padding:20px 16px;border-bottom:1px solid var(--border)}
@@ -32,6 +36,7 @@
     .sidebar-bottom{padding:12px 16px;border-top:1px solid var(--border)}
     .user-info{display:flex;align-items:center;gap:8px;margin-bottom:10px}
     .user-badge{background:var(--gold);padding:3px 8px;border-radius:6px;font-size:11px;color:#1a1a2e;font-weight:bold}
+    
     .theme-toggle{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text2);margin-bottom:8px}
     .switch{position:relative;width:40px;height:22px}
     .switch input{opacity:0;width:0;height:0}
@@ -39,93 +44,47 @@
     .slider:before{position:absolute;content:"";height:16px;width:16px;left:3px;bottom:3px;background:white;border-radius:50%;transition:.3s}
     input:checked+.slider{background:var(--gold)}
     input:checked+.slider:before{transform:translateX(18px)}
+    
     .btn-logout{width:100%;padding:8px;background:transparent;border:1px solid var(--border2);color:var(--text2);border-radius:8px;cursor:pointer;font-size:13px}
     .btn-logout:hover{background:var(--danger);color:#fff;border-color:var(--danger)}
+    
     .main{margin-left:220px;padding:24px;min-height:100vh}
     .page{display:none}
     .page.active{display:block}
     .page-title{font-size:20px;font-weight:bold;color:var(--text);margin-bottom:20px;border-left:4px solid var(--gold);padding-left:12px}
+    
+    /* Grille de stats */
     .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:16px;margin-bottom:24px}
     .card{background:var(--bg2);border-radius:12px;padding:20px;border:1px solid var(--border);box-shadow:0 2px 12px var(--shadow)}
     .card h3{color:var(--text2);font-size:11px;margin-bottom:8px;text-transform:uppercase}
     .card p{font-size:18px;font-weight:bold;color:var(--text)}
     .status-dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px}
     .online{background:#4CAF50}.offline{background:#f44336}
+    
+    /* Sections repliables */
     .section{background:var(--bg2);border-radius:12px;margin-bottom:16px;border:1px solid var(--border);box-shadow:0 2px 12px var(--shadow);overflow:hidden}
     .section-header{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;cursor:pointer;user-select:none}
     .section-header h2{color:var(--text);font-size:15px;border-left:3px solid var(--gold);padding-left:10px}
     .section-toggle{background:var(--bg3);border:1px solid var(--border2);color:var(--text2);width:26px;height:26px;border-radius:6px;font-size:13px;display:flex;align-items:center;justify-content:center}
     .section-body{padding:0 18px 18px}
     .section-body.collapsed{display:none}
+    
+    /* Formulaires */
     .form-row{display:flex;gap:10px;flex-wrap:wrap}
-    .form-row input,.form-row textarea,.form-row select{flex:1;padding:10px 12px;border-radius:8px;border:1px solid var(--border2);background:var(--bg3);color:var(--text);font-size:14px;min-width:140px}
-    .form-row input:focus,.form-row textarea:focus{outline:none;border-color:var(--gold)}
+    .form-row input, .form-row textarea, .form-row select{flex:1;padding:10px 12px;border-radius:8px;border:1px solid var(--border2);background:var(--bg3);color:var(--text);font-size:14px;min-width:140px}
+    .form-row input:focus, .form-row textarea:focus{outline:none;border-color:var(--gold)}
     .form-row textarea{height:90px;resize:vertical}
+    
     .btn{padding:10px 20px;background:var(--gold);color:#1a1a2e;border:none;border-radius:8px;font-size:14px;font-weight:bold;cursor:pointer}
     .btn:hover{background:var(--gold2)}
     .btn-sm{padding:5px 12px;font-size:12px;border:none;border-radius:6px;cursor:pointer;font-weight:bold}
     .btn-danger{background:var(--danger);color:#fff}
-    .btn-info{background:#1565c0;color:#fff}
+    
     .feedback{margin-top:10px;padding:10px;border-radius:8px;font-size:13px;display:none}
     .feedback.success{background:var(--success-bg);color:var(--success-text);display:block;border:1px solid var(--success-border)}
     .feedback.error{background:var(--error-bg);color:var(--error-text);display:block;border:1px solid var(--error-border)}
-    .tabs{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap}
-    .tab{padding:7px 16px;border-radius:8px;cursor:pointer;font-size:13px;border:1px solid var(--border2);color:var(--text2);background:var(--bg3)}
-    .tab.active{background:var(--gold);color:#1a1a2e;border-color:var(--gold);font-weight:bold}
-    .stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;margin-bottom:16px}
-    .stat-edit{display:flex;flex-direction:column;gap:5px}
-    .stat-edit label{font-size:11px;color:var(--text2);text-transform:uppercase;font-weight:bold}
-    .stat-edit input{padding:10px;border-radius:8px;border:1px solid var(--border2);background:var(--bg3);color:var(--text);font-size:16px;font-weight:bold;width:100%}
-    .ratio-display{font-size:13px;color:var(--text2);margin-top:6px}
-    .ratio-display span{color:var(--text);font-weight:bold}
-    .chart-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px}
-    .chart-tabs{display:flex;gap:8px;flex-wrap:wrap}
-    .chart-tab{padding:6px 14px;border-radius:8px;cursor:pointer;font-size:13px;border:1px solid var(--border2);color:var(--text2);background:var(--bg3);font-weight:bold}
-    .chart-tab.active{background:var(--gold);color:#1a1a2e;border-color:var(--gold)}
-    .chart-container{position:relative;height:260px}
-    .btn-dl{padding:6px 14px;background:var(--bg3);border:1px solid var(--border2);color:var(--text);border-radius:8px;cursor:pointer;font-size:13px;font-weight:bold}
-    .btn-dl:hover{background:var(--gold);color:#1a1a2e;border-color:var(--gold)}
-    .rapport-item{display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:var(--bg3);border-radius:8px;margin-bottom:8px;border:1px solid var(--border);flex-wrap:wrap;gap:8px}
-    .rapport-info{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
-    .send-results{margin-top:10px}
-    .send-result-item{padding:8px 12px;border-radius:6px;margin-bottom:6px;font-size:13px}
-    .send-result-item.ok{background:var(--success-bg);color:var(--success-text);border:1px solid var(--success-border)}
-    .send-result-item.ko{background:var(--error-bg);color:var(--error-text);border:1px solid var(--error-border)}
-    .member-select-wrapper{position:relative;margin-bottom:10px}
-    .member-search{width:100%;padding:10px 12px;border-radius:8px;border:1px solid var(--border2);background:var(--bg3);color:var(--text);font-size:14px}
-    .member-search:focus{outline:none;border-color:var(--gold)}
-    .member-dropdown{position:absolute;top:100%;left:0;right:0;background:var(--bg2);border:1px solid var(--border2);border-radius:8px;max-height:220px;overflow-y:auto;z-index:100;box-shadow:0 4px 12px var(--shadow);display:none}
-    .member-dropdown.open{display:block}
-    .member-option{display:flex;align-items:center;gap:10px;padding:8px 12px;cursor:pointer}
-    .member-option:hover{background:var(--bg3)}
-    .member-option img{width:30px;height:30px;border-radius:50%}
-    .member-opt-info{display:flex;flex-direction:column}
-    .member-opt-name{font-size:13px;color:var(--text)}
-    .member-opt-id{font-size:11px;color:var(--text2)}
-    .selected-members{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
-    .sel-member{display:flex;align-items:center;gap:6px;background:var(--bg3);border:1px solid var(--border2);border-radius:20px;padding:4px 10px;font-size:12px}
-    .sel-member img{width:18px;height:18px;border-radius:50%}
-    .sel-member button{background:none;border:none;color:var(--text2);cursor:pointer;font-size:13px;padding:0;line-height:1}
-    .channel-select{width:100%;padding:10px 12px;border-radius:8px;border:1px solid var(--border2);background:var(--bg3);color:var(--text);font-size:14px;margin-bottom:10px}
-    .channel-select:focus{outline:none;border-color:var(--gold)}
-    .disc-box{background:var(--bg3);border-radius:12px;border:1px solid var(--border2);height:320px;overflow-y:auto;padding:12px;margin-bottom:12px;display:flex;flex-direction:column;gap:8px}
-    .msg{display:flex;gap:8px;align-items:flex-start}
-    .msg img{width:28px;height:28px;border-radius:50%;flex-shrink:0}
-    .msg-bubble{background:var(--bg2);border-radius:10px;padding:8px 12px;font-size:13px;max-width:82%;border:1px solid var(--border)}
-    .msg-author{font-size:11px;color:var(--gold);font-weight:bold;margin-bottom:3px}
-    .msg-text{color:var(--text);line-height:1.5}
-    .msg-embed{background:var(--bg3);border-left:3px solid var(--gold);border-radius:4px;padding:8px;margin-top:4px;font-size:12px}
-    .msg-embed-title{font-weight:bold;color:var(--text);margin-bottom:4px}
-    .msg-embed-fname{font-size:11px;color:var(--text2);font-weight:bold}
-    .msg-embed-fval{color:var(--text);font-size:12px}
-    .msg-time{font-size:10px;color:var(--text2);margin-top:3px}
-    .msg.bot .msg-bubble{border-left:3px solid var(--gold)}
-    .disc-empty{color:var(--text2);font-size:13px;text-align:center;margin:auto;padding:20px}
-    .disc-member-bar{display:flex;align-items:center;gap:10px;margin-bottom:12px;padding:10px;background:var(--bg3);border-radius:8px;border:1px solid var(--border2)}
-    .disc-member-bar img{width:36px;height:36px;border-radius:50%}
-    .disc-member-info{flex:1}
-    .disc-member-name{font-weight:bold;font-size:14px;color:var(--text)}
-    .disc-member-id{font-size:11px;color:var(--text2)}
+
+    /* Gestion des comptes */
     .compte-item{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:var(--bg3);border-radius:10px;margin-bottom:8px;border:1px solid var(--border);gap:8px}
     .compte-left{display:flex;align-items:center;gap:10px}
     .compte-avatar{width:38px;height:38px;border-radius:50%;background:var(--gold);display:flex;align-items:center;justify-content:center;font-weight:bold;color:#1a1a2e;font-size:16px;flex-shrink:0}
@@ -133,18 +92,17 @@
     .role-badge{padding:2px 8px;border-radius:10px;font-size:11px;font-weight:bold}
     .role-admin{background:var(--gold);color:#1a1a2e}
     .role-normal{background:var(--bg3);color:var(--text2);border:1px solid var(--border2)}
-    .compte-actions{display:flex;gap:6px;align-items:center}
+    
+    /* Modales */
     .modal-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.55);z-index:1000;display:none;align-items:center;justify-content:center}
     .modal-overlay.open{display:flex}
     .modal{background:var(--bg2);border-radius:16px;padding:28px;width:400px;max-width:90vw;border:1px solid var(--border2);box-shadow:0 8px 32px var(--shadow)}
     .modal h3{font-size:17px;color:var(--text);margin-bottom:20px;border-left:3px solid var(--gold);padding-left:10px}
     .modal-field{margin-bottom:14px}
     .modal-field label{font-size:12px;color:var(--text2);text-transform:uppercase;font-weight:bold;display:block;margin-bottom:5px}
-    .modal-field-row{display:flex;align-items:center;gap:8px}
     .modal-input{width:100%;padding:10px;border-radius:8px;border:1px solid var(--border2);background:var(--bg3);color:var(--text);font-size:14px}
-    .modal-input:focus{outline:none;border-color:var(--gold)}
     .modal-actions{display:flex;gap:10px;margin-top:20px;justify-content:flex-end}
-    .btn-eye{background:var(--bg3);border:1px solid var(--border2);color:var(--text2);padding:8px 10px;border-radius:6px;cursor:pointer;font-size:14px}
+    
     @media(max-width:700px){.sidebar{width:200px}.main{margin-left:0;padding:12px}}
   </style>
 </head>
@@ -153,7 +111,7 @@
 <div class="login-screen" id="loginScreen">
   <div class="login-box">
     <div class="login-logo">
-      <img id="loginLogo" src="" alt="logo">
+      <img id="loginLogo" src="https://via.placeholder.com/44" alt="logo">
       <h2>MultiBOT</h2>
     </div>
     <input type="text" id="loginUsername" placeholder="Nom d'utilisateur" onkeydown="if(event.key==='Enter')login()">
@@ -165,7 +123,7 @@
 
 <div class="dashboard" id="dashboard">
   <div class="sidebar">
-    <div class="sidebar-logo"><img id="sidebarLogo" src="" alt=""><span>MultiBOT</span></div>
+    <div class="sidebar-logo"><img id="sidebarLogo" src="https://via.placeholder.com/36" alt=""><span>MultiBOT</span></div>
     <nav class="sidebar-nav">
       <div class="nav-item active" onclick="goPage('accueil')"><span class="nav-icon">🏠</span> Accueil</div>
       <div class="nav-item" onclick="goPage('stats')"><span class="nav-icon">📊</span> Statistiques</div>
@@ -178,85 +136,24 @@
       <button class="btn-logout" onclick="logout()">Se déconnecter</button>
     </div>
   </div>
+  
   <div class="main">
     <div class="page active" id="page-accueil">
       <div class="page-title">🏠 Accueil</div>
       <div class="cards">
-        <div class="card"><h3>Statut</h3><p><span class="status-dot" id="statusDot"></span><span id="statusText">...</span></p></div>
+        <div class="card"><h3>Statut</h3><p><span class="status-dot" id="statusDot"></span><span id="statusText">Hors ligne</span></p></div>
         <div class="card"><h3>Bot</h3><p id="botTag" style="font-size:13px">...</p></div>
         <div class="card"><h3>Uptime</h3><p id="uptime" style="font-size:14px">...</p></div>
-        <div class="card"><h3>Chars détruits</h3><p id="homeDetruits">...</p></div>
-        <div class="card"><h3>Chars perdus</h3><p id="homePerdus">...</p></div>
-        <div class="card"><h3>Ratio</h3><p id="homeRatio">...</p></div>
+        <div class="card"><h3>Chars détruits</h3><p id="homeDetruits">0</p></div>
+        <div class="card"><h3>Ratio</h3><p id="homeRatio">0.00</p></div>
       </div>
     </div>
+
     <div class="page" id="page-stats">
-      <div class="page-title">📊 Statistiques du mois</div>
-      <div class="section">
-        <div class="section-header" onclick="toggleSec('graphique')"><h2>📈 Évolution</h2><span class="section-toggle" id="t-graphique">▼</span></div>
-        <div class="section-body" id="b-graphique">
-          <div class="chart-top"><div class="chart-tabs"><button class="chart-tab active" onclick="switchChart('jour')">Par jour</button><button class="chart-tab" onclick="switchChart('semaine')">Par semaine</button><button class="chart-tab" onclick="switchChart('mois')">Cumul</button></div><button class="btn-dl" onclick="dlChart()">⬇️ Télécharger</button></div>
-          <div class="chart-container"><canvas id="statsChart"></canvas></div>
-        </div>
-      </div>
-      <div class="section">
-        <div class="section-header" onclick="toggleSec('edits')"><h2>✏️ Modifier les stats</h2><span class="section-toggle" id="t-edits">▼</span></div>
-        <div class="section-body" id="b-edits">
-          <div class="stats-grid">
-            <div class="stat-edit"><label>💥 Chars détruits</label><input type="number" id="statDetruits" min="0"></div>
-            <div class="stat-edit"><label>💀 Chars perdus</label><input type="number" id="statPerdus" min="0"></div>
-            <div class="stat-edit"><label>🚩 Chars capturés</label><input type="number" id="statCaptures" min="0"></div>
-            <div class="stat-edit"><label>🏆 Record rapport</label><input type="number" id="statRecord" min="0"></div>
-          </div>
-          <div class="ratio-display">Ratio : <span id="ratioDisplay">—</span></div>
-          <div style="display:flex;gap:10px;margin-top:14px;flex-wrap:wrap"><button class="btn" onclick="saveStats()">💾 Sauvegarder</button><button class="btn btn-sm btn-danger" style="padding:10px 20px;font-size:14px" onclick="resetStats()">🔁 Réinitialiser</button></div>
-          <div class="feedback" id="statsFeedback"></div>
-        </div>
-      </div>
-      <div class="section">
-        <div class="section-header" onclick="toggleSec('rapports')"><h2>📋 Rapports du mois</h2><span class="section-toggle" id="t-rapports">▼</span></div>
-        <div class="section-body" id="b-rapports"><div id="rapportsList"></div></div>
-      </div>
+      <div class="page-title">📊 Statistiques</div>
+      <p>Section des statistiques en cours de développement...</p>
     </div>
-    <div class="page" id="page-messages">
-      <div class="page-title">💬 Messages</div>
-      <div class="tabs" style="margin-bottom:20px">
-        <button class="tab active" onclick="switchMsgTab('mp')">📩 MP Membre</button>
-        <button class="tab" onclick="switchMsgTab('salon')">📢 Salon Discord</button>
-        <button class="tab" onclick="switchMsgTab('disc')">💬 Discussion</button>
-      </div>
-      <div id="msgTab-mp">
-        <div class="section"><div class="section-header" onclick="toggleSec('mp')"><h2>📩 Envoyer un MP</h2><span class="section-toggle" id="t-mp">▼</span></div>
-        <div class="section-body" id="b-mp">
-          <div class="member-select-wrapper"><input class="member-search" id="memberSearch" placeholder="Rechercher par nom ou ID Discord..." autocomplete="off" oninput="filtrerMembres()" onfocus="ouvrirDD('memberDropdown')" onblur="setTimeout(()=>fermerDD('memberDropdown'),200)"><div class="member-dropdown" id="memberDropdown"></div></div>
-          <div class="selected-members" id="selectedMembers"></div>
-          <div class="form-row"><textarea id="messageContent" placeholder="Ton message..."></textarea></div>
-          <div style="margin-top:10px"><button class="btn" onclick="envoyerMP()">Envoyer</button></div>
-          <div class="send-results" id="sendResults"></div>
-        </div></div>
-      </div>
-      <div id="msgTab-salon" style="display:none">
-        <div class="section"><div class="section-header" onclick="toggleSec('salon')"><h2>📢 Envoyer dans un salon</h2><span class="section-toggle" id="t-salon">▼</span></div>
-        <div class="section-body" id="b-salon">
-          <select class="channel-select" id="channelSelect"><option value="">Chargement des salons...</option></select>
-          <div class="form-row"><textarea id="salonContent" placeholder="Ton message..."></textarea></div>
-          <div style="margin-top:10px"><button class="btn" onclick="envoyerSalon()">Envoyer</button></div>
-          <div class="send-results" id="salonResults"></div>
-        </div></div>
-      </div>
-      <div id="msgTab-disc" style="display:none">
-        <div class="section"><div class="section-header" onclick="toggleSec('disc')"><h2>💬 Discussion DM</h2><span class="section-toggle" id="t-disc">▼</span></div>
-        <div class="section-body" id="b-disc">
-          <div class="member-select-wrapper"><input class="member-search" id="discSearch" placeholder="Rechercher par nom ou ID..." autocomplete="off" oninput="filtrerDisc()" onfocus="ouvrirDD('discDropdown')" onblur="setTimeout(()=>fermerDD('discDropdown'),200)"><div class="member-dropdown" id="discDropdown"></div></div>
-          <div id="discMemberBar" style="display:none" class="disc-member-bar">
-            <img id="discMemberAvatar" src="" onerror="this.src='https://cdn.discordapp.com/embed/avatars/0.png'" alt="">
-            <div class="disc-member-info"><div class="disc-member-name" id="discMemberName"></div><div class="disc-member-id" id="discMemberId"></div></div>
-            <button class="btn-sm btn-danger" onclick="clearDisc()">✕</button>
-          </div>
-          <div class="disc-box" id="discBox"><div class="disc-empty">Sélectionne un membre pour voir la discussion</div></div>
-        </div></div>
-      </div>
-    </div>
+
     <div class="page" id="page-comptes">
       <div class="page-title">👥 Gestion des comptes</div>
       <div style="margin-bottom:16px"><button class="btn" onclick="ouvrirModalCreer()">+ Créer un compte</button></div>
@@ -267,19 +164,101 @@
 
 <div class="modal-overlay" id="modalOverlay">
   <div class="modal">
-    <h3 id="modalTitle">Modifier le compte</h3>
-    <div class="modal-field"><label>Nom d'utilisateur</label><input class="modal-input" id="modalUsername" placeholder="Nom d'utilisateur"></div>
-    <div class="modal-field"><label>Mot de passe</label><div class="modal-field-row"><input class="modal-input" id="modalPassword" type="password" placeholder="Mot de passe (laisser vide = inchangé)"><button class="btn-eye" onclick="togglePwd()">👁</button></div></div>
+    <h3 id="modalTitle">Gérer le compte</h3>
+    <div class="modal-field"><label>Nom d'utilisateur</label><input class="modal-input" id="modalUsername"></div>
+    <div class="modal-field"><label>Mot de passe</label><input class="modal-input" id="modalPassword" type="password"></div>
     <div class="modal-field"><label>Rôle</label><select class="modal-input" id="modalRole"><option value="normal">Normal</option><option value="admin">Admin</option></select></div>
     <div class="feedback" id="modalFeedback"></div>
-    <div class="modal-actions"><button class="btn btn-sm btn-danger" style="padding:10px 16px" onclick="fermerModal()">Annuler</button><button class="btn" onclick="sauvegarderModal()">Sauvegarder</button></div>
+    <div class="modal-actions"><button class="btn btn-sm btn-danger" onclick="fermerModal()">Annuler</button><button class="btn" onclick="sauvegarderModal()">Sauvegarder</button></div>
   </div>
 </div>
 
 <script>
 const BOT_URL = window.location.origin;
-// Code JavaScript ici...
-// (Le reste de votre script se poursuit normalement après les variables)
+
+// Gestion du Token
+function getToken() { return localStorage.getItem('bot_token'); }
+function hdr() { 
+  return { 
+    'Content-Type': 'application/json',
+    'Authorization': 'Bearer ' + getToken() 
+  }; 
+}
+
+// Connexion
+function login() {
+  const u = document.getElementById('loginUsername').value;
+  const p = document.getElementById('loginPassword').value;
+  const err = document.getElementById('loginError');
+
+  fetch(BOT_URL + '/login', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({username: u, password: p})
+  })
+  .then(r => r.json())
+  .then(data => {
+    if(data.success) {
+      localStorage.setItem('bot_token', data.token);
+      localStorage.setItem('bot_user', JSON.stringify(data.user));
+      initDashboard();
+    } else {
+      err.style.display = 'block';
+      err.textContent = data.error || 'Erreur de connexion';
+    }
+  });
+}
+
+function logout() {
+  localStorage.clear();
+  location.reload();
+}
+
+function initDashboard() {
+  const user = JSON.parse(localStorage.getItem('bot_user'));
+  if(!user) return;
+  
+  document.getElementById('loginScreen').style.display = 'none';
+  document.getElementById('dashboard').style.display = 'flex';
+  document.getElementById('sidebarUser').textContent = user.username;
+  document.getElementById('sidebarRole').textContent = user.role.toUpperCase();
+  
+  if(user.role === 'admin') document.getElementById('navComptes').style.display = 'flex';
+  chargerInfos();
+}
+
+function goPage(pageId) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page-' + pageId).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  if(pageId === 'comptes') chargerComptes();
+}
+
+// Exemple de chargement des comptes (Admin)
+function chargerComptes() {
+  fetch(BOT_URL + '/comptes', { headers: hdr() })
+  .then(r => r.json())
+  .then(data => {
+    if(data.success) {
+      const list = document.getElementById('comptesList');
+      list.innerHTML = data.comptes.map(c => `
+        <div class="compte-item">
+          <div class="compte-left">
+            <div class="compte-avatar">${c.username[0].toUpperCase()}</div>
+            <span class="compte-name">${c.username}</span>
+            <span class="role-badge role-${c.role}">${c.role}</span>
+          </div>
+          <button class="btn-sm btn-danger" onclick="supprimerCompte('${c.username}')">Supprimer</button>
+        </div>
+      `).join('');
+    }
+  });
+}
+
+// Vérification auto au chargement
+window.onload = () => {
+  if(getToken()) initDashboard();
+};
 </script>
 </body>
 </html>
