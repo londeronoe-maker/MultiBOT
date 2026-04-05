@@ -371,8 +371,64 @@
 </div>
 
 <script>
-const BOT_URL = window.location.origin;
-const HEAD_ICON = 'data:image/png;base64,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';
+var HEAD_ICON = 'data:image/png;base64,';
+HEAD_ICON += 'iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAIAAAAlC+aJAAABCGlDQ1BJQ0MgUHJvZmlsZQAAeJxj';
+HEAD_ICON += 'YGA8wQAELAYMDLl5JUVB7k4KEZFRCuwPGBiBEAwSk4sLGHADoKpv1yBqL+viUYcLcKakFicD6Q9A';
+HEAD_ICON += 'rFIEtBxopAiQLZIOYWuA2EkQtg2IXV5SUAJkB4DYRSFBzkB2CpCtkY7ETkJiJxcUgdT3ANk2uTml';
+HEAD_ICON += 'yQh3M/Ck5oUGA2kOIJZhKGYIYnBncAL5H6IkfxEDg8VXBgbmCQixpJkMDNtbGRgkbiHEVBYwMPC3';
+HEAD_ICON += 'MDBsO48QQ4RJQWJRIliIBYiZ0tIYGD4tZ2DgjWRgEL7AwMAVDQsIHG5TALvNnSEfCNMZchhSgSKe';
+HEAD_ICON += 'DHkMyQx6QJYRgwGDIYMZAKbWPz9HbOBQAAALUUlEQVR4nO1ZW28d13ld377N7ZyZc3hISpTsWhEU';
+HEAD_ICON += '2zJyQZzYfWhrIC+9Ib8yL2lf3KcicNAGBaLWNvzQyIJd2TFpi6RMiZdzv83M3t/XhyEl2ZEpkxac';
+HEAD_ICON += 'Fy4cgAQ53LPW2nt/NwIXuMAFLnCBC1zgAhe4wAUucIELXOACF7jAdwAR/aUpfAc07OkEf2k63w3f';
+HEAD_ICON += 'swD1XFZpjG+12845AN+nBPPtHiPghBQRBACDBNAAQZiEDaHXioZc1ZXg8dOQ46/PcIrATzx8BnxL';
+HEAD_ICON += 'AXKyuPrKW0ggBBIIFMD1UkE0IcifU+Gn0wY1i5+DOk4InQlMwgRWEBKAGWACNIEIxphO3oZAQID6';
+HEAD_ICON += '2uL0xEcREUAQAtNjseqJnXseAoi+8ltFpABFpBU1voEIwiLCAmZUVVV7byIHAMd/++jskTQ/JUUA';
+HEAD_ICON += 'N44/OpWPmZx5J05T3MQTpRQzExGRYvYiIMAYQ6Qq75NWkcbRcjZGCGnijIvF2Oms1NY2ToPIGGut';
+HEAD_ICON += 'NUYbo61193d2FXi+mNVVSUQizZ0hgOTpJ+00nHYHCAAhhKCUYhbrDCm9un55Mp3mee5cNJrOorQV';
+HEAD_ICON += 'O5e1i8iQMcZEiXax0SQcAksduPYBIChtrEuT1PuwjpTDEv39xaRfLxbNLSAIQHJ8Jc6A03ZAEQhg';
+HEAD_ICON += 'EIBWu1hZuzRdLJV2XsQoZbTRUaKNS9O0m6e9ot3rrXbX1qM4pbAcDI4ODo76g9FwPFnWXhm7un75';
+HEAD_ICON += '5ZdfFcEndz/Z3f58MRsYqnf/9EnzLg0QVIA85f6fitOjEJFWCNxb30jz7tFgpLQBe2etMdY5Z6yJ';
+HEAD_ICON += 'YpdlUdZK251usdLN81aapkospJzPZvP5whrjvXjPZVl6qeMoiZPYGAtGVYe0VcynIwIxhM7OHs+K';
+HEAD_ICON += 'QsLMIqhrP5nOQIpAWikAJweXJVTENYkAMEalicuyqNWKu908z7PIWquNNVoTgq+qch7HNo5clkZE';
+HEAD_ICON += 'yNvtXm+tMQrAOdjjmXmAWQBV13Wa6tozC5NQI4CZmZuLTkSktXI2yrJWp1MQVwTdbk+iZGitWVYV';
+HEAD_ICON += 'IKGuy0UFgYsiETHGzBeL6WjUOHUO6s8WIAJSJMzGWIiIyJN1jshJdiMIoJRycZRlWZEX1iqQzlrD';
+HEAD_ICON += 'NEu1GWitNFPgsJjP69oba7W1pBSIQvAAQCQi56s/Ts0DgCIFIIqctZZFiIiZQwhNEmARhoCIFGlr';
+HEAD_ICON += 'rLNxmrSLPM+LXm+1u9LN0jSJI6MVALAsF8tyWWqtldLGmtrXL1y7lmRtNNacq5I1f2bqYwigCABa';
+HEAD_ICON += '7VyUwXgqzI1bIYRHGyIiSiki0tpkWdpu57FzINXOizRLo8SZqVYlBeaqrBbzOYS00UppACIszCKi';
+HEAD_ICON += 'tOJw5iQAwMg3lyFECCEA6sudnXZv1RgTQmhSjw9Ba+2cExYR8d4D0FobbfI8T5PUe07TLEkSZ63W';
+HEAD_ICON += 'REoQpK7K6WxmXERakSJjzGQy9d6D6Lj+OPtdMHmnEBFhMEtgYWYJzMdnWxNECJUP3ntmH0IQJgDW';
+HEAD_ICON += 'ORB5753VFEQJKdKkbZyvFGtrbYO8k1WlHOz1D/dGk/5iqTyHuq7relkaZQxZ0rHomBnKxBoAe9Li';
+HEAD_ICON += '/dkz8Y9efyNwgIADvGc+3lIQFEDCgbTy7AXMHLwPIlSV1Xg89lXVSmJi9uWinE9mo8Gkfzg+Otze';
+HEAD_ICON += '3JyV452d3Y8+vPPx7Tv3t7dns9l8uSx9HZTsbn9sWFXeL8pKQNZol9j5ZA5hoyjQmetSuvLDm772';
+HEAD_ICON += 'IhCBUpqgmhKiqRa5iTUErQ0zcwh1VZaLZTmdWC2tdkaK2ZdJ4tI47rTaqyvdXrcbRzydDIxzBGil';
+HEAD_ICON += 'nHPO2m63e/nSZQHKqj4YjDbv3b+3s7f38ODS5Y2HDw/u73ypCCxnF0DGCctxTfG4FWmsCFAEKDCT';
+HEAD_ICON += 'da0inwwHTlOWRGtF+9pLV9pFuqymHMq1XvHmz36ysbJydf1SO0liCxuZvQcPhpNRnCRZnMwm8/lk';
+HEAD_ICON += 'msRxURQVeDQr+5PqT9sP3vn9uzVFm5tbh4cDpRRzOBt9wIivnha6ml0QRRQY2rkfXHthOhm89cu/';
+HEAD_ICON += '/sELl166evnKxmrs1Gw+zjJ3aa0bO6XFD/b3aXY/SVZrsgdH463trStXXlhdK7TScebSttvd2V1W';
+HEAD_ICON += 'kyJt8ayqp5UTDA6HH23tAAQY5qZbOts1MN+QCKRpSUQEAvH1wf5enkWv3njxpY3OWjeO9Xw+nrWs';
+HEAD_ICON += 'vraymkc2dkYr27u68cUXW8MBddculUfDVZu8unpFi/JlWJa1E+fbK8PRkGOQ0toYpbXWugnB4czW';
+HEAD_ICON += 'H0Mx6KmfAAogFi3KBlbD4XjvweH+4X5ZzcpyajW0D4VLU6/80XTwxZ6rrUNClNWIfJAsTsrhtD6a';
+HEAD_ICON += 'FMGM7+398dZ75WjmFzVIiTVBK1YEqwIJMwsYVIOqc8RR9USj93WwEAMQIQIp6xm7e0eelQgRKVg6';
+HEAD_ICON += 'mhxNeb5z9OUCXBENJrP5snZRpJ3KVrL8Sm97dvjZ9FDWu9ff/PlQYb9cxkVulG4aHVKqSWcntOUc';
+HEAD_ICON += 'AsypZ44ggZpvoEVk9/6DsoQvUZXcWVkf9Pc+u39v49IanPt05/OqLLurrVZmyC9Sa9Y31g76w839';
+HEAD_ICON += 'nfF4rrXN0qzX62RxJHUNFjCEhR4ZJ42Jz7Uj+yoEwHA0GQxHvZapPSW1XV+5WpWTUX9SRpUAnZW8';
+HEAD_ICON += 't1a4SGshLTpy1ErzZVnOZ3MR0UYLh7peluCAUIeqqms+trxp/p7/WOXxgiKstDnojz/Z2llfLfKy';
+HEAD_ICON += 'biU1EbrdwtiuIt1uFz74/aN+WS20KDA8B2aOIre+tgapfVUFFlJchqoWqZk/v7fz6WfbBGLm8/I/';
+HEAD_ICON += 'RcBJj9EkCCFF0ID/6O7WT3/0yiSbFQGadc0RvE3i9O7drVv//f5kPo0T1ynaeZG3Wi0QzWfTvH3/';
+HEAD_ICON += 'Fz//KUM8cxXYs5ou5sua+8N55T0RQRSd/fA8S8DXIQJoaw8Go//7dLvbvjGeLbTLqKpVYvvD0e3b';
+HEAD_ICON += 'd974xRvKKuaKtADkA3c6K8aa9979nx9OlrGzgVVZ06Kmqlb7B4Nb7/4vEQG6OfrNbTjrLpwq4Mkl';
+HEAD_ICON += 'm6GBqLKsfv+H94rEFa/ftJYkJWtQliXgr1/fSFK7WE41xLkoSlJt3O0P70z6h+Q9E3xZl8tqNFlO';
+HEAD_ICON += 'ZtV//Of7+/2RVi48qgPOhW8WcML7kSUcfNN0TOfL3/7X+6uXV6/TOiFBWBSddgn+l7f/7cevvZa3';
+HEAD_ICON += 'W1malcvh5mdbd+9+evvDj//urTfjOBqPZ+Wyniz48Kj6w/u3P7hzV2kKHE6MorPXQcD5pDctwY0b';
+HEAD_ICON += 'f/X3f/v6j1++1o7Uykq++fnWr3/9r8tpDUYdOAQ4g16veO3mjX/4518WRT6bl4uFP+gvb31w9zf/';
+HEAD_ICON += '/o7SxCQIBGmmWo1Xz3UydwqMImHpFK1/+se/+cnN693EraTZYjqdL5bT2Xw8HzhtNq5c7XTyTrdd';
+HEAD_ICON += '1ovxdLYouT+YfvDHzbd/eysQQghCCkxgJoAhzZD4exKgoa02y1Aqo371q7d+9vK1y0naK1pREpnY';
+HEAD_ICON += 'OkOKKASp6qqqy6Wv5otyOK137/d/8/Y7D4czEztfBwWNICQMSCA+GVSfjcm3j0JfAZOqSZPRIvy7';
+HEAD_ICON += '372bkspuXteLqeOFLilW2pIBKSgChKC0dgo0n4XppCQgVF5pAz627/xDlXMLgCaGN0FiBevR330Y';
+HEAD_ICON += 'Xn4JVrVacUxilTHaaG0ABHgm6g/nPtGxohc7xWC+mFVV6Wt/MgwlPBHrvh8BQp5Y1lz8SrvXsqod';
+HEAD_ICON += 'lAV1Onk30l1r2YAMGaUhEoCqrpEbrpaXVpKNPOlpNwj15tERKREREB13sPLcR4t08i8HIgVSICiC';
+HEAD_ICON += 'AgyBRLG8tn7VzZayWGxcXW8lLtWqlSZp6tLMtBObRTqOTRZZ4xQcxw4vrq28snEFR+O1KCus1dwM';
+HEAD_ICON += 'dQWAKDRvOH7x1wdEGtBP5fj/TRwQscv1ygMAAAAASUVORK5CYII=';
 
 document.getElementById('loginLogo').src = HEAD_ICON;
 const fav = document.createElement('link');
@@ -384,297 +440,542 @@ let darkMode = localStorage.getItem('theme') === 'dark';
 let tousLesMembres=[], membresSelectionnes=[];
 let discMembre=null, modalMode='creer', modalOldUsername='';
 
-// Theme : par defaut dark (deja en dark dans le CSS)
 function applyTheme() {
   if (!darkMode) {
     document.documentElement.style.setProperty('--bg','#f5f5f5');
-    document.documentElement.style.setProperty('--bg2','#fff');
+    document.documentElement.style.setProperty('--bg2','#ffffff');
     document.documentElement.style.setProperty('--bg3','#f0f0f0');
-    document.documentElement.style.sunction chargerMembres() {
-  fetch(BOT_URL+'/membres',{headers:hdr()}).then(r=>r.json()).then(data=>{
+    document.documentElement.style.setProperty('--text','#1a1a2e');
+    document.documentElement.style.setProperty('--text2','#888');
+    document.documentElement.style.setProperty('--border','#eee');
+    document.documentElement.style.setProperty('--border2','#ddd');
+  } else {
+    document.documentElement.style.setProperty('--bg','#1a1a2e');
+    document.documentElement.style.setProperty('--bg2','#16213e');
+    document.documentElement.style.setProperty('--bg3','#0f3460');
+    document.documentElement.style.setProperty('--text','#f0f0f0');
+    document.documentElement.style.setProperty('--text2','#aaa');
+    document.documentElement.style.setProperty('--border','#0f3460');
+    document.documentElement.style.setProperty('--border2','#333');
+  }
+  document.getElementById('themeSwitch').checked = darkMode;
+  if (chart) majChart();
+}
+function toggleTheme() {
+  darkMode = document.getElementById('themeSwitch').checked;
+  localStorage.setItem('theme', darkMode ? 'dark' : 'light');
+  applyTheme();
+}
+applyTheme();
+
+function goPage(p) {
+  document.querySelectorAll('.page').forEach(function(el) { el.classList.remove('active'); });
+  document.querySelectorAll('.nav-item').forEach(function(el) { el.classList.remove('active'); });
+  document.getElementById('page-' + p).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(function(el) {
+    var oc = el.getAttribute('onclick');
+    if (oc && oc.indexOf("'" + p + "'") !== -1) el.classList.add('active');
+  });
+  if (p === 'stats') chargerStats();
+  if (p === 'messages') { chargerMembres(); chargerSalons(); }
+  if (p === 'comptes') chargerComptes();
+}
+
+function toggleSec(id) {
+  var b = document.getElementById('b-' + id);
+  var t = document.getElementById('t-' + id);
+  if (!b || !t) return;
+  var c = b.classList.toggle('collapsed');
+  t.textContent = c ? '>' : 'v';
+}
+
+function hdr() {
+  return { 'Content-Type': 'application/json', 'x-username': username, 'x-password': password };
+}
+
+function login() {
+  username = document.getElementById('loginUsername').value;
+  password = document.getElementById('loginPassword').value;
+  fetch(BOT_URL + '/login', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ username: username, password: password })
+  }).then(function(r) { return r.json(); }).then(function(data) {
+    if (data.error) {
+      document.getElementById('loginError').style.display = 'block';
+      return;
+    }
+    role = data.role;
+    document.getElementById('loginScreen').style.display = 'none';
+    document.getElementById('sidebar').style.display = 'flex';
+    document.getElementById('mainContent').style.display = 'block';
+    document.getElementById('sidebarLogo').src = HEAD_ICON;
+    document.getElementById('sidebarUser').textContent = username;
+    document.getElementById('sidebarRole').textContent = role;
+    if (role === 'admin') document.getElementById('navComptes').style.display = 'flex';
+    chargerStatut();
+    chargerStats();
+    setInterval(chargerStatut, 10000);
+  });
+}
+
+function logout() {
+  username = ''; password = ''; role = '';
+  tousLesMembres = []; membresSelectionnes = []; discMembre = null;
+  document.getElementById('loginScreen').style.display = 'flex';
+  document.getElementById('sidebar').style.display = 'none';
+  document.getElementById('mainContent').style.display = 'none';
+  document.getElementById('loginUsername').value = '';
+  document.getElementById('loginPassword').value = '';
+  document.getElementById('navComptes').style.display = 'none';
+  if (chart) { chart.destroy(); chart = null; }
+}
+
+function chargerStatut() {
+  fetch(BOT_URL + '/status', { headers: hdr() })
+  .then(function(r) { return r.json(); })
+  .then(function(data) {
+    document.getElementById('statusText').innerHTML = data.online
+      ? '<span style="color:#4CAF50">EN LIGNE</span>'
+      : '<span style="color:#f44336">HORS LIGNE</span>';
+    document.getElementById('botTag').textContent = data.tag || '-';
+    var h = Math.floor(data.uptime / 3600);
+    var m = Math.floor((data.uptime % 3600) / 60);
+    var s = data.uptime % 60;
+    document.getElementById('uptime').textContent = h + 'h ' + m + 'm ' + s + 's';
+  }).catch(function() {});
+}
+
+function chargerMembres() {
+  fetch(BOT_URL + '/membres', { headers: hdr() })
+  .then(function(r) { return r.json(); })
+  .then(function(data) {
     tousLesMembres = Array.isArray(data) ? data : [];
     rndDD('memberDropdown', tousLesMembres, 'selMembre');
     rndDD('discDropdown', tousLesMembres, 'selDisc');
-  }).catch(()=>{});
+  }).catch(function() {});
 }
 
 function rndDD(ddId, membres, fn) {
-  const dd = document.getElementById(ddId); if(!dd) return;
-  dd.innerHTML = membres.map(m =>
-    '<div class="member-option" onclick="'+fn+"('"+m.id+"','"+encodeURIComponent(m.displayName)+"','"+m.avatar+"')"+'">'
-    +'<img src="'+m.avatar+'" onerror="this.src=\'https://cdn.discordapp.com/embed/avatars/0.png\'" alt="">'
-    +'<div class="member-opt-info"><span class="member-opt-name">'+m.displayName+'</span><span class="member-opt-id">'+m.id+'</span></div>'
-    +'</div>'
-  ).join('');
+  var dd = document.getElementById(ddId);
+  if (!dd) return;
+  var html = '';
+  for (var i = 0; i < membres.length; i++) {
+    var m = membres[i];
+    html += '<div class="member-option" onclick="' + fn + '('' + m.id + '','' + encodeURIComponent(m.displayName) + '','' + m.avatar + '')">';
+    html += '<img src="' + m.avatar + '" onerror="this.src='https://cdn.discordapp.com/embed/avatars/0.png'" alt="">';
+    html += '<div class="member-opt-info"><span class="member-opt-name">' + m.displayName + '</span>';
+    html += '<span class="member-opt-id">' + m.id + '</span></div></div>';
+  }
+  dd.innerHTML = html;
 }
 
-function ouvrirDD(id){document.getElementById(id).classList.add('open');}
-function fermerDD(id){document.getElementById(id).classList.remove('open');}
+function ouvrirDD(id) { document.getElementById(id).classList.add('open'); }
+function fermerDD(id) { document.getElementById(id).classList.remove('open'); }
 
 function filtrerMembres() {
-  const q=document.getElementById('memberSearch').value.toLowerCase();
-  const f=tousLesMembres.filter(m=>m.displayName.toLowerCase().includes(q)||m.username.toLowerCase().includes(q)||m.id.includes(q));
-  rndDD('memberDropdown',f,'selMembre'); ouvrirDD('memberDropdown');
+  var q = document.getElementById('memberSearch').value.toLowerCase();
+  var f = tousLesMembres.filter(function(m) {
+    return m.displayName.toLowerCase().indexOf(q) !== -1 || m.username.toLowerCase().indexOf(q) !== -1 || m.id.indexOf(q) !== -1;
+  });
+  rndDD('memberDropdown', f, 'selMembre');
+  ouvrirDD('memberDropdown');
 }
 function filtrerDisc() {
-  const q=document.getElementById('discSearch').value.toLowerCase();
-  const f=tousLesMembres.filter(m=>m.displayName.toLowerCase().includes(q)||m.username.toLowerCase().includes(q)||m.id.includes(q));
-  rndDD('discDropdown',f,'selDisc'); ouvrirDD('discDropdown');
+  var q = document.getElementById('discSearch').value.toLowerCase();
+  var f = tousLesMembres.filter(function(m) {
+    return m.displayName.toLowerCase().indexOf(q) !== -1 || m.username.toLowerCase().indexOf(q) !== -1 || m.id.indexOf(q) !== -1;
+  });
+  rndDD('discDropdown', f, 'selDisc');
+  ouvrirDD('discDropdown');
 }
 
-function selMembre(id,nomEnc,avatar) {
-  const nom=decodeURIComponent(nomEnc);
-  if(membresSelectionnes.find(m=>m.id===id)) return;
-  membresSelectionnes.push({id,nom,avatar});
+function selMembre(id, nomEnc, avatar) {
+  var nom = decodeURIComponent(nomEnc);
+  if (membresSelectionnes.find(function(m) { return m.id === id; })) return;
+  membresSelectionnes.push({ id: id, nom: nom, avatar: avatar });
   majSelMembres();
-  document.getElementById('memberSearch').value=''; fermerDD('memberDropdown');
+  document.getElementById('memberSearch').value = '';
+  fermerDD('memberDropdown');
 }
-function retirerMembre(id){membresSelectionnes=membresSelectionnes.filter(m=>m.id!==id);majSelMembres();}
+function retirerMembre(id) {
+  membresSelectionnes = membresSelectionnes.filter(function(m) { return m.id !== id; });
+  majSelMembres();
+}
 function majSelMembres() {
-  document.getElementById('selectedMembers').innerHTML = membresSelectionnes.map(m=>
-    '<div class="sel-member">'
-    +'<img src="'+m.avatar+'" onerror="this.src=\'https://cdn.discordapp.com/embed/avatars/0.png\'" alt="">'
-    +'<span>'+m.nom+'</span>'
-    +'<button onclick="retirerMembre(\''+m.id+'\')">x</button>'
-    +'</div>'
-  ).join('');
+  var html = '';
+  for (var i = 0; i < membresSelectionnes.length; i++) {
+    var m = membresSelectionnes[i];
+    html += '<div class="sel-member">';
+    html += '<img src="' + m.avatar + '" onerror="this.src='https://cdn.discordapp.com/embed/avatars/0.png'" alt="">';
+    html += '<span>' + m.nom + '</span>';
+    html += '<button onclick="retirerMembre('' + m.id + '')">x</button></div>';
+  }
+  document.getElementById('selectedMembers').innerHTML = html;
 }
 
-// DISCUSSION
-function selDisc(id,nomEnc,avatar) {
-  const nom=decodeURIComponent(nomEnc);
-  discMembre={id,nom,avatar};
-  document.getElementById('discSearch').value=''; fermerDD('discDropdown');
-  document.getElementById('discMemberBar').style.display='flex';
-  document.getElementById('discMemberAvatar').src=avatar;
-  document.getElementById('discMemberName').textContent=nom;
-  document.getElementById('discMemberId').textContent='ID : '+id;
+function selDisc(id, nomEnc, avatar) {
+  var nom = decodeURIComponent(nomEnc);
+  discMembre = { id: id, nom: nom, avatar: avatar };
+  document.getElementById('discSearch').value = '';
+  fermerDD('discDropdown');
+  document.getElementById('discMemberBar').style.display = 'flex';
+  document.getElementById('discMemberAvatar').src = avatar;
+  document.getElementById('discMemberName').textContent = nom;
+  document.getElementById('discMemberId').textContent = 'ID : ' + id;
   chargerDisc(id);
 }
 function clearDisc() {
-  discMembre=null;
-  document.getElementById('discMemberBar').style.display='none';
-  document.getElementById('discBox').innerHTML='<div class="disc-empty">Selectionne un membre pour voir la discussion</div>';
+  discMembre = null;
+  document.getElementById('discMemberBar').style.display = 'none';
+  document.getElementById('discBox').innerHTML = '<div class="disc-empty">Selectionne un membre pour voir la discussion</div>';
 }
 
 function chargerDisc(userId) {
-  const box=document.getElementById('discBox');
-  box.innerHTML='<div class="disc-empty">Chargement...</div>';
-  fetch(BOT_URL+'/discussion/'+userId,{headers:hdr()})
-  .then(r=>r.json()).then(data=>{
-    if(!data.messages||data.messages.length===0){box.innerHTML='<div class="disc-empty">Aucun message trouve</div>';return;}
-    const msgs = data.messages.map(msg=>{
-      const isBot = msg.isBot;
-      const avatar = isBot ? HEAD_ICON : (discMembre?.avatar||'https://cdn.discordapp.com/embed/avatars/0.png');
-      const author = isBot ? 'ARMORED.BOT' : (discMembre?.nom||'Utilisateur');
-      let inner = '<div class="msg-author">'+author+'</div>';
-      if(msg.content) inner += '<div class="msg-text">'+msg.content+'</div>';
-      if(msg.embeds && msg.embeds.length>0) {
-        msg.embeds.forEach(e=>{
+  var box = document.getElementById('discBox');
+  box.innerHTML = '<div class="disc-empty">Chargement...</div>';
+  fetch(BOT_URL + '/discussion/' + userId, { headers: hdr() })
+  .then(function(r) { return r.json(); })
+  .then(function(data) {
+    if (!data.messages || data.messages.length === 0) {
+      box.innerHTML = '<div class="disc-empty">Aucun message trouve</div>';
+      return;
+    }
+    var html = '';
+    for (var i = 0; i < data.messages.length; i++) {
+      var msg = data.messages[i];
+      var isBot = msg.isBot;
+      var avatar = isBot ? HEAD_ICON : (discMembre ? discMembre.avatar : 'https://cdn.discordapp.com/embed/avatars/0.png');
+      var author = isBot ? 'ARMORED.BOT' : (discMembre ? discMembre.nom : 'Utilisateur');
+      var inner = '<div class="msg-author">' + author + '</div>';
+      if (msg.content) inner += '<div class="msg-text">' + msg.content + '</div>';
+      if (msg.embeds && msg.embeds.length > 0) {
+        for (var j = 0; j < msg.embeds.length; j++) {
+          var e = msg.embeds[j];
           inner += '<div class="msg-embed">';
-          if(e.title) inner += '<div class="msg-embed-title">'+e.title+'</div>';
-          if(e.description) inner += '<div class="msg-text" style="font-size:12px;margin-top:2px">'+e.description+'</div>';
-          if(e.fields&&e.fields.length>0) e.fields.forEach(f=>{
-            inner += '<div class="msg-embed-fname">'+f.name+'</div><div class="msg-embed-fval">'+f.value+'</div>';
-          });
+          if (e.title) inner += '<div class="msg-embed-title">' + e.title + '</div>';
+          if (e.description) inner += '<div class="msg-text" style="font-size:12px">' + e.description + '</div>';
+          if (e.fields && e.fields.length > 0) {
+            for (var k = 0; k < e.fields.length; k++) {
+              inner += '<div class="msg-embed-fname">' + e.fields[k].name + '</div>';
+              inner += '<div class="msg-embed-fval">' + e.fields[k].value + '</div>';
+            }
+          }
           inner += '</div>';
-        });
+        }
       }
-      if(!msg.content && (!msg.embeds||msg.embeds.length===0)) inner += '<div class="msg-text" style="opacity:.6">[Fichier ou contenu non supporte]</div>';
-      inner += '<div class="msg-time">'+new Date(msg.timestamp).toLocaleString('fr-FR')+'</div>';
-      return '<div class="msg '+(isBot?'bot':'user')+'">'+inner+'</div>';
-    });
-    box.innerHTML = msgs.join('');
+      if (!msg.content && (!msg.embeds || msg.embeds.length === 0)) {
+        inner += '<div class="msg-text" style="opacity:.6">[Fichier non supporte]</div>';
+      }
+      inner += '<div class="msg-time">' + new Date(msg.timestamp).toLocaleString('fr-FR') + '</div>';
+      html += '<div class="msg ' + (isBot ? 'bot' : 'user') + '">' + inner + '</div>';
+    }
+    box.innerHTML = html;
     box.scrollTop = box.scrollHeight;
-  }).catch(()=>{box.innerHTML='<div class="disc-empty">Impossible de charger (API Discord limitee)</div>';});
+  }).catch(function() {
+    box.innerHTML = '<div class="disc-empty">Impossible de charger</div>';
+  });
 }
 
-// SALONS
 function chargerSalons() {
-  fetch(BOT_URL+'/salons',{headers:hdr()}).then(r=>r.json()).then(data=>{
-    const sel=document.getElementById('channelSelect');
-    sel.innerHTML=data.map(c=>'<option value="'+c.id+'">#'+c.name+'</option>').join('');
-  }).catch(()=>{document.getElementById('channelSelect').innerHTML='<option value="">Erreur chargement</option>';});
+  fetch(BOT_URL + '/salons', { headers: hdr() })
+  .then(function(r) { return r.json(); })
+  .then(function(data) {
+    var html = '';
+    for (var i = 0; i < data.length; i++) {
+      html += '<option value="' + data[i].id + '">#' + data[i].name + '</option>';
+    }
+    document.getElementById('channelSelect').innerHTML = html;
+  }).catch(function() {
+    document.getElementById('channelSelect').innerHTML = '<option value="">Erreur chargement</option>';
+  });
 }
 
 function envoyerSalon() {
-  const channelId=document.getElementById('channelSelect').value;
-  const message=document.getElementById('salonContent').value;
-  const results=document.getElementById('salonResults');
-  if(!channelId||!message){results.innerHTML='<div class="send-result-item ko">Selectionne un salon et ecris un message !</div>';return;}
-  fetch(BOT_URL+'/send-salon',{method:'POST',headers:hdr(),body:JSON.stringify({channelId,message})})
-  .then(r=>r.json()).then(data=>{
-    if(data.success){results.innerHTML='<div class="send-result-item ok">✅ Message envoye dans le salon !</div>';document.getElementById('salonContent').value='';}
-    else{results.innerHTML='<div class="send-result-item ko">❌ '+data.error+'</div>';}
+  var channelId = document.getElementById('channelSelect').value;
+  var message = document.getElementById('salonContent').value;
+  var results = document.getElementById('salonResults');
+  if (!channelId || !message) {
+    results.innerHTML = '<div class="send-result-item ko">Selectionne un salon et ecris un message !</div>';
+    return;
+  }
+  fetch(BOT_URL + '/send-salon', {
+    method: 'POST', headers: hdr(),
+    body: JSON.stringify({ channelId: channelId, message: message })
+  }).then(function(r) { return r.json(); }).then(function(data) {
+    if (data.success) {
+      results.innerHTML = '<div class="send-result-item ok">Message envoye !</div>';
+      document.getElementById('salonContent').value = '';
+    } else {
+      results.innerHTML = '<div class="send-result-item ko">Erreur : ' + data.error + '</div>';
+    }
   });
 }
 
 function envoyerMP() {
-  const message=document.getElementById('messageContent').value;
-  const results=document.getElementById('sendResults');
-  if(!membresSelectionnes.length||!message){results.innerHTML='<div class="send-result-item ko">Selectionne au moins un membre et ecris un message !</div>';return;}
-  fetch(BOT_URL+'/send',{method:'POST',headers:hdr(),body:JSON.stringify({userIds:membresSelectionnes.map(m=>m.id),message})})
-  .then(r=>r.json()).then(data=>{
-    results.innerHTML=data.results.map(r=>'<div class="send-result-item '+(r.success?'ok':'ko')+'">'+(r.success?'✅':'❌')+' '+(membresSelectionnes.find(m=>m.id===r.userId)?.nom||r.userId)+' — '+(r.success?'Envoye !':r.error)+'</div>').join('');
-    if(data.results.every(r=>r.success)){document.getElementById('messageContent').value='';membresSelectionnes=[];majSelMembres();}
+  var message = document.getElementById('messageContent').value;
+  var results = document.getElementById('sendResults');
+  if (!membresSelectionnes.length || !message) {
+    results.innerHTML = '<div class="send-result-item ko">Selectionne un membre et ecris un message !</div>';
+    return;
+  }
+  var ids = membresSelectionnes.map(function(m) { return m.id; });
+  fetch(BOT_URL + '/send', {
+    method: 'POST', headers: hdr(),
+    body: JSON.stringify({ userIds: ids, message: message })
+  }).then(function(r) { return r.json(); }).then(function(data) {
+    var html = '';
+    for (var i = 0; i < data.results.length; i++) {
+      var r = data.results[i];
+      var nom = membresSelectionnes.find(function(m) { return m.id === r.userId; });
+      html += '<div class="send-result-item ' + (r.success ? 'ok' : 'ko') + '">';
+      html += (r.success ? 'OK' : 'ERR') + ' ' + (nom ? nom.nom : r.userId);
+      html += ' - ' + (r.success ? 'Envoye !' : r.error) + '</div>';
+    }
+    results.innerHTML = html;
+    if (data.results.every(function(r) { return r.success; })) {
+      document.getElementById('messageContent').value = '';
+      membresSelectionnes = [];
+      majSelMembres();
+    }
   });
 }
 
 function switchMsgTab(t) {
-  ['mp','salon','disc'].forEach(x=>{document.getElementById('msgTab-'+x).style.display=x===t?'block':'none';});
-  document.querySelectorAll('#page-messages .tabs .tab').forEach((el,i)=>{el.classList.toggle('active',['mp','salon','disc'][i]===t);});
-  if(t==='salon') chargerSalons();
-  if(t==='disc') chargerMembres();
+  ['mp', 'salon', 'disc'].forEach(function(x) {
+    document.getElementById('msgTab-' + x).style.display = x === t ? 'block' : 'none';
+  });
+  document.querySelectorAll('#page-messages .tabs .tab').forEach(function(el, i) {
+    el.classList.toggle('active', ['mp', 'salon', 'disc'][i] === t);
+  });
+  if (t === 'salon') chargerSalons();
+  if (t === 'disc') chargerMembres();
 }
 
-// STATS
 function chargerStats() {
-  fetch(BOT_URL+'/stats',{headers:hdr()}).then(r=>r.json()).then(data=>{
-    statsData=data;
-    document.getElementById('statDetruits').value=data.charsDetruitTotal||0;
-    document.getElementById('statPerdus').value=data.charsPerdusTotal||0;
-    document.getElementById('statCaptures').value=data.charsCapturesTotal||0;
-    document.getElementById('statRecord').value=data.recordRapport||0;
-    document.getElementById('homeDetruits').textContent=data.charsDetruitTotal||0;
-    document.getElementById('homePerdus').textContent=data.charsPerdusTotal||0;
-    const d=data.charsDetruitTotal||0, p=data.charsPerdusTotal||0;
-    document.getElementById('homeRatio').textContent=p>0?(d/p).toFixed(2):d>0?'∞':'0';
-    majRatio(); majChart();
-    const list=document.getElementById('rapportsList');
-    if(!data.rapports?.length){list.innerHTML='<div style="color:var(--text2);font-size:13px;padding:10px">Aucun rapport ce mois-ci</div>';return;}
-    list.innerHTML=data.rapports.map(r=>
-      '<div class="rapport-item"><div class="rapport-info">'
-      +'<span>📋 <strong>'+r.nom+'</strong></span>'
-      +'<span style="color:var(--text2);font-size:12px">🎯 '+r.tireur+'</span>'
-      +'<span style="color:#FFD700;font-weight:bold">💥 '+r.detruits+'</span>'
-      +'<span style="color:#f44336;font-weight:bold">💀 '+r.perdus+'</span>'
-      +'<span style="color:#1565c0;font-weight:bold">🚩 '+(r.captures||0)+'</span>'
-      +'<span style="color:var(--text2);font-size:12px">'+r.date+'</span>'
-      +'</div><button class="btn-sm btn-danger" onclick="supprimerRapport('+r.id+')">Supprimer</button></div>'
-    ).join('');
+  fetch(BOT_URL + '/stats', { headers: hdr() })
+  .then(function(r) { return r.json(); })
+  .then(function(data) {
+    statsData = data;
+    document.getElementById('statDetruits').value = data.charsDetruitTotal || 0;
+    document.getElementById('statPerdus').value = data.charsPerdusTotal || 0;
+    document.getElementById('statCaptures').value = data.charsCapturesTotal || 0;
+    document.getElementById('statRecord').value = data.recordRapport || 0;
+    document.getElementById('homeDetruits').textContent = data.charsDetruitTotal || 0;
+    document.getElementById('homePerdus').textContent = data.charsPerdusTotal || 0;
+    var d = data.charsDetruitTotal || 0;
+    var p = data.charsPerdusTotal || 0;
+    document.getElementById('homeRatio').textContent = p > 0 ? (d / p).toFixed(2) : d > 0 ? 'inf' : '0';
+    majRatio();
+    majChart();
+    var list = document.getElementById('rapportsList');
+    if (!data.rapports || !data.rapports.length) {
+      list.innerHTML = '<div style="color:var(--text2);font-size:13px;padding:10px">Aucun rapport ce mois-ci</div>';
+      return;
+    }
+    var html = '';
+    for (var i = 0; i < data.rapports.length; i++) {
+      var r = data.rapports[i];
+      html += '<div class="rapport-item"><div class="rapport-info">';
+      html += '<span><strong>' + r.nom + '</strong></span>';
+      html += '<span style="color:var(--text2);font-size:12px">Tireur: ' + r.tireur + '</span>';
+      html += '<span style="color:#FFD700;font-weight:bold">' + r.detruits + ' detruits</span>';
+      html += '<span style="color:#f44336;font-weight:bold">' + r.perdus + ' perdus</span>';
+      html += '<span style="color:#1565c0;font-weight:bold">' + (r.captures || 0) + ' captures</span>';
+      html += '<span style="color:var(--text2);font-size:12px">' + r.date + '</span>';
+      html += '</div><button class="btn-sm btn-danger" onclick="supprimerRapport(' + r.id + ')">Supprimer</button></div>';
+    }
+    list.innerHTML = html;
   });
 }
 
 function switchChart(v) {
-  chartView=v;
-  document.querySelectorAll('.chart-tab').forEach((el,i)=>el.classList.toggle('active',['jour','semaine','mois'][i]===v));
+  chartView = v;
+  document.querySelectorAll('.chart-tab').forEach(function(el, i) {
+    el.classList.toggle('active', ['jour', 'semaine', 'mois'][i] === v);
+  });
   majChart();
 }
 function dlChart() {
-  if(!chart) return;
-  const a=document.createElement('a');
-  a.download='graphique-'+chartView+'-'+new Date().toISOString().slice(0,10)+'.png';
-  a.href=document.getElementById('statsChart').toDataURL('image/png');
+  if (!chart) return;
+  var a = document.createElement('a');
+  a.download = 'graphique-' + chartView + '-' + new Date().toISOString().slice(0, 10) + '.png';
+  a.href = document.getElementById('statsChart').toDataURL('image/png');
   a.click();
 }
 function majChart() {
-  if(!statsData?.rapports) return;
-  const raps=statsData.rapports;
-  let labels=[],detruits=[],perdus=[],captures=[];
-  if(chartView==='jour'){
-    const pj={};
-    raps.forEach(r=>{const d=r.date||'?';if(!pj[d])pj[d]={d:0,p:0,c:0};pj[d].d+=r.detruits||0;pj[d].p+=r.perdus||0;pj[d].c+=r.captures||0;});
-    const j=Object.keys(pj).sort();labels=j;detruits=j.map(x=>pj[x].d);perdus=j.map(x=>pj[x].p);captures=j.map(x=>pj[x].c);
-  } else if(chartView==='semaine'){
-    const ps={};
-    raps.forEach(r=>{const parts=(r.date||'').split('/');const s=parts.length>=1?'S'+Math.ceil(parseInt(parts[0])/7):'S?';if(!ps[s])ps[s]={d:0,p:0,c:0};ps[s].d+=r.detruits||0;ps[s].p+=r.perdus||0;ps[s].c+=r.captures||0;});
-    const ss=Object.keys(ps).sort();labels=ss;detruits=ss.map(x=>ps[x].d);perdus=ss.map(x=>ps[x].p);captures=ss.map(x=>ps[x].c);
+  if (!statsData || !statsData.rapports) return;
+  var raps = statsData.rapports;
+  var labels = [], detruits = [], perdus = [], captures = [];
+  if (chartView === 'jour') {
+    var pj = {};
+    raps.forEach(function(r) {
+      var d = r.date || '?';
+      if (!pj[d]) pj[d] = { d: 0, p: 0, c: 0 };
+      pj[d].d += r.detruits || 0; pj[d].p += r.perdus || 0; pj[d].c += r.captures || 0;
+    });
+    var j = Object.keys(pj).sort();
+    labels = j; detruits = j.map(function(x) { return pj[x].d; });
+    perdus = j.map(function(x) { return pj[x].p; });
+    captures = j.map(function(x) { return pj[x].c; });
+  } else if (chartView === 'semaine') {
+    var ps = {};
+    raps.forEach(function(r) {
+      var parts = (r.date || '').split('/');
+      var s = parts.length >= 1 ? 'S' + Math.ceil(parseInt(parts[0]) / 7) : 'S?';
+      if (!ps[s]) ps[s] = { d: 0, p: 0, c: 0 };
+      ps[s].d += r.detruits || 0; ps[s].p += r.perdus || 0; ps[s].c += r.captures || 0;
+    });
+    var ss = Object.keys(ps).sort();
+    labels = ss; detruits = ss.map(function(x) { return ps[x].d; });
+    perdus = ss.map(function(x) { return ps[x].p; });
+    captures = ss.map(function(x) { return ps[x].c; });
   } else {
-    let cd=0,cp=0,cc=0;
-    [...raps].sort((a,b)=>a.date>b.date?1:-1).forEach(r=>{cd+=r.detruits||0;cp+=r.perdus||0;cc+=r.captures||0;labels.push(r.date||'?');detruits.push(cd);perdus.push(cp);captures.push(cc);});
+    var cd = 0, cp = 0, cc = 0;
+    var sorted = raps.slice().sort(function(a, b) { return a.date > b.date ? 1 : -1; });
+    sorted.forEach(function(r) {
+      cd += r.detruits || 0; cp += r.perdus || 0; cc += r.captures || 0;
+      labels.push(r.date || '?'); detruits.push(cd); perdus.push(cp); captures.push(cc);
+    });
   }
-  const tc='#aaa', gc='#1a2a4a';
-  if(chart) chart.destroy();
-  chart=new Chart(document.getElementById('statsChart').getContext('2d'),{
-    type:'line',
-    data:{labels,datasets:[
-      {label:'Detruits',data:detruits,borderColor:'#FFD700',backgroundColor:'rgba(255,215,0,0.1)',tension:.3,fill:true,pointBackgroundColor:'#FFD700',pointRadius:5},
-      {label:'Perdus',data:perdus,borderColor:'#f44336',backgroundColor:'rgba(244,67,54,0.1)',tension:.3,fill:true,pointBackgroundColor:'#f44336',pointRadius:5},
-      {label:'Captures',data:captures,borderColor:'#1565c0',backgroundColor:'rgba(21,101,192,0.1)',tension:.3,fill:true,pointBackgroundColor:'#1565c0',pointRadius:5}
+  if (chart) chart.destroy();
+  chart = new Chart(document.getElementById('statsChart').getContext('2d'), {
+    type: 'line',
+    data: { labels: labels, datasets: [
+      { label: 'Detruits', data: detruits, borderColor: '#FFD700', backgroundColor: 'rgba(255,215,0,0.1)', tension: 0.3, fill: true, pointBackgroundColor: '#FFD700', pointRadius: 5 },
+      { label: 'Perdus', data: perdus, borderColor: '#f44336', backgroundColor: 'rgba(244,67,54,0.1)', tension: 0.3, fill: true, pointBackgroundColor: '#f44336', pointRadius: 5 },
+      { label: 'Captures', data: captures, borderColor: '#1565c0', backgroundColor: 'rgba(21,101,192,0.1)', tension: 0.3, fill: true, pointBackgroundColor: '#1565c0', pointRadius: 5 }
     ]},
-    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top',labels:{color:tc,font:{size:12}}},tooltip:{mode:'index',intersect:false}},scales:{x:{ticks:{color:tc},grid:{color:gc}},y:{beginAtZero:true,ticks:{color:tc,stepSize:1},grid:{color:gc}}}}
+    options: { responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { position: 'top', labels: { color: '#aaa', font: { size: 12 } } }, tooltip: { mode: 'index', intersect: false } },
+      scales: { x: { ticks: { color: '#aaa' }, grid: { color: '#1a2a4a' } }, y: { beginAtZero: true, ticks: { color: '#aaa', stepSize: 1 }, grid: { color: '#1a2a4a' } } }
+    }
   });
 }
-function majRatio(){
-  const d=parseInt(document.getElementById('statDetruits').value)||0;
-  const p=parseInt(document.getElementById('statPerdus').value)||0;
-  document.getElementById('ratioDisplay').textContent=p>0?(d/p).toFixed(2):d>0?'∞':'0';
+function majRatio() {
+  var d = parseInt(document.getElementById('statDetruits').value) || 0;
+  var p = parseInt(document.getElementById('statPerdus').value) || 0;
+  document.getElementById('ratioDisplay').textContent = p > 0 ? (d / p).toFixed(2) : d > 0 ? 'inf' : '0';
 }
-document.addEventListener('input',e=>{if(['statDetruits','statPerdus'].includes(e.target.id))majRatio();});
+document.addEventListener('input', function(e) {
+  if (e.target.id === 'statDetruits' || e.target.id === 'statPerdus') majRatio();
+});
 
-function saveStats(){
-  const fb=document.getElementById('statsFeedback');
-  fetch(BOT_URL+'/stats',{method:'PUT',headers:hdr(),body:JSON.stringify({charsDetruitTotal:document.getElementById('statDetruits').value,charsPerdusTotal:document.getElementById('statPerdus').value,charsCapturesTotal:document.getElementById('statCaptures').value,recordRapport:document.getElementById('statRecord').value})})
-  .then(r=>r.json()).then(data=>{fb.textContent=data.success?'✅ Stats sauvegardees !':'❌ '+data.error;fb.className='feedback '+(data.success?'success':'error');});
+function saveStats() {
+  var fb = document.getElementById('statsFeedback');
+  fetch(BOT_URL + '/stats', {
+    method: 'PUT', headers: hdr(),
+    body: JSON.stringify({
+      charsDetruitTotal: document.getElementById('statDetruits').value,
+      charsPerdusTotal: document.getElementById('statPerdus').value,
+      charsCapturesTotal: document.getElementById('statCaptures').value,
+      recordRapport: document.getElementById('statRecord').value
+    })
+  }).then(function(r) { return r.json(); }).then(function(data) {
+    fb.textContent = data.success ? 'Stats sauvegardees !' : 'Erreur : ' + data.error;
+    fb.className = 'feedback ' + (data.success ? 'success' : 'error');
+  });
 }
-function resetStats(){
-  if(!confirm('Reinitialiser les stats du mois ? Un bilan sera envoye avant.')) return;
-  fetch(BOT_URL+'/stats/reset',{method:'POST',headers:hdr()}).then(r=>r.json()).then(data=>{if(data.success){alert('Stats reinitialisees !');chargerStats();}else alert('Erreur : '+data.error);});
+function resetStats() {
+  if (!confirm('Reinitialiser les stats ? Un bilan sera envoye.')) return;
+  fetch(BOT_URL + '/stats/reset', { method: 'POST', headers: hdr() })
+  .then(function(r) { return r.json(); })
+  .then(function(data) {
+    if (data.success) { alert('Stats reinitialisees !'); chargerStats(); }
+    else alert('Erreur : ' + data.error);
+  });
 }
-function supprimerRapport(id){
-  if(!confirm('Supprimer ce rapport ?')) return;
-  fetch(BOT_URL+'/stats/rapport/'+id,{method:'DELETE',headers:hdr()}).then(r=>r.json()).then(data=>{if(data.success)chargerStats();});
+function supprimerRapport(id) {
+  if (!confirm('Supprimer ce rapport ?')) return;
+  fetch(BOT_URL + '/stats/rapport/' + id, { method: 'DELETE', headers: hdr() })
+  .then(function(r) { return r.json(); })
+  .then(function(data) { if (data.success) chargerStats(); });
 }
 
-// COMPTES
-function chargerComptes(){
-  fetch(BOT_URL+'/comptes',{headers:hdr()}).then(r=>r.json()).then(data=>{
-    document.getElementById('comptesList').innerHTML=data.map(c=>
-      '<div class="compte-item">'
-      +'<div class="compte-left"><div class="compte-avatar">'+c.username[0].toUpperCase()+'</div>'
-      +'<div><div class="compte-name">'+c.username+'</div><span class="role-badge role-'+c.role+'">'+c.role+'</span></div></div>'
-      +'<div class="compte-actions">'
-      +'<button class="btn-sm btn-info" onclick="ouvrirModalModifier(\''+c.username+'\',\''+c.role+'\')">⚙️ Modifier</button>'
-      +(c.username!=='admin'?'<button class="btn-sm btn-danger" onclick="supprimerCompte(\''+c.username+'\')">🗑️</button>':'')
-      +'</div></div>'
-    ).join('');
+function chargerComptes() {
+  fetch(BOT_URL + '/comptes', { headers: hdr() })
+  .then(function(r) { return r.json(); })
+  .then(function(data) {
+    var html = '';
+    for (var i = 0; i < data.length; i++) {
+      var c = data[i];
+      html += '<div class="compte-item">';
+      html += '<div class="compte-left"><div class="compte-avatar">' + c.username[0].toUpperCase() + '</div>';
+      html += '<div><div class="compte-name">' + c.username + '</div>';
+      html += '<span class="role-badge role-' + c.role + '">' + c.role + '</span></div></div>';
+      html += '<div class="compte-actions">';
+      html += '<button class="btn-sm btn-info" onclick="ouvrirModalModifier('' + c.username + '','' + c.role + '')">Modifier</button>';
+      if (c.username !== 'admin') {
+        html += '<button class="btn-sm btn-danger" onclick="supprimerCompte('' + c.username + '')">Supprimer</button>';
+      }
+      html += '</div></div>';
+    }
+    document.getElementById('comptesList').innerHTML = html;
   });
 }
 
-function ouvrirModalCreer(){
-  modalMode='creer';
-  document.getElementById('modalTitle').textContent='Creer un compte';
-  document.getElementById('modalUsername').value='';
-  document.getElementById('modalPassword').value='';
-  document.getElementById('modalRole').value='normal';
-  document.getElementById('modalFeedback').style.display='none';
+function ouvrirModalCreer() {
+  modalMode = 'creer';
+  document.getElementById('modalTitle').textContent = 'Creer un compte';
+  document.getElementById('modalUsername').value = '';
+  document.getElementById('modalPassword').value = '';
+  document.getElementById('modalRole').value = 'normal';
+  document.getElementById('modalFeedback').style.display = 'none';
   document.getElementById('modalOverlay').classList.add('open');
 }
-function ouvrirModalModifier(username,role){
-  modalMode='modifier'; modalOldUsername=username;
-  document.getElementById('modalTitle').textContent='Modifier : '+username;
-  document.getElementById('modalUsername').value=username;
-  document.getElementById('modalPassword').value='';
-  document.getElementById('modalRole').value=role;
-  document.getElementById('modalFeedback').style.display='none';
+function ouvrirModalModifier(username, role) {
+  modalMode = 'modifier'; modalOldUsername = username;
+  document.getElementById('modalTitle').textContent = 'Modifier : ' + username;
+  document.getElementById('modalUsername').value = username;
+  document.getElementById('modalPassword').value = '';
+  document.getElementById('modalRole').value = role;
+  document.getElementById('modalFeedback').style.display = 'none';
   document.getElementById('modalOverlay').classList.add('open');
 }
-function fermerModal(){document.getElementById('modalOverlay').classList.remove('open');}
-function togglePwd(){const inp=document.getElementById('modalPassword');inp.type=inp.type==='password'?'text':'password';}
-function sauvegarderModal(){
-  const fb=document.getElementById('modalFeedback');
-  const u=document.getElementById('modalUsername').value;
-  const p=document.getElementById('modalPassword').value;
-  const r=document.getElementById('modalRole').value;
-  if(!u){fb.textContent='Nom utilisateur requis !';fb.className='feedback error';return;}
-  if(modalMode==='creer'){
-    if(!p){fb.textContent='Mot de passe requis !';fb.className='feedback error';return;}
-    fetch(BOT_URL+'/comptes',{method:'POST',headers:hdr(),body:JSON.stringify({username:u,password:p,role:r})})
-    .then(x=>x.json()).then(data=>{if(data.success){fermerModal();chargerComptes();}else{fb.textContent='❌ '+data.error;fb.className='feedback error';}});
+function fermerModal() { document.getElementById('modalOverlay').classList.remove('open'); }
+function togglePwd() {
+  var inp = document.getElementById('modalPassword');
+  inp.type = inp.type === 'password' ? 'text' : 'password';
+}
+function sauvegarderModal() {
+  var fb = document.getElementById('modalFeedback');
+  var u = document.getElementById('modalUsername').value;
+  var p = document.getElementById('modalPassword').value;
+  var r = document.getElementById('modalRole').value;
+  if (!u) { fb.textContent = 'Nom utilisateur requis !'; fb.className = 'feedback error'; return; }
+  if (modalMode === 'creer') {
+    if (!p) { fb.textContent = 'Mot de passe requis !'; fb.className = 'feedback error'; return; }
+    fetch(BOT_URL + '/comptes', {
+      method: 'POST', headers: hdr(),
+      body: JSON.stringify({ username: u, password: p, role: r })
+    }).then(function(x) { return x.json(); }).then(function(data) {
+      if (data.success) { fermerModal(); chargerComptes(); }
+      else { fb.textContent = 'Erreur : ' + data.error; fb.className = 'feedback error'; }
+    });
   } else {
-    const body={};
-    if(u!==modalOldUsername) body.newUsername=u;
-    if(p) body.newPassword=p;
-    if(r) body.newRole=r;
-    fetch(BOT_URL+'/comptes/'+modalOldUsername,{method:'PUT',headers:hdr(),body:JSON.stringify(body)})
-    .then(x=>x.json()).then(data=>{if(data.success){fermerModal();chargerComptes();}else{fb.textContent='❌ '+data.error;fb.className='feedback error';}});
+    var body = {};
+    if (u !== modalOldUsername) body.newUsername = u;
+    if (p) body.newPassword = p;
+    if (r) body.newRole = r;
+    fetch(BOT_URL + '/comptes/' + modalOldUsername, {
+      method: 'PUT', headers: hdr(), body: JSON.stringify(body)
+    }).then(function(x) { return x.json(); }).then(function(data) {
+      if (data.success) { fermerModal(); chargerComptes(); }
+      else { fb.textContent = 'Erreur : ' + data.error; fb.className = 'feedback error'; }
+    });
   }
 }
-function supprimerCompte(u){
-  if(!confirm('Supprimer le compte '+u+' ?')) return;
-  fetch(BOT_URL+'/comptes/'+u,{method:'DELETE',headers:hdr()}).then(r=>r.json()).then(data=>{if(data.success)chargerComptes();});
+function supprimerCompte(u) {
+  if (!confirm('Supprimer le compte ' + u + ' ?')) return;
+  fetch(BOT_URL + '/comptes/' + u, { method: 'DELETE', headers: hdr() })
+  .then(function(r) { return r.json(); })
+  .then(function(data) { if (data.success) chargerComptes(); });
 }
-document.getElementById('modalOverlay').addEventListener('click',function(e){if(e.target===this)fermerModal();});
+document.getElementById('modalOverlay').addEventListener('click', function(e) {
+  if (e.target === this) fermerModal();
+});
+
+var BOT_URL = window.location.origin;
 
 </script>
 </body>
