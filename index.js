@@ -21,14 +21,14 @@ const ADMIN_PASSWORD = process.env.DASHBOARD_PASSWORD || "admin";
 
 let db;
 const parties = new Map();
-const MOIS = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
+const MOIS = ['Janvier','Fevrier','Mars','Avril','Mai','Juin','Juillet','Aout','Septembre','Octobre','Novembre','Decembre'];
 
 // ===== MONGODB =====
 async function connectMongo() {
   const mongoClient = new MongoClient(MONGODB_URL);
   await mongoClient.connect();
   db = mongoClient.db('multibot');
-  console.log('MongoDB connecté !');
+  console.log('MongoDB connecte !');
   const comptes = db.collection('comptes');
   const admin = await comptes.findOne({ username: 'admin' });
   if (!admin) await comptes.insertOne({ username: 'admin', password: ADMIN_PASSWORD, role: 'admin' });
@@ -43,9 +43,9 @@ async function saveStats(stats) { await db.collection('stats').replaceOne({ _id:
 
 // ===== COMMANDES SLASH =====
 const commands = [
-  new SlashCommandBuilder().setName('oxo').setDescription('Jouer au Morpion contre quelqu\'un').addUserOption(o => o.setName('adversaire').setDescription('Ton adversaire').setRequired(true)),
-  new SlashCommandBuilder().setName('puissance4').setDescription('Jouer au Puissance 4 contre quelqu\'un').addUserOption(o => o.setName('adversaire').setDescription('Ton adversaire').setRequired(true)),
-  new SlashCommandBuilder().setName('demineur').setDescription('Jouer au Démineur').addStringOption(o => o.setName('difficulte').setDescription('Difficulté').setRequired(false).addChoices({ name: 'Facile (5x5)', value: 'facile' }, { name: 'Moyen (7x7)', value: 'moyen' }, { name: 'Difficile (9x9)', value: 'difficile' })),
+  new SlashCommandBuilder().setName('oxo').setDescription('Jouer au Morpion').addUserOption(o => o.setName('adversaire').setDescription('Ton adversaire').setRequired(true)),
+  new SlashCommandBuilder().setName('puissance4').setDescription('Jouer au Puissance 4').addUserOption(o => o.setName('adversaire').setDescription('Ton adversaire').setRequired(true)),
+  new SlashCommandBuilder().setName('demineur').setDescription('Jouer au Demineur').addStringOption(o => o.setName('difficulte').setDescription('Difficulte').setRequired(false).addChoices({ name: 'Facile (5x5)', value: 'facile' }, { name: 'Moyen (7x7)', value: 'moyen' }, { name: 'Difficile (9x9)', value: 'difficile' })),
   new SlashCommandBuilder().setName('logimage').setDescription('Jouer au Logimage (Nonogramme)'),
 ].map(c => c.toJSON());
 
@@ -54,7 +54,7 @@ async function enregistrerCommandes() {
   try {
     await rest.put(Routes.applicationCommands(CLIENT_ID), { body: [] });
     await rest.put(Routes.applicationGuildCommands(CLIENT_ID, GUILD_ID), { body: commands });
-    console.log('Commandes enregistrées !');
+    console.log('Commandes enregistrees !');
   } catch (err) { console.error('Erreur:', err); }
 }
 
@@ -71,7 +71,7 @@ function oxoButtons(grille, fini) {
     const row = new ActionRowBuilder();
     for (let c = 0; c < 3; c++) {
       const i = r * 3 + c;
-      row.addComponents(new ButtonBuilder().setCustomId(`oxo_${i}`).setLabel(grille[i] ? (grille[i] === 'X' ? '❌' : '⭕') : '⬜').setStyle(grille[i] === 'X' ? ButtonStyle.Danger : grille[i] === 'O' ? ButtonStyle.Primary : ButtonStyle.Secondary).setDisabled(!!grille[i] || fini));
+      row.addComponents(new ButtonBuilder().setCustomId(`oxo_${i}`).setLabel(grille[i] ? (grille[i] === 'X' ? 'X' : 'O') : '-').setStyle(grille[i] === 'X' ? ButtonStyle.Danger : grille[i] === 'O' ? ButtonStyle.Primary : ButtonStyle.Secondary).setDisabled(!!grille[i] || fini));
     }
     rows.push(row);
   }
@@ -93,9 +93,9 @@ function p4Verifier(g) {
   return g.every(row => row.every(c => c)) ? 'nul' : null;
 }
 function p4Afficher(g) {
-  const e = { '1': '🔴', '2': '🟡', null: '⚫' };
-  let txt = '1️⃣2️⃣3️⃣4️⃣5️⃣6️⃣7️⃣\n';
-  for (const row of g) txt += row.map(c => e[c]).join('') + '\n';
+  const e = { '1': 'R', '2': 'J', null: '.' };
+  let txt = '1 2 3 4 5 6 7\n';
+  for (const row of g) txt += row.map(c => e[c]).join(' ') + '\n';
   return txt;
 }
 function p4Buttons(g) {
@@ -120,9 +120,8 @@ function demCreer(taille, mines) {
   return { g, rev, drap, taille, mines, fini: false, gagne: false };
 }
 function demAfficher(jeu) {
-  const nums = ['0️⃣','1️⃣','2️⃣','3️⃣','4️⃣','5️⃣','6️⃣','7️⃣','8️⃣'];
   let txt = '';
-  for (let r=0;r<jeu.taille;r++) { for (let c=0;c<jeu.taille;c++) { if (jeu.drap[r][c]) txt+='🚩'; else if (!jeu.rev[r][c]) txt+='🟦'; else if (jeu.g[r][c]===-1) txt+='💣'; else txt+=nums[jeu.g[r][c]]; } txt+='\n'; }
+  for (let r=0;r<jeu.taille;r++) { for (let c=0;c<jeu.taille;c++) { if (jeu.drap[r][c]) txt+='F'; else if (!jeu.rev[r][c]) txt+='?'; else if (jeu.g[r][c]===-1) txt+='*'; else txt+=jeu.g[r][c]; } txt+='\n'; }
   return txt;
 }
 function demButtons(jeu) {
@@ -131,7 +130,7 @@ function demButtons(jeu) {
     const row = new ActionRowBuilder();
     for (let c=0;c<Math.min(jeu.taille,5);c++) {
       const rev = jeu.rev[r][c];
-      row.addComponents(new ButtonBuilder().setCustomId(`dem_${r}_${c}`).setLabel(rev?(jeu.g[r][c]===0?'·':String(jeu.g[r][c])):(jeu.drap[r][c]?'🚩':'?')).setStyle(rev?ButtonStyle.Secondary:ButtonStyle.Primary).setDisabled(rev||jeu.fini));
+      row.addComponents(new ButtonBuilder().setCustomId(`dem_${r}_${c}`).setLabel(rev?(jeu.g[r][c]===0?'.':String(jeu.g[r][c])):(jeu.drap[r][c]?'F':'?')).setStyle(rev?ButtonStyle.Secondary:ButtonStyle.Primary).setDisabled(rev||jeu.fini));
     }
     rows.push(row);
   }
@@ -140,7 +139,7 @@ function demButtons(jeu) {
 
 // ===== LOGIMAGE =====
 const logimagesPuzzles = [
-  { nom: "Cœur", rows: [[0,2],[2,2],[4],[6],[4],[2,2],[0,2]], cols: [[1],[1,1],[3],[5],[3],[1,1],[1]], taille: 7,
+  { nom: "Coeur", rows: [[0,2],[2,2],[4],[6],[4],[2,2],[0,2]], cols: [[1],[1,1],[3],[5],[3],[1,1],[1]], taille: 7,
     solution: [[0,1,0,0,0,1,0],[1,1,0,0,0,1,1],[1,1,1,1,1,1,1],[0,1,1,1,1,1,0],[0,0,1,1,1,0,0],[0,0,0,1,0,0,0],[0,0,0,0,0,0,0]] },
   { nom: "Maison", rows: [[3],[5],[1,1],[1,1],[5]], cols: [[1],[2,1],[5],[2,1],[1]], taille: 5,
     solution: [[0,1,1,1,0],[1,1,1,1,1],[1,0,1,0,1],[1,0,1,0,1],[1,1,1,1,1]] }
@@ -150,7 +149,7 @@ function logiAfficher(jeu) {
   let txt = '```\n';
   const maxColHint = Math.max(...jeu.puzzle.cols.map(c => c.length));
   for (let h=0;h<maxColHint;h++) { txt+='   '; for (let c=0;c<t;c++) { const hints=jeu.puzzle.cols[c]; const idx=hints.length-maxColHint+h; txt+=idx>=0?` ${hints[idx]}`:'  '; } txt+='\n'; }
-  for (let r=0;r<t;r++) { const hint=jeu.puzzle.rows[r].join(' '); txt+=hint.padStart(3)+' '; for (let c=0;c<t;c++) { const val=jeu.grille[r][c]; txt+=val===1?'██':val===-1?'XX':'░░'; } txt+='\n'; }
+  for (let r=0;r<t;r++) { const hint=jeu.puzzle.rows[r].join(' '); txt+=hint.padStart(3)+' '; for (let c=0;c<t;c++) { const val=jeu.grille[r][c]; txt+=val===1?'##':val===-1?'XX':'..'; } txt+='\n'; }
   txt+='```'; return txt;
 }
 function logiButtons(jeu) {
@@ -158,10 +157,10 @@ function logiButtons(jeu) {
   const t = jeu.puzzle.taille;
   for (let r=0;r<t&&r<5;r++) {
     const row = new ActionRowBuilder();
-    for (let c=0;c<t&&c<5;c++) { const val=jeu.grille[r][c]; row.addComponents(new ButtonBuilder().setCustomId(`logi_${r}_${c}`).setLabel(val===1?'■':val===-1?'X':'·').setStyle(val===1?ButtonStyle.Success:val===-1?ButtonStyle.Danger:ButtonStyle.Secondary).setDisabled(jeu.fini)); }
+    for (let c=0;c<t&&c<5;c++) { const val=jeu.grille[r][c]; row.addComponents(new ButtonBuilder().setCustomId(`logi_${r}_${c}`).setLabel(val===1?'#':val===-1?'X':'.').setStyle(val===1?ButtonStyle.Success:val===-1?ButtonStyle.Danger:ButtonStyle.Secondary).setDisabled(jeu.fini)); }
     rows.push(row);
   }
-  rows.push(new ActionRowBuilder().addComponents(new ButtonBuilder().setCustomId('logi_check').setLabel('✅ Vérifier').setStyle(ButtonStyle.Primary).setDisabled(jeu.fini)));
+  rows.push(new ActionRowBuilder().addComponents(new ButtonBuilder().setCustomId('logi_check').setLabel('Verifier').setStyle(ButtonStyle.Primary).setDisabled(jeu.fini)));
   return rows;
 }
 
@@ -170,19 +169,19 @@ client.on('interactionCreate', async interaction => {
   if (interaction.isChatInputCommand()) {
     if (interaction.commandName === 'oxo') {
       const adv = interaction.options.getUser('adversaire');
-      if (adv.id === interaction.user.id) return interaction.reply({ content: '❌ Tu ne peux pas jouer contre toi-même !', ephemeral: true });
+      if (adv.id === interaction.user.id) return interaction.reply({ content: 'Tu ne peux pas jouer contre toi-meme !', ephemeral: true });
       const id = `oxo_${interaction.channelId}`;
       parties.set(id, { grille: oxoGrille(), joueurs: [interaction.user.id, adv.id], tour: 0 });
-      const embed = new EmbedBuilder().setTitle('⭕❌ Morpion').setColor(0xFFD700).setDescription(`**${interaction.user.username}** ❌ vs **${adv.username}** ⭕\n\nC'est au tour de **${interaction.user.username}** ❌`);
+      const embed = new EmbedBuilder().setTitle('Morpion').setColor(0xFFD700).setDescription(`${interaction.user.username} (X) vs ${adv.username} (O)\n\nTour de ${interaction.user.username}`);
       await interaction.reply({ embeds: [embed], components: oxoButtons(parties.get(id).grille, false) });
     }
     else if (interaction.commandName === 'puissance4') {
       const adv = interaction.options.getUser('adversaire');
-      if (adv.id === interaction.user.id) return interaction.reply({ content: '❌ Tu ne peux pas jouer contre toi-même !', ephemeral: true });
+      if (adv.id === interaction.user.id) return interaction.reply({ content: 'Tu ne peux pas jouer contre toi-meme !', ephemeral: true });
       const id = `p4_${interaction.channelId}`;
       const grille = p4Grille();
       parties.set(id, { grille, joueurs: [interaction.user.id, adv.id], tour: 0 });
-      const embed = new EmbedBuilder().setTitle('🔴🟡 Puissance 4').setColor(0xFFD700).setDescription(`**${interaction.user.username}** 🔴 vs **${adv.username}** 🟡\n\n${p4Afficher(grille)}\nC'est au tour de **${interaction.user.username}** 🔴`);
+      const embed = new EmbedBuilder().setTitle('Puissance 4').setColor(0xFFD700).setDescription(`${interaction.user.username} (R) vs ${adv.username} (J)\n\n${p4Afficher(grille)}\nTour de ${interaction.user.username}`);
       await interaction.reply({ embeds: [embed], components: p4Buttons(grille) });
     }
     else if (interaction.commandName === 'demineur') {
@@ -191,7 +190,7 @@ client.on('interactionCreate', async interaction => {
       const { taille, mines } = config[diff];
       const jeu = demCreer(taille, mines);
       parties.set(`dem_${interaction.user.id}`, { ...jeu, userId: interaction.user.id });
-      const embed = new EmbedBuilder().setTitle('💣 Démineur').setColor(0xFFD700).setDescription(`Difficulté : **${diff}** | Mines : **${mines}**\n\n${demAfficher(jeu)}\nClique sur une case !`);
+      const embed = new EmbedBuilder().setTitle('Demineur').setColor(0xFFD700).setDescription(`Difficulte : ${diff} | Mines : ${mines}\n\n${demAfficher(jeu)}`);
       await interaction.reply({ embeds: [embed], components: demButtons(jeu) });
     }
     else if (interaction.commandName === 'logimage') {
@@ -199,7 +198,7 @@ client.on('interactionCreate', async interaction => {
       const grille = Array(puzzle.taille).fill(null).map(() => Array(puzzle.taille).fill(0));
       const jeu = { grille, puzzle, fini: false, userId: interaction.user.id };
       parties.set(`logi_${interaction.user.id}`, jeu);
-      const embed = new EmbedBuilder().setTitle(`🖼️ Logimage — ${puzzle.nom}`).setColor(0xFFD700).setDescription(`${logiAfficher(jeu)}\n■ rempli | X vide | · effacé`);
+      const embed = new EmbedBuilder().setTitle(`Logimage - ${puzzle.nom}`).setColor(0xFFD700).setDescription(`${logiAfficher(jeu)}\n# rempli | X vide | . efface`);
       await interaction.reply({ embeds: [embed], components: logiButtons(jeu) });
     }
   }
@@ -209,50 +208,50 @@ client.on('interactionCreate', async interaction => {
     if (id.startsWith('oxo_')) {
       const partieId = `oxo_${interaction.channelId}`;
       const partie = parties.get(partieId);
-      if (!partie) return interaction.reply({ content: '❌ Partie introuvable !', ephemeral: true });
+      if (!partie) return interaction.reply({ content: 'Partie introuvable !', ephemeral: true });
       const joueurIdx = partie.joueurs.indexOf(interaction.user.id);
-      if (joueurIdx === -1) return interaction.reply({ content: '❌ Tu ne fais pas partie de cette partie !', ephemeral: true });
-      if (joueurIdx !== partie.tour) return interaction.reply({ content: '⏳ Ce n\'est pas ton tour !', ephemeral: true });
+      if (joueurIdx === -1) return interaction.reply({ content: 'Tu ne fais pas partie de cette partie !', ephemeral: true });
+      if (joueurIdx !== partie.tour) return interaction.reply({ content: 'Ce n\'est pas ton tour !', ephemeral: true });
       const case_ = parseInt(id.split('_')[1]);
-      if (partie.grille[case_]) return interaction.reply({ content: '❌ Case déjà jouée !', ephemeral: true });
+      if (partie.grille[case_]) return interaction.reply({ content: 'Case deja jouee !', ephemeral: true });
       partie.grille[case_] = partie.tour === 0 ? 'X' : 'O';
       const resultat = oxoVerifier(partie.grille);
       const noms = await Promise.all(partie.joueurs.map(id => client.users.fetch(id)));
       let desc = ''; let fini = false;
-      if (resultat === 'nul') { desc = '🤝 Match nul !'; fini = true; parties.delete(partieId); }
-      else if (resultat) { desc = `🎉 **${noms[partie.tour].username}** a gagné !`; fini = true; parties.delete(partieId); }
-      else { partie.tour = 1 - partie.tour; desc = `C'est au tour de **${noms[partie.tour].username}** ${partie.tour === 0 ? '❌' : '⭕'}`; }
-      const embed = new EmbedBuilder().setTitle('⭕❌ Morpion').setColor(fini ? 0x4CAF50 : 0xFFD700).setDescription(`**${noms[0].username}** ❌ vs **${noms[1].username}** ⭕\n\n${desc}`);
+      if (resultat === 'nul') { desc = 'Match nul !'; fini = true; parties.delete(partieId); }
+      else if (resultat) { desc = `${noms[partie.tour].username} a gagne !`; fini = true; parties.delete(partieId); }
+      else { partie.tour = 1 - partie.tour; desc = `Tour de ${noms[partie.tour].username}`; }
+      const embed = new EmbedBuilder().setTitle('Morpion').setColor(fini ? 0x4CAF50 : 0xFFD700).setDescription(`${noms[0].username} (X) vs ${noms[1].username} (O)\n\n${desc}`);
       await interaction.update({ embeds: [embed], components: oxoButtons(partie.grille, fini) });
     }
     else if (id.startsWith('p4_')) {
       const partieId = `p4_${interaction.channelId}`;
       const partie = parties.get(partieId);
-      if (!partie) return interaction.reply({ content: '❌ Partie introuvable !', ephemeral: true });
+      if (!partie) return interaction.reply({ content: 'Partie introuvable !', ephemeral: true });
       const joueurIdx = partie.joueurs.indexOf(interaction.user.id);
-      if (joueurIdx === -1) return interaction.reply({ content: '❌ Tu ne fais pas partie de cette partie !', ephemeral: true });
-      if (joueurIdx !== partie.tour) return interaction.reply({ content: '⏳ Ce n\'est pas ton tour !', ephemeral: true });
+      if (joueurIdx === -1) return interaction.reply({ content: 'Tu ne fais pas partie de cette partie !', ephemeral: true });
+      if (joueurIdx !== partie.tour) return interaction.reply({ content: 'Ce n\'est pas ton tour !', ephemeral: true });
       const col = parseInt(id.split('_')[1]);
       let placed = false;
       for (let r = 5; r >= 0; r--) { if (!partie.grille[r][col]) { partie.grille[r][col] = String(partie.tour + 1); placed = true; break; } }
-      if (!placed) return interaction.reply({ content: '❌ Colonne pleine !', ephemeral: true });
+      if (!placed) return interaction.reply({ content: 'Colonne pleine !', ephemeral: true });
       const resultat = p4Verifier(partie.grille);
       const noms = await Promise.all(partie.joueurs.map(id => client.users.fetch(id)));
       let desc = ''; let fini = false;
-      if (resultat === 'nul') { desc = '🤝 Match nul !'; fini = true; parties.delete(partieId); }
-      else if (resultat) { desc = `🎉 **${noms[partie.tour].username}** a gagné !`; fini = true; parties.delete(partieId); }
-      else { partie.tour = 1 - partie.tour; desc = `C'est au tour de **${noms[partie.tour].username}** ${partie.tour === 0 ? '🔴' : '🟡'}`; }
-      const embed = new EmbedBuilder().setTitle('🔴🟡 Puissance 4').setColor(fini ? 0x4CAF50 : 0xFFD700).setDescription(`**${noms[0].username}** 🔴 vs **${noms[1].username}** 🟡\n\n${p4Afficher(partie.grille)}\n${desc}`);
+      if (resultat === 'nul') { desc = 'Match nul !'; fini = true; parties.delete(partieId); }
+      else if (resultat) { desc = `${noms[partie.tour].username} a gagne !`; fini = true; parties.delete(partieId); }
+      else { partie.tour = 1 - partie.tour; desc = `Tour de ${noms[partie.tour].username}`; }
+      const embed = new EmbedBuilder().setTitle('Puissance 4').setColor(fini ? 0x4CAF50 : 0xFFD700).setDescription(`${noms[0].username} (R) vs ${noms[1].username} (J)\n\n${p4Afficher(partie.grille)}\n${desc}`);
       await interaction.update({ embeds: [embed], components: fini ? [] : p4Buttons(partie.grille) });
     }
     else if (id.startsWith('dem_')) {
       const jeu = parties.get(`dem_${interaction.user.id}`);
-      if (!jeu) return interaction.reply({ content: '❌ Partie introuvable !', ephemeral: true });
+      if (!jeu) return interaction.reply({ content: 'Partie introuvable !', ephemeral: true });
       const [, r, c] = id.split('_').map(Number);
       if (jeu.g[r][c] === -1) {
         jeu.fini = true;
         for (let i=0;i<jeu.taille;i++) for (let j=0;j<jeu.taille;j++) if (jeu.g[i][j]===-1) jeu.rev[i][j]=true;
-        return interaction.update({ embeds: [new EmbedBuilder().setTitle('💣 Démineur').setColor(0xf44336).setDescription(`${demAfficher(jeu)}\n\n💥 **BOOM ! Tu as perdu !**`)], components: [] });
+        return interaction.update({ embeds: [new EmbedBuilder().setTitle('Demineur').setColor(0xf44336).setDescription(`${demAfficher(jeu)}\n\nBOOM ! Tu as perdu !`)], components: [] });
       }
       const queue = [[r, c]];
       while (queue.length) {
@@ -264,19 +263,19 @@ client.on('interactionCreate', async interaction => {
       let gagne = true;
       for (let i=0;i<jeu.taille;i++) for (let j=0;j<jeu.taille;j++) if (jeu.g[i][j]!==-1&&!jeu.rev[i][j]) { gagne=false; break; }
       if (gagne) jeu.fini = true;
-      await interaction.update({ embeds: [new EmbedBuilder().setTitle('💣 Démineur').setColor(gagne ? 0x4CAF50 : 0xFFD700).setDescription(`${demAfficher(jeu)}\n\n${gagne ? '🎉 **Bravo, tu as gagné !**' : 'Continue !'}`)], components: jeu.fini ? [] : demButtons(jeu) });
+      await interaction.update({ embeds: [new EmbedBuilder().setTitle('Demineur').setColor(gagne ? 0x4CAF50 : 0xFFD700).setDescription(`${demAfficher(jeu)}\n\n${gagne ? 'Bravo, tu as gagne !' : 'Continue !'}`)], components: jeu.fini ? [] : demButtons(jeu) });
     }
     else if (id.startsWith('logi_')) {
       const jeu = parties.get(`logi_${interaction.user.id}`);
-      if (!jeu) return interaction.reply({ content: '❌ Partie introuvable !', ephemeral: true });
+      if (!jeu) return interaction.reply({ content: 'Partie introuvable !', ephemeral: true });
       if (id === 'logi_check') {
         const correct = jeu.grille.every((row, r) => row.every((v, c) => (v === 1) === (jeu.puzzle.solution[r][c] === 1)));
         jeu.fini = correct;
-        return interaction.update({ embeds: [new EmbedBuilder().setTitle(`🖼️ Logimage — ${jeu.puzzle.nom}`).setColor(correct ? 0x4CAF50 : 0xFFD700).setDescription(`${logiAfficher(jeu)}\n\n${correct ? '🎉 **Bravo, Logimage résolu !**' : '❌ Pas encore correct, continue !'}`)], components: correct ? [] : logiButtons(jeu) });
+        return interaction.update({ embeds: [new EmbedBuilder().setTitle(`Logimage - ${jeu.puzzle.nom}`).setColor(correct ? 0x4CAF50 : 0xFFD700).setDescription(`${logiAfficher(jeu)}\n\n${correct ? 'Bravo, Logimage resolu !' : 'Pas encore correct, continue !'}`)], components: correct ? [] : logiButtons(jeu) });
       }
       const [, r, c] = id.split('_').map(Number);
       jeu.grille[r][c] = jeu.grille[r][c] === 0 ? 1 : jeu.grille[r][c] === 1 ? -1 : 0;
-      await interaction.update({ embeds: [new EmbedBuilder().setTitle(`🖼️ Logimage — ${jeu.puzzle.nom}`).setColor(0xFFD700).setDescription(`${logiAfficher(jeu)}\n■ rempli | X vide | · effacé`)], components: logiButtons(jeu) });
+      await interaction.update({ embeds: [new EmbedBuilder().setTitle(`Logimage - ${jeu.puzzle.nom}`).setColor(0xFFD700).setDescription(`${logiAfficher(jeu)}\n# rempli | X vide | . efface`)], components: logiButtons(jeu) });
     }
   }
 });
@@ -290,16 +289,16 @@ async function envoyerLog(titre, description, couleur = 0xFFD700) {
 
 // ===== BILAN MENSUEL =====
 async function envoyerBilanMensuel(stats) {
-  const ratio = stats.charsPerdusTotal > 0 ? (stats.charsDetruitTotal / stats.charsPerdusTotal).toFixed(2) : stats.charsDetruitTotal > 0 ? '∞' : '0';
+  const ratio = stats.charsPerdusTotal > 0 ? (stats.charsDetruitTotal / stats.charsPerdusTotal).toFixed(2) : stats.charsDetruitTotal > 0 ? 'inf' : '0';
   const meilleurTireur = Object.entries(stats.tireurs).sort((a, b) => b[1] - a[1])[0];
-  const embed = { embeds: [{ title: `📊 Bilan de ${MOIS[stats.mois]} ${stats.annee}`, color: 0xFFD700, fields: [
-    { name: '💥 Chars détruits', value: `**${stats.charsDetruitTotal}**`, inline: true },
-    { name: '💀 Chars perdus', value: `**${stats.charsPerdusTotal}**`, inline: true },
-    { name: '🚩 Capturés', value: `**${stats.charsCapturesTotal||0}**`, inline: true },
-    { name: '⚖️ Ratio', value: `**${ratio}**`, inline: true },
-    { name: '🏆 Record', value: `**${stats.recordRapport}** chars en un rapport`, inline: false },
-    { name: '🎯 Meilleur tireur', value: meilleurTireur ? `**${meilleurTireur[0]}** — **${meilleurTireur[1]}** chars` : 'Aucun', inline: false },
-  ], footer: { text: `Réinitialisation — ${MOIS[stats.mois]} ${stats.annee}` }, timestamp: new Date().toISOString() }] };
+  const embed = { embeds: [{ title: `Bilan de ${MOIS[stats.mois]} ${stats.annee}`, color: 0xFFD700, fields: [
+    { name: 'Chars detruits', value: `**${stats.charsDetruitTotal}**`, inline: true },
+    { name: 'Chars perdus', value: `**${stats.charsPerdusTotal}**`, inline: true },
+    { name: 'Captures', value: `**${stats.charsCapturesTotal||0}**`, inline: true },
+    { name: 'Ratio', value: `**${ratio}**`, inline: true },
+    { name: 'Record', value: `**${stats.recordRapport}** chars en un rapport`, inline: false },
+    { name: 'Meilleur tireur', value: meilleurTireur ? `**${meilleurTireur[0]}** - **${meilleurTireur[1]}** chars` : 'Aucun', inline: false },
+  ], footer: { text: `Reinitialisation - ${MOIS[stats.mois]} ${stats.annee}` }, timestamp: new Date().toISOString() }] };
   for (const userId of USER_IDS) { try { const u = await client.users.fetch(userId.trim()); await u.send(embed); } catch (e) {} }
   if (WEBHOOK_URL) await fetch(WEBHOOK_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(embed) });
 }
@@ -317,9 +316,9 @@ async function verifierReinitialisationMois(stats) {
 let botStartTime = new Date();
 
 client.once('ready', () => {
-  console.log(`Bot connecté : ${client.user.tag}`);
+  console.log(`Bot connecte : ${client.user.tag}`);
   botStartTime = new Date();
-  envoyerLog("🟢 Bot démarré", `**${client.user.tag}** en ligne !`, 0x4CAF50);
+  envoyerLog("Bot demarre", `${client.user.tag} en ligne !`, 0x4CAF50);
   enregistrerCommandes();
 });
 
@@ -329,14 +328,14 @@ function auth(req, res, next) {
   const password = req.headers['x-password'];
   getComptes().then(comptes => {
     const compte = comptes.find(c => c.username === username && c.password === password);
-    if (!compte) return res.status(401).json({ error: "Non autorisé" });
+    if (!compte) return res.status(401).json({ error: "Non autorise" });
     req.compte = compte;
     next();
-  }).catch(err => { res.status(500).json({ error: "Erreur serveur" }); });
+  }).catch(() => { res.status(500).json({ error: "Erreur serveur" }); });
 }
 
 function adminOnly(req, res, next) {
-  if (req.compte.role !== 'admin') return res.status(403).json({ error: "Réservé à l'admin" });
+  if (req.compte.role !== 'admin') return res.status(403).json({ error: "Reserve a l'admin" });
   next();
 }
 
@@ -344,16 +343,15 @@ function adminOnly(req, res, next) {
 app.post('/login', async (req, res) => {
   const comptes = await getComptes();
   const compte = comptes.find(c => c.username === req.body.username && c.password === req.body.password);
-  if (!compte) { envoyerLog("🔴 Connexion échouée", `**${req.body.username}**`, 0xf44336); return res.status(401).json({ error: "Identifiants incorrects" }); }
-  envoyerLog("🔵 Connexion", `**${compte.username}** (${compte.role})`, 0x378ADD);
+  if (!compte) { envoyerLog("Connexion echouee", req.body.username, 0xf44336); return res.status(401).json({ error: "Identifiants incorrects" }); }
+  envoyerLog("Connexion", `${compte.username} (${compte.role})`, 0x378ADD);
   res.json({ success: true, role: compte.role, username: compte.username });
 });
 
 app.get('/status', auth, (req, res) => {
-  res.json({ online: client.isReady(), tag: client.user?.tag || "Déconnecté", uptime: Math.floor((new Date() - botStartTime) / 1000) });
+  res.json({ online: client.isReady(), tag: client.user?.tag || "Deconnecte", uptime: Math.floor((new Date() - botStartTime) / 1000) });
 });
 
-// Route pour récupérer les membres du serveur
 app.get('/membres', auth, async (req, res) => {
   try {
     const guild = await client.guilds.fetch(GUILD_ID);
@@ -374,18 +372,18 @@ app.post('/send', auth, async (req, res) => {
   for (const userId of ids) {
     try {
       const user = await client.users.fetch(userId.trim());
-      await user.send({ embeds: [new EmbedBuilder().setTitle('📩 Message du Dashboard').setDescription(req.body.message).setColor(0xFFD700).setFooter({ text: `Envoyé par ${req.compte.username}` }).setTimestamp()] });
+      await user.send({ embeds: [new EmbedBuilder().setTitle('Message du Dashboard').setDescription(req.body.message).setColor(0xFFD700).setFooter({ text: `Envoye par ${req.compte.username}` }).setTimestamp()] });
       results.push({ userId, success: true });
     } catch (err) { results.push({ userId, success: false, error: err.message }); }
   }
-  envoyerLog("💬 Message", `Par **${req.compte.username}**`, 0xFFD700);
+  envoyerLog("Message MP", `Par ${req.compte.username}`, 0xFFD700);
   res.json({ results });
 });
 
 app.post('/candidature', async (req, res) => {
   const { fields, titre } = req.body;
   if (!fields?.length) return res.status(400).json({ error: "Aucun champ" });
-  const embed = new EmbedBuilder().setTitle(titre || "📋 Candidature !").setColor(0xFFD700).setTimestamp().addFields(fields.map(f => ({ name: f.name, value: String(f.value) })));
+  const embed = new EmbedBuilder().setTitle(titre || "Candidature !").setColor(0xFFD700).setTimestamp().addFields(fields.map(f => ({ name: f.name, value: String(f.value) })));
   for (const userId of USER_IDS) { try { const u = await client.users.fetch(userId); await u.send({ embeds: [embed] }); } catch (e) {} }
   res.json({ success: true });
 });
@@ -401,16 +399,22 @@ app.post('/rapport', async (req, res) => {
   stats.tireurs[tireur] = (stats.tireurs[tireur]||0) + detruits;
   stats.rapports.push({ id: Date.now(), nom, tireur, detruits, perdus, captures, date });
   await saveStats(stats);
-  const ratio = perdus > 0 ? (detruits/perdus).toFixed(2) : detruits > 0 ? '∞' : '0';
-  const embed = new EmbedBuilder().setTitle(`📋 Rapport — ${nom}`).setColor(0xFFD700).setTimestamp().addFields(
-    { name: '👤 Rapporteur', value: `**${nom}**`, inline: true }, { name: '🎯 Tireur', value: `**${tireur}**`, inline: true },
-    { name: '📍 Front', value: `**${front}**`, inline: true }, { name: '🛡️ Char', value: `**${charUtilise||'N/A'}**`, inline: true },
-    { name: '⚔️ Ennemis', value: `**${vehiculesConfront||'N/A'}**`, inline: true }, { name: '👥 Équipage', value: `**${autresPersonnes||'Solo'}**`, inline: true },
-    { name: '💥 Détruits', value: `**${detruits}**`, inline: true }, { name: '💀 Perdus', value: `**${perdus}**`, inline: true },
-    { name: '🚩 Capturés', value: `**${captures}**`, inline: true }, { name: '⚖️ Ratio', value: `**${ratio}**`, inline: true },
-    { name: '🔧 Réparations', value: `**${reparations||0}**`, inline: true }, { name: '📅 Date', value: `**${date}**`, inline: true },
-    { name: `📊 Total ${MOIS[stats.mois]}`, value: `**${stats.charsDetruitTotal}** détruits | **${stats.charsPerdusTotal}** perdus | **${stats.charsCapturesTotal}** capturés`, inline: false },
-    { name: '🏆 Record', value: `**${stats.recordRapport}** chars Détruits`, inline: true },
+  const ratio = perdus > 0 ? (detruits/perdus).toFixed(2) : detruits > 0 ? 'inf' : '0';
+  const embed = new EmbedBuilder().setTitle(`Rapport - ${nom}`).setColor(0xFFD700).setTimestamp().addFields(
+    { name: 'Rapporteur', value: `**${nom}**`, inline: true },
+    { name: 'Tireur', value: `**${tireur}**`, inline: true },
+    { name: 'Front', value: `**${front}**`, inline: true },
+    { name: 'Char', value: `**${charUtilise||'N/A'}**`, inline: true },
+    { name: 'Ennemis', value: `**${vehiculesConfront||'N/A'}**`, inline: true },
+    { name: 'Equipage', value: `**${autresPersonnes||'Solo'}**`, inline: true },
+    { name: 'Detruits', value: `**${detruits}**`, inline: true },
+    { name: 'Perdus', value: `**${perdus}**`, inline: true },
+    { name: 'Captures', value: `**${captures}**`, inline: true },
+    { name: 'Ratio', value: `**${ratio}**`, inline: true },
+    { name: 'Reparations', value: `**${reparations||0}**`, inline: true },
+    { name: 'Date', value: `**${date}**`, inline: true },
+    { name: `Total ${MOIS[stats.mois]}`, value: `**${stats.charsDetruitTotal}** detruits | **${stats.charsPerdusTotal}** perdus | **${stats.charsCapturesTotal}** captures`, inline: false },
+    { name: 'Record', value: `**${stats.recordRapport}** chars detruits`, inline: true },
   );
   for (const userId of USER_IDS) { try { const u = await client.users.fetch(userId.trim()); await u.send({ embeds: [embed] }); } catch (e) {} }
   res.json({ success: true });
@@ -426,7 +430,7 @@ app.put('/stats', auth, async (req, res) => {
   if (recordRapport !== undefined) stats.recordRapport = parseInt(recordRapport);
   if (charsCapturesTotal !== undefined) stats.charsCapturesTotal = parseInt(charsCapturesTotal);
   await saveStats(stats);
-  envoyerLog("✏️ Stats modifiées", `Par **${req.compte.username}**`, 0xFF9800);
+  envoyerLog("Stats modifiees", `Par ${req.compte.username}`, 0xFF9800);
   res.json({ success: true });
 });
 
@@ -440,7 +444,7 @@ app.delete('/stats/rapport/:id', auth, async (req, res) => {
   stats.rapports = stats.rapports.filter(r => r.id !== parseInt(req.params.id));
   stats.recordRapport = stats.rapports.length > 0 ? Math.max(...stats.rapports.map(r => r.detruits)) : 0;
   await saveStats(stats);
-  envoyerLog("🗑️ Rapport supprimé", `Par **${req.compte.username}**`, 0xf44336);
+  envoyerLog("Rapport supprime", `Par ${req.compte.username}`, 0xf44336);
   res.json({ success: true });
 });
 
@@ -449,7 +453,7 @@ app.post('/stats/reset', auth, adminOnly, async (req, res) => {
   await envoyerBilanMensuel(stats);
   Object.assign(stats, { charsDetruitTotal: 0, charsPerdusTotal: 0, charsCapturesTotal: 0, recordRapport: 0, tireurs: {}, rapports: [] });
   await saveStats(stats);
-  envoyerLog("🔁 Reset stats", `Par **${req.compte.username}**`, 0xf44336);
+  envoyerLog("Reset stats", `Par ${req.compte.username}`, 0xf44336);
   res.json({ success: true });
 });
 
@@ -462,57 +466,54 @@ app.post('/comptes', auth, adminOnly, async (req, res) => {
   const { username, password, role } = req.body;
   if (!username||!password||!role) return res.status(400).json({ error: "Champs manquants" });
   const comptes = await getComptes();
-  if (comptes.find(c => c.username === username)) return res.status(400).json({ error: "Nom déjà pris" });
+  if (comptes.find(c => c.username === username)) return res.status(400).json({ error: "Nom deja pris" });
   await db.collection('comptes').insertOne({ username, password, role });
-  envoyerLog("👤 Compte créé", `**${username}** (${role})`, 0x4CAF50);
+  envoyerLog("Compte cree", `${username} (${role})`, 0x4CAF50);
   res.json({ success: true });
 });
 
 app.put('/comptes/:username', auth, adminOnly, async (req, res) => {
   const { username } = req.params;
   const { newUsername, newPassword, newRole } = req.body;
-  if (username === 'admin' && newRole && newRole !== 'admin') return res.status(400).json({ error: "Impossible de changer le rôle de l'admin" });
+  if (username === 'admin' && newRole && newRole !== 'admin') return res.status(400).json({ error: "Impossible de changer le role de l'admin" });
   const update = {};
   if (newUsername) update.username = newUsername;
   if (newPassword) update.password = newPassword;
   if (newRole) update.role = newRole;
   await db.collection('comptes').updateOne({ username }, { $set: update });
-  envoyerLog("✏️ Compte modifié", `**${username}** par **${req.compte.username}**`, 0xFF9800);
+  envoyerLog("Compte modifie", `${username} par ${req.compte.username}`, 0xFF9800);
   res.json({ success: true });
 });
 
 app.delete('/comptes/:username', auth, adminOnly, async (req, res) => {
   if (req.params.username === 'admin') return res.status(400).json({ error: "Impossible" });
   await db.collection('comptes').deleteOne({ username: req.params.username });
-  envoyerLog("🗑️ Compte supprimé", `**${req.params.username}**`, 0xf44336);
+  envoyerLog("Compte supprime", req.params.username, 0xf44336);
   res.json({ success: true });
 });
 
-// Route salons
 app.get('/salons', auth, async (req, res) => {
   try {
     const guild = await client.guilds.fetch(GUILD_ID);
     await guild.channels.fetch();
     const salons = guild.channels.cache
-      .filter(c => c.type === 0) // TextChannel
+      .filter(c => c.type === 0)
       .map(c => ({ id: c.id, name: c.name }))
       .sort((a, b) => a.name.localeCompare(b.name));
     res.json(salons);
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-// Route envoyer dans un salon
 app.post('/send-salon', auth, async (req, res) => {
   const { channelId, message } = req.body;
   try {
     const channel = await client.channels.fetch(channelId);
     await channel.send(message);
-    envoyerLog("📢 Message salon", `Par **${req.compte.username}** dans <#${channelId}>`, 0xFFD700);
+    envoyerLog("Message salon", `Par ${req.compte.username}`, 0xFFD700);
     res.json({ success: true });
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-// Route discussion DM
 app.get('/discussion/:userId', auth, async (req, res) => {
   try {
     const user = await client.users.fetch(req.params.userId);
@@ -537,8 +538,11 @@ app.get('/discussion/:userId', auth, async (req, res) => {
 
 app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'public', 'index.html')));
 
+// ===== DEMARRAGE =====
+const PORT = process.env.PORT || 3000;
+
 connectMongo().then(() => {
   client.login(BOT_TOKEN).then(() => {
-    app.listen(3000, () => console.log('Serveur démarré'));
+    app.listen(PORT, () => console.log('Serveur demarre sur port ' + PORT));
   });
 });
