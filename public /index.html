@@ -1,0 +1,923 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MultiBOT | Dashboard</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"><\/script>
+  <style>
+    :root {
+      --bg:#1a1a2e; --bg2:#16213e; --bg3:#0f3460;
+      --text:#f0f0f0; --text2:#aaa;
+      --gold:#FFD700; --gold2:#e6c200;
+      --danger:#f44336; --success:#4CAF50;
+      --border:#0f3460; --border2:#333;
+      --shadow:rgba(0,0,0,0.3);
+      --success-bg:#1e4d2b; --success-text:#4CAF50; --success-border:#2e7d32;
+      --error-bg:#4d1e1e; --error-text:#ef9a9a; --error-border:#c62828;
+    }
+    *{margin:0;padding:0;box-sizing:border-box;}
+    body{font-family:'Segoe UI',sans-serif;background:var(--bg);color:var(--text);display:flex;min-height:100vh;}
+
+    /* LOGIN */
+    #loginScreen{position:fixed;inset:0;background:var(--bg);z-index:1000;display:flex;align-items:center;justify-content:center;}
+    .login-box{background:var(--bg2);padding:40px;border-radius:15px;border:2px solid var(--gold);width:350px;text-align:center;}
+    .login-logo{display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:24px;}
+    .login-logo img{width:48px;height:48px;border-radius:50%;object-fit:cover;border:2px solid var(--gold);}
+    .login-logo h2{color:var(--gold);font-size:20px;}
+    .login-box input{width:100%;padding:12px;margin:8px 0;background:var(--bg3);border:1px solid var(--border2);color:white;border-radius:8px;font-size:14px;}
+    .login-box input:focus{outline:none;border-color:var(--gold);}
+    .login-box button{width:100%;padding:12px;background:var(--gold);border:none;border-radius:8px;font-weight:bold;cursor:pointer;color:#1a1a2e;font-size:15px;margin-top:6px;}
+    .login-box button:hover{background:var(--gold2);}
+
+    /* SIDEBAR */
+    .sidebar{width:240px;background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;position:fixed;height:100vh;z-index:10;}
+    .sidebar-header{padding:20px 25px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;}
+    .sidebar-header img{width:36px;height:36px;border-radius:50%;object-fit:cover;border:2px solid var(--gold);}
+    .sidebar-header span{color:var(--gold);font-weight:bold;font-size:18px;}
+    .sidebar-nav{flex:1;overflow-y:auto;padding:8px 0;}
+    .nav-item{padding:13px 25px;cursor:pointer;color:var(--text2);transition:.2s;display:flex;align-items:center;gap:10px;font-size:14px;border-left:3px solid transparent;}
+    .nav-item:hover{background:var(--bg3);color:var(--text);}
+    .nav-item.active{background:var(--bg3);color:var(--gold);border-left-color:var(--gold);font-weight:bold;}
+    .nav-admin{display:none;}
+    .sidebar-bottom{padding:16px;border-top:1px solid var(--border);}
+    .user-line{display:flex;align-items:center;gap:8px;margin-bottom:10px;}
+    .user-name{font-size:13px;color:var(--text);}
+    .user-badge{background:var(--gold);padding:2px 8px;border-radius:6px;font-size:11px;color:#1a1a2e;font-weight:bold;}
+    .theme-row{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text2);margin-bottom:10px;}
+    .switch{position:relative;width:40px;height:22px;}
+    .switch input{opacity:0;width:0;height:0;}
+    .slider{position:absolute;cursor:pointer;top:0;left:0;right:0;bottom:0;background:var(--border2);border-radius:22px;transition:.3s;}
+    .slider:before{position:absolute;content:"";height:16px;width:16px;left:3px;bottom:3px;background:white;border-radius:50%;transition:.3s;}
+    input:checked+.slider{background:var(--gold);}
+    input:checked+.slider:before{transform:translateX(18px);}
+    .btn-logout{width:100%;padding:8px;background:transparent;border:1px solid var(--border2);color:var(--text2);border-radius:8px;cursor:pointer;font-size:13px;}
+    .btn-logout:hover{background:var(--danger);color:#fff;border-color:var(--danger);}
+
+    /* MAIN */
+    .main{margin-left:240px;padding:30px;width:calc(100% - 240px);min-height:100vh;}
+    .page{display:none;}
+    .page.active{display:block;}
+    .page-title{font-size:22px;font-weight:bold;color:var(--text);margin-bottom:24px;border-left:4px solid var(--gold);padding-left:12px;}
+
+    /* CARDS */
+    .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:20px;margin-bottom:28px;}
+    .card{background:var(--bg2);padding:20px;border-radius:12px;border:1px solid var(--border);}
+    .card h3{font-size:11px;color:var(--text2);text-transform:uppercase;margin-bottom:10px;letter-spacing:1px;}
+    .stat-value{font-size:26px;font-weight:bold;color:var(--gold);}
+
+    /* SECTIONS */
+    .section{background:var(--bg2);border-radius:12px;margin-bottom:16px;border:1px solid var(--border);overflow:hidden;}
+    .section-header{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;cursor:pointer;user-select:none;}
+    .section-header h2{color:var(--text);font-size:15px;border-left:3px solid var(--gold);padding-left:10px;}
+    .section-toggle{background:var(--bg3);border:1px solid var(--border2);color:var(--text2);width:26px;height:26px;border-radius:6px;font-size:13px;display:flex;align-items:center;justify-content:center;}
+    .section-body{padding:0 18px 18px;}
+    .section-body.collapsed{display:none;}
+
+    /* FORMS */
+    .form-row{display:flex;gap:10px;flex-wrap:wrap;}
+    .form-row textarea{flex:1;padding:10px 12px;border-radius:8px;border:1px solid var(--border2);background:var(--bg3);color:var(--text);font-size:14px;min-width:140px;height:90px;resize:vertical;}
+    .form-row textarea:focus{outline:none;border-color:var(--gold);}
+    .btn{padding:10px 20px;background:var(--gold);color:#1a1a2e;border:none;border-radius:8px;font-size:14px;font-weight:bold;cursor:pointer;}
+    .btn:hover{background:var(--gold2);}
+    .btn-sm{padding:5px 12px;font-size:12px;border:none;border-radius:6px;cursor:pointer;font-weight:bold;}
+    .btn-danger{background:var(--danger);color:#fff;}
+    .btn-info{background:#1565c0;color:#fff;}
+    .feedback{margin-top:10px;padding:10px;border-radius:8px;font-size:13px;display:none;}
+    .feedback.success{background:var(--success-bg);color:var(--success-text);display:block;border:1px solid var(--success-border);}
+    .feedback.error{background:var(--error-bg);color:var(--error-text);display:block;border:1px solid var(--error-border);}
+
+    /* TABS */
+    .tabs{display:flex;gap:8px;margin-bottom:18px;flex-wrap:wrap;}
+    .tab{padding:8px 18px;border-radius:8px;cursor:pointer;font-size:13px;border:1px solid var(--border2);color:var(--text2);background:var(--bg3);}
+    .tab.active{background:var(--gold);color:#1a1a2e;border-color:var(--gold);font-weight:bold;}
+
+    /* STATS */
+    .stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;margin-bottom:16px;}
+    .stat-edit{display:flex;flex-direction:column;gap:5px;}
+    .stat-edit label{font-size:11px;color:var(--text2);text-transform:uppercase;font-weight:bold;}
+    .stat-edit input{padding:10px;border-radius:8px;border:1px solid var(--border2);background:var(--bg3);color:var(--text);font-size:16px;font-weight:bold;width:100%;}
+    .ratio-display{font-size:13px;color:var(--text2);margin-top:6px;}
+    .ratio-display span{color:var(--gold);font-weight:bold;}
+
+    /* CHART */
+    .chart-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px;}
+    .chart-tabs{display:flex;gap:8px;flex-wrap:wrap;}
+    .chart-tab{padding:6px 14px;border-radius:8px;cursor:pointer;font-size:13px;border:1px solid var(--border2);color:var(--text2);background:var(--bg3);font-weight:bold;}
+    .chart-tab.active{background:var(--gold);color:#1a1a2e;border-color:var(--gold);}
+    .chart-container{position:relative;height:260px;}
+    .btn-dl{padding:6px 14px;background:var(--bg3);border:1px solid var(--border2);color:var(--text);border-radius:8px;cursor:pointer;font-size:13px;font-weight:bold;}
+    .btn-dl:hover{background:var(--gold);color:#1a1a2e;border-color:var(--gold);}
+
+    /* RAPPORTS */
+    .rapport-item{display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:var(--bg3);border-radius:8px;margin-bottom:8px;border:1px solid var(--border);flex-wrap:wrap;gap:8px;}
+    .rapport-info{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+
+    /* SEND RESULTS */
+    .send-results{margin-top:10px;}
+    .send-result-item{padding:8px 12px;border-radius:6px;margin-bottom:6px;font-size:13px;}
+    .send-result-item.ok{background:var(--success-bg);color:var(--success-text);border:1px solid var(--success-border);}
+    .send-result-item.ko{background:var(--error-bg);color:var(--error-text);border:1px solid var(--error-border);}
+
+    /* MEMBER SEARCH */
+    .member-select-wrapper{position:relative;margin-bottom:10px;}
+    .member-search{width:100%;padding:10px 12px;border-radius:8px;border:1px solid var(--border2);background:var(--bg3);color:var(--text);font-size:14px;}
+    .member-search:focus{outline:none;border-color:var(--gold);}
+    .member-dropdown{position:absolute;top:100%;left:0;right:0;background:var(--bg2);border:1px solid var(--border2);border-radius:8px;max-height:220px;overflow-y:auto;z-index:100;box-shadow:0 4px 12px var(--shadow);display:none;}
+    .member-dropdown.open{display:block;}
+    .member-option{display:flex;align-items:center;gap:10px;padding:8px 12px;cursor:pointer;}
+    .member-option:hover{background:var(--bg3);}
+    .member-option img{width:30px;height:30px;border-radius:50%;}
+    .member-opt-info{display:flex;flex-direction:column;}
+    .member-opt-name{font-size:13px;color:var(--text);}
+    .member-opt-id{font-size:11px;color:var(--text2);}
+    .selected-members{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;}
+    .sel-member{display:flex;align-items:center;gap:6px;background:var(--bg3);border:1px solid var(--border2);border-radius:20px;padding:4px 10px;font-size:12px;}
+    .sel-member img{width:18px;height:18px;border-radius:50%;}
+    .sel-member button{background:none;border:none;color:var(--text2);cursor:pointer;font-size:13px;padding:0;line-height:1;}
+
+    /* SALON */
+    .channel-select{width:100%;padding:10px 12px;border-radius:8px;border:1px solid var(--border2);background:var(--bg3);color:var(--text);font-size:14px;margin-bottom:10px;}
+    .channel-select:focus{outline:none;border-color:var(--gold);}
+
+    /* DISCUSSION */
+    .disc-box{background:#10172a;border-radius:12px;border:1px solid var(--border);height:340px;overflow-y:auto;padding:16px;margin-bottom:12px;display:flex;flex-direction:column;gap:10px;}
+    .msg{padding:10px 14px;border-radius:10px;max-width:80%;font-size:13px;line-height:1.5;}
+    .msg.bot{align-self:flex-end;background:var(--gold);color:#1a1a2e;}
+    .msg.user{align-self:flex-start;background:var(--bg3);border:1px solid var(--border);}
+    .msg-author{font-size:11px;font-weight:bold;margin-bottom:4px;opacity:.8;}
+    .msg-text{color:inherit;}
+    .msg-embed{border-left:3px solid var(--gold);background:rgba(255,215,0,0.08);border-radius:4px;padding:8px;margin-top:4px;font-size:12px;}
+    .msg-embed-title{font-weight:bold;color:var(--gold);margin-bottom:4px;}
+    .msg-embed-fname{font-size:10px;color:var(--text2);font-weight:bold;text-transform:uppercase;}
+    .msg-embed-fval{color:var(--text);font-size:12px;margin-bottom:4px;}
+    .msg-time{font-size:10px;opacity:.6;margin-top:4px;}
+    .disc-empty{color:var(--text2);font-size:13px;text-align:center;margin:auto;padding:20px;}
+    .disc-member-bar{display:flex;align-items:center;gap:10px;margin-bottom:12px;padding:10px;background:var(--bg3);border-radius:8px;border:1px solid var(--border);}
+    .disc-member-bar img{width:38px;height:38px;border-radius:50%;}
+    .disc-member-info{flex:1;}
+    .disc-member-name{font-weight:bold;font-size:14px;color:var(--text);}
+    .disc-member-id{font-size:11px;color:var(--text2);}
+
+    /* COMPTES */
+    .compte-item{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:var(--bg3);border-radius:10px;margin-bottom:8px;border:1px solid var(--border);gap:8px;}
+    .compte-left{display:flex;align-items:center;gap:12px;}
+    .compte-avatar{width:38px;height:38px;border-radius:50%;background:var(--gold);display:flex;align-items:center;justify-content:center;font-weight:bold;color:#1a1a2e;font-size:16px;flex-shrink:0;}
+    .compte-name{font-weight:bold;font-size:14px;color:var(--text);}
+    .role-badge{padding:2px 8px;border-radius:10px;font-size:11px;font-weight:bold;}
+    .role-admin{background:var(--gold);color:#1a1a2e;}
+    .role-normal{background:var(--bg3);color:var(--text2);border:1px solid var(--border2);}
+    .compte-actions{display:flex;gap:6px;align-items:center;}
+
+    /* MODAL */
+    .modal-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.7);z-index:1000;display:none;align-items:center;justify-content:center;}
+    .modal-overlay.open{display:flex;}
+    .modal{background:var(--bg2);border-radius:16px;padding:28px;width:400px;max-width:90vw;border:1px solid var(--border2);}
+    .modal h3{font-size:17px;color:var(--text);margin-bottom:20px;border-left:3px solid var(--gold);padding-left:10px;}
+    .modal-field{margin-bottom:14px;}
+    .modal-field label{font-size:12px;color:var(--text2);text-transform:uppercase;font-weight:bold;display:block;margin-bottom:5px;}
+    .modal-field-row{display:flex;align-items:center;gap:8px;}
+    .modal-input{width:100%;padding:10px;border-radius:8px;border:1px solid var(--border2);background:var(--bg3);color:var(--text);font-size:14px;}
+    .modal-input:focus{outline:none;border-color:var(--gold);}
+    .modal-actions{display:flex;gap:10px;margin-top:20px;justify-content:flex-end;}
+    .btn-eye{background:var(--bg3);border:1px solid var(--border2);color:var(--text2);padding:8px 10px;border-radius:6px;cursor:pointer;font-size:14px;}
+  </style>
+</head>
+<body>
+
+<div id="loginScreen">
+  <div class="login-box">
+    <div class="login-logo">
+      <span style="font-size:40px">🤖</span>
+      <h2>MultiBOT</h2>
+    </div>
+    <input type="text" id="loginUsername" placeholder="Nom d'utilisateur" onkeydown="if(event.key==='Enter')login()">
+    <input type="password" id="loginPassword" placeholder="Mot de passe" onkeydown="if(event.key==='Enter')login()">
+    <button onclick="login()">CONNEXION</button>
+    <p id="loginError" style="color:var(--danger);margin-top:10px;display:none;">Identifiants incorrects</p>
+  </div>
+</div>
+
+<div class="sidebar" id="sidebar" style="display:none">
+  <div class="sidebar-header">
+    <span style="font-size:24px">🤖</span>
+    <span>MultiBOT</span>
+  </div>
+  <nav class="sidebar-nav">
+    <div class="nav-item active" onclick="goPage('accueil')">🏠 Accueil</div>
+    <div class="nav-item" onclick="goPage('stats')">📊 Statistiques</div>
+    <div class="nav-item" onclick="goPage('messages')">💬 Messages</div>
+    <div class="nav-item nav-admin" id="navComptes" onclick="goPage('comptes')">👥 Comptes</div>
+  </nav>
+  <div class="sidebar-bottom">
+    <div class="user-line">
+      <span class="user-name" id="sidebarUser"></span>
+      <span class="user-badge" id="sidebarRole"></span>
+    </div>
+    <div class="theme-row">
+      <span>☀️</span>
+      <label class="switch"><input type="checkbox" id="themeSwitch" onchange="toggleTheme()"><span class="slider"></span></label>
+      <span>🌙</span>
+    </div>
+    <button class="btn-logout" onclick="logout()">Se déconnecter</button>
+  </div>
+</div>
+
+<div class="main" id="mainContent" style="display:none">
+
+  <!-- ACCUEIL -->
+  <div id="page-accueil" class="page active">
+    <div class="page-title">🏠 Accueil</div>
+    <div class="grid">
+      <div class="card"><h3>Statut Bot</h3><div id="statusText" style="font-size:16px;font-weight:bold;">...</div></div>
+      <div class="card"><h3>Bot Tag</h3><div id="botTag" style="font-size:14px;color:var(--text2);">...</div></div>
+      <div class="card"><h3>Uptime</h3><div id="uptime" style="font-size:14px;color:var(--text2);">...</div></div>
+      <div class="card"><h3>Chars Detruits</h3><div class="stat-value" id="homeDetruits">0</div></div>
+      <div class="card"><h3>Chars Perdus</h3><div class="stat-value" id="homePerdus" style="color:#f44336;">0</div></div>
+      <div class="card"><h3>Ratio</h3><div class="stat-value" id="homeRatio">-</div></div>
+    </div>
+  </div>
+
+  <!-- STATS -->
+  <div id="page-stats" class="page">
+    <div class="page-title">📊 Statistiques du mois</div>
+    <div class="section">
+      <div class="section-header" onclick="toggleSec('graphique')"><h2>📈 Evolution</h2><span class="section-toggle" id="t-graphique">▼</span></div>
+      <div class="section-body" id="b-graphique">
+        <div class="chart-top">
+          <div class="chart-tabs">
+            <button class="chart-tab active" onclick="switchChart('jour')">Par jour</button>
+            <button class="chart-tab" onclick="switchChart('semaine')">Par semaine</button>
+            <button class="chart-tab" onclick="switchChart('mois')">Cumul</button>
+          </div>
+          <button class="btn-dl" onclick="dlChart()">⬇️ Telecharger</button>
+        </div>
+        <div class="chart-container"><canvas id="statsChart"></canvas></div>
+      </div>
+    </div>
+    <div class="section">
+      <div class="section-header" onclick="toggleSec('edits')"><h2>✏️ Modifier les stats</h2><span class="section-toggle" id="t-edits">▼</span></div>
+      <div class="section-body" id="b-edits">
+        <div class="stats-grid">
+          <div class="stat-edit"><label>💥 Chars detruits</label><input type="number" id="statDetruits" min="0"></div>
+          <div class="stat-edit"><label>💀 Chars perdus</label><input type="number" id="statPerdus" min="0"></div>
+          <div class="stat-edit"><label>🚩 Chars captures</label><input type="number" id="statCaptures" min="0"></div>
+          <div class="stat-edit"><label>🏆 Record rapport</label><input type="number" id="statRecord" min="0"></div>
+        </div>
+        <div class="ratio-display">Ratio : <span id="ratioDisplay">-</span></div>
+        <div style="display:flex;gap:10px;margin-top:14px;flex-wrap:wrap;">
+          <button class="btn" onclick="saveStats()">💾 Sauvegarder</button>
+          <button class="btn btn-sm btn-danger" style="padding:10px 20px;font-size:14px;" onclick="resetStats()">🔁 Reinitialiser</button>
+        </div>
+        <div class="feedback" id="statsFeedback"></div>
+      </div>
+    </div>
+    <div class="section">
+      <div class="section-header" onclick="toggleSec('rapports')"><h2>📋 Rapports du mois</h2><span class="section-toggle" id="t-rapports">▼</span></div>
+      <div class="section-body" id="b-rapports"><div id="rapportsList"></div></div>
+    </div>
+  </div>
+
+  <!-- MESSAGES -->
+  <div id="page-messages" class="page">
+    <div class="page-title">💬 Messages</div>
+    <div class="tabs">
+      <button class="tab active" onclick="switchMsgTab('mp')">📩 MP Membre</button>
+      <button class="tab" onclick="switchMsgTab('salon')">📢 Salon Discord</button>
+      <button class="tab" onclick="switchMsgTab('disc')">💬 Discussion DM</button>
+    </div>
+
+    <div id="msgTab-mp">
+      <div class="section">
+        <div class="section-header" onclick="toggleSec('mp')"><h2>📩 Envoyer un MP</h2><span class="section-toggle" id="t-mp">▼</span></div>
+        <div class="section-body" id="b-mp">
+          <div class="member-select-wrapper">
+            <input class="member-search" id="memberSearch" placeholder="Rechercher par nom ou ID Discord..." autocomplete="off" oninput="filtrerMembres()" onfocus="ouvrirDD('memberDropdown')" onblur="setTimeout(()=>fermerDD('memberDropdown'),200)">
+            <div class="member-dropdown" id="memberDropdown"></div>
+          </div>
+          <div class="selected-members" id="selectedMembers"></div>
+          <div class="form-row"><textarea id="messageContent" placeholder="Ton message..."></textarea></div>
+          <div style="margin-top:10px"><button class="btn" onclick="envoyerMP()">Envoyer</button></div>
+          <div class="send-results" id="sendResults"></div>
+        </div>
+      </div>
+    </div>
+
+    <div id="msgTab-salon" style="display:none">
+      <div class="section">
+        <div class="section-header" onclick="toggleSec('salon')"><h2>📢 Envoyer dans un salon</h2><span class="section-toggle" id="t-salon">▼</span></div>
+        <div class="section-body" id="b-salon">
+          <select class="channel-select" id="channelSelect"><option value="">Chargement des salons...</option></select>
+          <div class="form-row"><textarea id="salonContent" placeholder="Ton message..."></textarea></div>
+          <div style="margin-top:10px"><button class="btn" onclick="envoyerSalon()">Envoyer</button></div>
+          <div class="send-results" id="salonResults"></div>
+        </div>
+      </div>
+    </div>
+
+    <div id="msgTab-disc" style="display:none">
+      <div class="section">
+        <div class="section-header" onclick="toggleSec('disc')"><h2>💬 Discussion DM</h2><span class="section-toggle" id="t-disc">▼</span></div>
+        <div class="section-body" id="b-disc">
+          <div class="member-select-wrapper">
+            <input class="member-search" id="discSearch" placeholder="Rechercher par nom ou ID..." autocomplete="off" oninput="filtrerDisc()" onfocus="ouvrirDD('discDropdown')" onblur="setTimeout(()=>fermerDD('discDropdown'),200)">
+            <div class="member-dropdown" id="discDropdown"></div>
+          </div>
+          <div id="discMemberBar" style="display:none" class="disc-member-bar">
+            <img id="discMemberAvatar" src="" onerror="this.src='https://cdn.discordapp.com/embed/avatars/0.png'" alt="">
+            <div class="disc-member-info">
+              <div class="disc-member-name" id="discMemberName"></div>
+              <div class="disc-member-id" id="discMemberId"></div>
+            </div>
+            <button class="btn-sm btn-danger" onclick="clearDisc()" style="margin-left:auto">✕</button>
+          </div>
+          <div class="disc-box" id="discBox">
+            <div class="disc-empty">Selectionne un membre pour voir la discussion</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- COMPTES -->
+  <div id="page-comptes" class="page">
+    <div class="page-title">👥 Gestion des comptes</div>
+    <div style="margin-bottom:16px"><button class="btn" onclick="ouvrirModalCreer()">+ Creer un compte</button></div>
+    <div id="comptesList"></div>
+  </div>
+
+</div>
+
+<!-- MODAL COMPTE -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <h3 id="modalTitle">Compte</h3>
+    <div class="modal-field"><label>Nom d'utilisateur</label><input class="modal-input" id="modalUsername" placeholder="Nom d'utilisateur"></div>
+    <div class="modal-field"><label>Mot de passe</label>
+      <div class="modal-field-row">
+        <input class="modal-input" id="modalPassword" type="password" placeholder="Mot de passe (vide = inchange)">
+        <button class="btn-eye" onclick="togglePwd()">👁</button>
+      </div>
+    </div>
+    <div class="modal-field"><label>Role</label>
+      <select class="modal-input" id="modalRole"><option value="normal">Normal</option><option value="admin">Admin</option></select>
+    </div>
+    <div class="feedback" id="modalFeedback"></div>
+    <div class="modal-actions">
+      <button class="btn btn-sm btn-danger" style="padding:10px 16px" onclick="fermerModal()">Annuler</button>
+      <button class="btn" onclick="sauvegarderModal()">Sauvegarder</button>
+    </div>
+  </div>
+</div>
+
+<script>
+
+
+
+
+let username='', password='', role='';
+let statsData=null, chart=null, chartView='jour';
+let darkMode = localStorage.getItem('theme') === 'dark';
+let tousLesMembres=[], membresSelectionnes=[];
+let discMembre=null, modalMode='creer', modalOldUsername='';
+
+function applyTheme() {
+  if (!darkMode) {
+    document.documentElement.style.setProperty('--bg','#f5f5f5');
+    document.documentElement.style.setProperty('--bg2','#ffffff');
+    document.documentElement.style.setProperty('--bg3','#f0f0f0');
+    document.documentElement.style.setProperty('--text','#1a1a2e');
+    document.documentElement.style.setProperty('--text2','#888');
+    document.documentElement.style.setProperty('--border','#eee');
+    document.documentElement.style.setProperty('--border2','#ddd');
+  } else {
+    document.documentElement.style.setProperty('--bg','#1a1a2e');
+    document.documentElement.style.setProperty('--bg2','#16213e');
+    document.documentElement.style.setProperty('--bg3','#0f3460');
+    document.documentElement.style.setProperty('--text','#f0f0f0');
+    document.documentElement.style.setProperty('--text2','#aaa');
+    document.documentElement.style.setProperty('--border','#0f3460');
+    document.documentElement.style.setProperty('--border2','#333');
+  }
+  document.getElementById('themeSwitch').checked = darkMode;
+  if (chart) majChart();
+}
+function toggleTheme() {
+  darkMode = document.getElementById('themeSwitch').checked;
+  localStorage.setItem('theme', darkMode ? 'dark' : 'light');
+  applyTheme();
+}
+applyTheme();
+
+function goPage(p) {
+  document.querySelectorAll('.page').forEach(function(el) { el.classList.remove('active'); });
+  document.querySelectorAll('.nav-item').forEach(function(el) { el.classList.remove('active'); });
+  document.getElementById('page-' + p).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(function(el) {
+    var oc = el.getAttribute('onclick');
+    if (oc && oc.indexOf("'" + p + "'") !== -1) el.classList.add('active');
+  });
+  if (p === 'stats') chargerStats();
+  if (p === 'messages') { chargerMembres(); chargerSalons(); }
+  if (p === 'comptes') chargerComptes();
+}
+
+function toggleSec(id) {
+  var b = document.getElementById('b-' + id);
+  var t = document.getElementById('t-' + id);
+  if (!b || !t) return;
+  var c = b.classList.toggle('collapsed');
+  t.textContent = c ? '>' : 'v';
+}
+
+function hdr() {
+  return { 'Content-Type': 'application/json', 'x-username': username, 'x-password': password };
+}
+
+function login() {
+  username = document.getElementById('loginUsername').value;
+  password = document.getElementById('loginPassword').value;
+  fetch(BOT_URL + '/login', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ username: username, password: password })
+  }).then(function(r) { return r.json(); }).then(function(data) {
+    if (data.error) {
+      document.getElementById('loginError').style.display = 'block';
+      return;
+    }
+    role = data.role;
+    document.getElementById('loginScreen').style.display = 'none';
+    document.getElementById('sidebar').style.display = 'flex';
+    document.getElementById('mainContent').style.display = 'block';
+    
+    document.getElementById('sidebarUser').textContent = username;
+    document.getElementById('sidebarRole').textContent = role;
+    if (role === 'admin') document.getElementById('navComptes').style.display = 'flex';
+    chargerStatut();
+    chargerStats();
+    setInterval(chargerStatut, 10000);
+  });
+}
+
+function logout() {
+  username = ''; password = ''; role = '';
+  tousLesMembres = []; membresSelectionnes = []; discMembre = null;
+  document.getElementById('loginScreen').style.display = 'flex';
+  document.getElementById('sidebar').style.display = 'none';
+  document.getElementById('mainContent').style.display = 'none';
+  document.getElementById('loginUsername').value = '';
+  document.getElementById('loginPassword').value = '';
+  document.getElementById('navComptes').style.display = 'none';
+  if (chart) { chart.destroy(); chart = null; }
+}
+
+function chargerStatut() {
+  fetch(BOT_URL + '/status', { headers: hdr() })
+  .then(function(r) { return r.json(); })
+  .then(function(data) {
+    document.getElementById('statusText').innerHTML = data.online
+      ? '<span style="color:#4CAF50">EN LIGNE</span>'
+      : '<span style="color:#f44336">HORS LIGNE</span>';
+    document.getElementById('botTag').textContent = data.tag || '-';
+    var h = Math.floor(data.uptime / 3600);
+    var m = Math.floor((data.uptime % 3600) / 60);
+    var s = data.uptime % 60;
+    document.getElementById('uptime').textContent = h + 'h ' + m + 'm ' + s + 's';
+  }).catch(function() {});
+}
+
+function chargerMembres() {
+  fetch(BOT_URL + '/membres', { headers: hdr() })
+  .then(function(r) { return r.json(); })
+  .then(function(data) {
+    tousLesMembres = Array.isArray(data) ? data : [];
+    rndDD('memberDropdown', tousLesMembres, 'selMembre');
+    rndDD('discDropdown', tousLesMembres, 'selDisc');
+  }).catch(function() {});
+}
+
+function rndDD(ddId, membres, fn) {
+  var dd = document.getElementById(ddId);
+  if (!dd) return;
+  var html = '';
+  for (var i = 0; i < membres.length; i++) {
+    var m = membres[i];
+    html += '<div class="member-option" onclick="' + fn + '('' + m.id + '','' + encodeURIComponent(m.displayName) + '','' + m.avatar + '')">';
+    html += '<img src="' + m.avatar + '" onerror="this.src='https://cdn.discordapp.com/embed/avatars/0.png'" alt="">';
+    html += '<div class="member-opt-info"><span class="member-opt-name">' + m.displayName + '</span>';
+    html += '<span class="member-opt-id">' + m.id + '</span></div></div>';
+  }
+  dd.innerHTML = html;
+}
+
+function ouvrirDD(id) { document.getElementById(id).classList.add('open'); }
+function fermerDD(id) { document.getElementById(id).classList.remove('open'); }
+
+function filtrerMembres() {
+  var q = document.getElementById('memberSearch').value.toLowerCase();
+  var f = tousLesMembres.filter(function(m) {
+    return m.displayName.toLowerCase().indexOf(q) !== -1 || m.username.toLowerCase().indexOf(q) !== -1 || m.id.indexOf(q) !== -1;
+  });
+  rndDD('memberDropdown', f, 'selMembre');
+  ouvrirDD('memberDropdown');
+}
+function filtrerDisc() {
+  var q = document.getElementById('discSearch').value.toLowerCase();
+  var f = tousLesMembres.filter(function(m) {
+    return m.displayName.toLowerCase().indexOf(q) !== -1 || m.username.toLowerCase().indexOf(q) !== -1 || m.id.indexOf(q) !== -1;
+  });
+  rndDD('discDropdown', f, 'selDisc');
+  ouvrirDD('discDropdown');
+}
+
+function selMembre(id, nomEnc, avatar) {
+  var nom = decodeURIComponent(nomEnc);
+  if (membresSelectionnes.find(function(m) { return m.id === id; })) return;
+  membresSelectionnes.push({ id: id, nom: nom, avatar: avatar });
+  majSelMembres();
+  document.getElementById('memberSearch').value = '';
+  fermerDD('memberDropdown');
+}
+function retirerMembre(id) {
+  membresSelectionnes = membresSelectionnes.filter(function(m) { return m.id !== id; });
+  majSelMembres();
+}
+function majSelMembres() {
+  var html = '';
+  for (var i = 0; i < membresSelectionnes.length; i++) {
+    var m = membresSelectionnes[i];
+    html += '<div class="sel-member">';
+    html += '<img src="' + m.avatar + '" onerror="this.src='https://cdn.discordapp.com/embed/avatars/0.png'" alt="">';
+    html += '<span>' + m.nom + '</span>';
+    html += '<button onclick="retirerMembre('' + m.id + '')">x</button></div>';
+  }
+  document.getElementById('selectedMembers').innerHTML = html;
+}
+
+function selDisc(id, nomEnc, avatar) {
+  var nom = decodeURIComponent(nomEnc);
+  discMembre = { id: id, nom: nom, avatar: avatar };
+  document.getElementById('discSearch').value = '';
+  fermerDD('discDropdown');
+  document.getElementById('discMemberBar').style.display = 'flex';
+  document.getElementById('discMemberAvatar').src = avatar;
+  document.getElementById('discMemberName').textContent = nom;
+  document.getElementById('discMemberId').textContent = 'ID : ' + id;
+  chargerDisc(id);
+}
+function clearDisc() {
+  discMembre = null;
+  document.getElementById('discMemberBar').style.display = 'none';
+  document.getElementById('discBox').innerHTML = '<div class="disc-empty">Selectionne un membre pour voir la discussion</div>';
+}
+
+function chargerDisc(userId) {
+  var box = document.getElementById('discBox');
+  box.innerHTML = '<div class="disc-empty">Chargement...</div>';
+  fetch(BOT_URL + '/discussion/' + userId, { headers: hdr() })
+  .then(function(r) { return r.json(); })
+  .then(function(data) {
+    if (!data.messages || data.messages.length === 0) {
+      box.innerHTML = '<div class="disc-empty">Aucun message trouve</div>';
+      return;
+    }
+    var html = '';
+    for (var i = 0; i < data.messages.length; i++) {
+      var msg = data.messages[i];
+      var isBot = msg.isBot;
+      var avatar = isBot ? 'https://cdn.discordapp.com/embed/avatars/5.png' : (discMembre ? discMembre.avatar : 'https://cdn.discordapp.com/embed/avatars/0.png');
+      var author = isBot ? 'ARMORED.BOT' : (discMembre ? discMembre.nom : 'Utilisateur');
+      var inner = '<div class="msg-author">' + author + '</div>';
+      if (msg.content) inner += '<div class="msg-text">' + msg.content + '</div>';
+      if (msg.embeds && msg.embeds.length > 0) {
+        for (var j = 0; j < msg.embeds.length; j++) {
+          var e = msg.embeds[j];
+          inner += '<div class="msg-embed">';
+          if (e.title) inner += '<div class="msg-embed-title">' + e.title + '</div>';
+          if (e.description) inner += '<div class="msg-text" style="font-size:12px">' + e.description + '</div>';
+          if (e.fields && e.fields.length > 0) {
+            for (var k = 0; k < e.fields.length; k++) {
+              inner += '<div class="msg-embed-fname">' + e.fields[k].name + '</div>';
+              inner += '<div class="msg-embed-fval">' + e.fields[k].value + '</div>';
+            }
+          }
+          inner += '</div>';
+        }
+      }
+      if (!msg.content && (!msg.embeds || msg.embeds.length === 0)) {
+        inner += '<div class="msg-text" style="opacity:.6">[Fichier non supporte]</div>';
+      }
+      inner += '<div class="msg-time">' + new Date(msg.timestamp).toLocaleString('fr-FR') + '</div>';
+      html += '<div class="msg ' + (isBot ? 'bot' : 'user') + '">' + inner + '</div>';
+    }
+    box.innerHTML = html;
+    box.scrollTop = box.scrollHeight;
+  }).catch(function() {
+    box.innerHTML = '<div class="disc-empty">Impossible de charger</div>';
+  });
+}
+
+function chargerSalons() {
+  fetch(BOT_URL + '/salons', { headers: hdr() })
+  .then(function(r) { return r.json(); })
+  .then(function(data) {
+    var html = '';
+    for (var i = 0; i < data.length; i++) {
+      html += '<option value="' + data[i].id + '">#' + data[i].name + '</option>';
+    }
+    document.getElementById('channelSelect').innerHTML = html;
+  }).catch(function() {
+    document.getElementById('channelSelect').innerHTML = '<option value="">Erreur chargement</option>';
+  });
+}
+
+function envoyerSalon() {
+  var channelId = document.getElementById('channelSelect').value;
+  var message = document.getElementById('salonContent').value;
+  var results = document.getElementById('salonResults');
+  if (!channelId || !message) {
+    results.innerHTML = '<div class="send-result-item ko">Selectionne un salon et ecris un message !</div>';
+    return;
+  }
+  fetch(BOT_URL + '/send-salon', {
+    method: 'POST', headers: hdr(),
+    body: JSON.stringify({ channelId: channelId, message: message })
+  }).then(function(r) { return r.json(); }).then(function(data) {
+    if (data.success) {
+      results.innerHTML = '<div class="send-result-item ok">Message envoye !</div>';
+      document.getElementById('salonContent').value = '';
+    } else {
+      results.innerHTML = '<div class="send-result-item ko">Erreur : ' + data.error + '</div>';
+    }
+  });
+}
+
+function envoyerMP() {
+  var message = document.getElementById('messageContent').value;
+  var results = document.getElementById('sendResults');
+  if (!membresSelectionnes.length || !message) {
+    results.innerHTML = '<div class="send-result-item ko">Selectionne un membre et ecris un message !</div>';
+    return;
+  }
+  var ids = membresSelectionnes.map(function(m) { return m.id; });
+  fetch(BOT_URL + '/send', {
+    method: 'POST', headers: hdr(),
+    body: JSON.stringify({ userIds: ids, message: message })
+  }).then(function(r) { return r.json(); }).then(function(data) {
+    var html = '';
+    for (var i = 0; i < data.results.length; i++) {
+      var r = data.results[i];
+      var nom = membresSelectionnes.find(function(m) { return m.id === r.userId; });
+      html += '<div class="send-result-item ' + (r.success ? 'ok' : 'ko') + '">';
+      html += (r.success ? 'OK' : 'ERR') + ' ' + (nom ? nom.nom : r.userId);
+      html += ' - ' + (r.success ? 'Envoye !' : r.error) + '</div>';
+    }
+    results.innerHTML = html;
+    if (data.results.every(function(r) { return r.success; })) {
+      document.getElementById('messageContent').value = '';
+      membresSelectionnes = [];
+      majSelMembres();
+    }
+  });
+}
+
+function switchMsgTab(t) {
+  ['mp', 'salon', 'disc'].forEach(function(x) {
+    document.getElementById('msgTab-' + x).style.display = x === t ? 'block' : 'none';
+  });
+  document.querySelectorAll('#page-messages .tabs .tab').forEach(function(el, i) {
+    el.classList.toggle('active', ['mp', 'salon', 'disc'][i] === t);
+  });
+  if (t === 'salon') chargerSalons();
+  if (t === 'disc') chargerMembres();
+}
+
+function chargerStats() {
+  fetch(BOT_URL + '/stats', { headers: hdr() })
+  .then(function(r) { return r.json(); })
+  .then(function(data) {
+    statsData = data;
+    document.getElementById('statDetruits').value = data.charsDetruitTotal || 0;
+    document.getElementById('statPerdus').value = data.charsPerdusTotal || 0;
+    document.getElementById('statCaptures').value = data.charsCapturesTotal || 0;
+    document.getElementById('statRecord').value = data.recordRapport || 0;
+    document.getElementById('homeDetruits').textContent = data.charsDetruitTotal || 0;
+    document.getElementById('homePerdus').textContent = data.charsPerdusTotal || 0;
+    var d = data.charsDetruitTotal || 0;
+    var p = data.charsPerdusTotal || 0;
+    document.getElementById('homeRatio').textContent = p > 0 ? (d / p).toFixed(2) : d > 0 ? 'inf' : '0';
+    majRatio();
+    majChart();
+    var list = document.getElementById('rapportsList');
+    if (!data.rapports || !data.rapports.length) {
+      list.innerHTML = '<div style="color:var(--text2);font-size:13px;padding:10px">Aucun rapport ce mois-ci</div>';
+      return;
+    }
+    var html = '';
+    for (var i = 0; i < data.rapports.length; i++) {
+      var r = data.rapports[i];
+      html += '<div class="rapport-item"><div class="rapport-info">';
+      html += '<span><strong>' + r.nom + '</strong></span>';
+      html += '<span style="color:var(--text2);font-size:12px">Tireur: ' + r.tireur + '</span>';
+      html += '<span style="color:#FFD700;font-weight:bold">' + r.detruits + ' detruits</span>';
+      html += '<span style="color:#f44336;font-weight:bold">' + r.perdus + ' perdus</span>';
+      html += '<span style="color:#1565c0;font-weight:bold">' + (r.captures || 0) + ' captures</span>';
+      html += '<span style="color:var(--text2);font-size:12px">' + r.date + '</span>';
+      html += '</div><button class="btn-sm btn-danger" onclick="supprimerRapport(' + r.id + ')">Supprimer</button></div>';
+    }
+    list.innerHTML = html;
+  });
+}
+
+function switchChart(v) {
+  chartView = v;
+  document.querySelectorAll('.chart-tab').forEach(function(el, i) {
+    el.classList.toggle('active', ['jour', 'semaine', 'mois'][i] === v);
+  });
+  majChart();
+}
+function dlChart() {
+  if (!chart) return;
+  var a = document.createElement('a');
+  a.download = 'graphique-' + chartView + '-' + new Date().toISOString().slice(0, 10) + '.png';
+  a.href = document.getElementById('statsChart').toDataURL('image/png');
+  a.click();
+}
+function majChart() {
+  if (!statsData || !statsData.rapports) return;
+  var raps = statsData.rapports;
+  var labels = [], detruits = [], perdus = [], captures = [];
+  if (chartView === 'jour') {
+    var pj = {};
+    raps.forEach(function(r) {
+      var d = r.date || '?';
+      if (!pj[d]) pj[d] = { d: 0, p: 0, c: 0 };
+      pj[d].d += r.detruits || 0; pj[d].p += r.perdus || 0; pj[d].c += r.captures || 0;
+    });
+    var j = Object.keys(pj).sort();
+    labels = j; detruits = j.map(function(x) { return pj[x].d; });
+    perdus = j.map(function(x) { return pj[x].p; });
+    captures = j.map(function(x) { return pj[x].c; });
+  } else if (chartView === 'semaine') {
+    var ps = {};
+    raps.forEach(function(r) {
+      var parts = (r.date || '').split('/');
+      var s = parts.length >= 1 ? 'S' + Math.ceil(parseInt(parts[0]) / 7) : 'S?';
+      if (!ps[s]) ps[s] = { d: 0, p: 0, c: 0 };
+      ps[s].d += r.detruits || 0; ps[s].p += r.perdus || 0; ps[s].c += r.captures || 0;
+    });
+    var ss = Object.keys(ps).sort();
+    labels = ss; detruits = ss.map(function(x) { return ps[x].d; });
+    perdus = ss.map(function(x) { return ps[x].p; });
+    captures = ss.map(function(x) { return ps[x].c; });
+  } else {
+    var cd = 0, cp = 0, cc = 0;
+    var sorted = raps.slice().sort(function(a, b) { return a.date > b.date ? 1 : -1; });
+    sorted.forEach(function(r) {
+      cd += r.detruits || 0; cp += r.perdus || 0; cc += r.captures || 0;
+      labels.push(r.date || '?'); detruits.push(cd); perdus.push(cp); captures.push(cc);
+    });
+  }
+  if (chart) chart.destroy();
+  chart = new Chart(document.getElementById('statsChart').getContext('2d'), {
+    type: 'line',
+    data: { labels: labels, datasets: [
+      { label: 'Detruits', data: detruits, borderColor: '#FFD700', backgroundColor: 'rgba(255,215,0,0.1)', tension: 0.3, fill: true, pointBackgroundColor: '#FFD700', pointRadius: 5 },
+      { label: 'Perdus', data: perdus, borderColor: '#f44336', backgroundColor: 'rgba(244,67,54,0.1)', tension: 0.3, fill: true, pointBackgroundColor: '#f44336', pointRadius: 5 },
+      { label: 'Captures', data: captures, borderColor: '#1565c0', backgroundColor: 'rgba(21,101,192,0.1)', tension: 0.3, fill: true, pointBackgroundColor: '#1565c0', pointRadius: 5 }
+    ]},
+    options: { responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { position: 'top', labels: { color: '#aaa', font: { size: 12 } } }, tooltip: { mode: 'index', intersect: false } },
+      scales: { x: { ticks: { color: '#aaa' }, grid: { color: '#1a2a4a' } }, y: { beginAtZero: true, ticks: { color: '#aaa', stepSize: 1 }, grid: { color: '#1a2a4a' } } }
+    }
+  });
+}
+function majRatio() {
+  var d = parseInt(document.getElementById('statDetruits').value) || 0;
+  var p = parseInt(document.getElementById('statPerdus').value) || 0;
+  document.getElementById('ratioDisplay').textContent = p > 0 ? (d / p).toFixed(2) : d > 0 ? 'inf' : '0';
+}
+document.addEventListener('input', function(e) {
+  if (e.target.id === 'statDetruits' || e.target.id === 'statPerdus') majRatio();
+});
+
+function saveStats() {
+  var fb = document.getElementById('statsFeedback');
+  fetch(BOT_URL + '/stats', {
+    method: 'PUT', headers: hdr(),
+    body: JSON.stringify({
+      charsDetruitTotal: document.getElementById('statDetruits').value,
+      charsPerdusTotal: document.getElementById('statPerdus').value,
+      charsCapturesTotal: document.getElementById('statCaptures').value,
+      recordRapport: document.getElementById('statRecord').value
+    })
+  }).then(function(r) { return r.json(); }).then(function(data) {
+    fb.textContent = data.success ? 'Stats sauvegardees !' : 'Erreur : ' + data.error;
+    fb.className = 'feedback ' + (data.success ? 'success' : 'error');
+  });
+}
+function resetStats() {
+  if (!confirm('Reinitialiser les stats ? Un bilan sera envoye.')) return;
+  fetch(BOT_URL + '/stats/reset', { method: 'POST', headers: hdr() })
+  .then(function(r) { return r.json(); })
+  .then(function(data) {
+    if (data.success) { alert('Stats reinitialisees !'); chargerStats(); }
+    else alert('Erreur : ' + data.error);
+  });
+}
+function supprimerRapport(id) {
+  if (!confirm('Supprimer ce rapport ?')) return;
+  fetch(BOT_URL + '/stats/rapport/' + id, { method: 'DELETE', headers: hdr() })
+  .then(function(r) { return r.json(); })
+  .then(function(data) { if (data.success) chargerStats(); });
+}
+
+function chargerComptes() {
+  fetch(BOT_URL + '/comptes', { headers: hdr() })
+  .then(function(r) { return r.json(); })
+  .then(function(data) {
+    var html = '';
+    for (var i = 0; i < data.length; i++) {
+      var c = data[i];
+      html += '<div class="compte-item">';
+      html += '<div class="compte-left"><div class="compte-avatar">' + c.username[0].toUpperCase() + '</div>';
+      html += '<div><div class="compte-name">' + c.username + '</div>';
+      html += '<span class="role-badge role-' + c.role + '">' + c.role + '</span></div></div>';
+      html += '<div class="compte-actions">';
+      html += '<button class="btn-sm btn-info" onclick="ouvrirModalModifier('' + c.username + '','' + c.role + '')">Modifier</button>';
+      if (c.username !== 'admin') {
+        html += '<button class="btn-sm btn-danger" onclick="supprimerCompte('' + c.username + '')">Supprimer</button>';
+      }
+      html += '</div></div>';
+    }
+    document.getElementById('comptesList').innerHTML = html;
+  });
+}
+
+function ouvrirModalCreer() {
+  modalMode = 'creer';
+  document.getElementById('modalTitle').textContent = 'Creer un compte';
+  document.getElementById('modalUsername').value = '';
+  document.getElementById('modalPassword').value = '';
+  document.getElementById('modalRole').value = 'normal';
+  document.getElementById('modalFeedback').style.display = 'none';
+  document.getElementById('modalOverlay').classList.add('open');
+}
+function ouvrirModalModifier(username, role) {
+  modalMode = 'modifier'; modalOldUsername = username;
+  document.getElementById('modalTitle').textContent = 'Modifier : ' + username;
+  document.getElementById('modalUsername').value = username;
+  document.getElementById('modalPassword').value = '';
+  document.getElementById('modalRole').value = role;
+  document.getElementById('modalFeedback').style.display = 'none';
+  document.getElementById('modalOverlay').classList.add('open');
+}
+function fermerModal() { document.getElementById('modalOverlay').classList.remove('open'); }
+function togglePwd() {
+  var inp = document.getElementById('modalPassword');
+  inp.type = inp.type === 'password' ? 'text' : 'password';
+}
+function sauvegarderModal() {
+  var fb = document.getElementById('modalFeedback');
+  var u = document.getElementById('modalUsername').value;
+  var p = document.getElementById('modalPassword').value;
+  var r = document.getElementById('modalRole').value;
+  if (!u) { fb.textContent = 'Nom utilisateur requis !'; fb.className = 'feedback error'; return; }
+  if (modalMode === 'creer') {
+    if (!p) { fb.textContent = 'Mot de passe requis !'; fb.className = 'feedback error'; return; }
+    fetch(BOT_URL + '/comptes', {
+      method: 'POST', headers: hdr(),
+      body: JSON.stringify({ username: u, password: p, role: r })
+    }).then(function(x) { return x.json(); }).then(function(data) {
+      if (data.success) { fermerModal(); chargerComptes(); }
+      else { fb.textContent = 'Erreur : ' + data.error; fb.className = 'feedback error'; }
+    });
+  } else {
+    var body = {};
+    if (u !== modalOldUsername) body.newUsername = u;
+    if (p) body.newPassword = p;
+    if (r) body.newRole = r;
+    fetch(BOT_URL + '/comptes/' + modalOldUsername, {
+      method: 'PUT', headers: hdr(), body: JSON.stringify(body)
+    }).then(function(x) { return x.json(); }).then(function(data) {
+      if (data.success) { fermerModal(); chargerComptes(); }
+      else { fb.textContent = 'Erreur : ' + data.error; fb.className = 'feedback error'; }
+    });
+  }
+}
+function supprimerCompte(u) {
+  if (!confirm('Supprimer le compte ' + u + ' ?')) return;
+  fetch(BOT_URL + '/comptes/' + u, { method: 'DELETE', headers: hdr() })
+  .then(function(r) { return r.json(); })
+  .then(function(data) { if (data.success) chargerComptes(); });
+}
+document.getElementById('modalOverlay').addEventListener('click', function(e) {
+  if (e.target === this) fermerModal();
+});
+
+var BOT_URL = window.location.origin;
+
+</script>
+</body>
+</html>
