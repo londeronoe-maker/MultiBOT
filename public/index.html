@@ -188,7 +188,7 @@
 <div id="loginScreen">
   <div class="login-box">
     <div class="login-logo">
-      <img id="loginLogo" src="" alt="logo">
+      <span style="font-size:40px">🤖</span>
       <h2>MultiBOT</h2>
     </div>
     <input type="text" id="loginUsername" placeholder="Nom d'utilisateur" onkeydown="if(event.key==='Enter')login()">
@@ -200,7 +200,7 @@
 
 <div class="sidebar" id="sidebar" style="display:none">
   <div class="sidebar-header">
-    <img id="sidebarLogo" src="" alt="">
+    <span style="font-size:24px">🤖</span>
     <span>MultiBOT</span>
   </div>
   <nav class="sidebar-nav">
@@ -371,68 +371,9 @@
 </div>
 
 <script>
-var HEAD_ICON = 'data:image/png;base64,';
-HEAD_ICON += 'iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAIAAAAlC+aJAAABCGlDQ1BJQ0MgUHJvZmlsZQAAeJxj';
-HEAD_ICON += 'YGA8wQAELAYMDLl5JUVB7k4KEZFRCuwPGBiBEAwSk4sLGHADoKpv1yBqL+viUYcLcKakFicD6Q9A';
-HEAD_ICON += 'rFIEtBxopAiQLZIOYWuA2EkQtg2IXV5SUAJkB4DYRSFBzkB2CpCtkY7ETkJiJxcUgdT3ANk2uTml';
-HEAD_ICON += 'yQh3M/Ck5oUGA2kOIJZhKGYIYnBncAL5H6IkfxEDg8VXBgbmCQixpJkMDNtbGRgkbiHEVBYwMPC3';
-HEAD_ICON += 'MDBsO48QQ4RJQWJRIliIBYiZ0tIYGD4tZ2DgjWRgEL7AwMAVDQsIHG5TALvNnSEfCNMZchhSgSKe';
-HEAD_ICON += 'DHkMyQx6QJYRgwGDIYMZAKbWPz9HbOBQAAALUUlEQVR4nO1ZW28d13ld377N7ZyZc3hISpTsWhEU';
-HEAD_ICON += '2zJyQZzYfWhrIC+9Ib8yL2lf3KcicNAGBaLWNvzQyIJd2TFpi6RMiZdzv83M3t/XhyEl2ZEpkxac';
-HEAD_ICON += 'Fy4cgAQ53LPW2nt/NwIXuMAFLnCBC1zgAhe4wAUucIELXOACF7jAdwAR/aUpfAc07OkEf2k63w3f';
-HEAD_ICON += 'swD1XFZpjG+12845AN+nBPPtHiPghBQRBACDBNAAQZiEDaHXioZc1ZXg8dOQ46/PcIrATzx8BnxL';
-HEAD_ICON += 'AXKyuPrKW0ggBBIIFMD1UkE0IcifU+Gn0wY1i5+DOk4InQlMwgRWEBKAGWACNIEIxphO3oZAQID6';
-HEAD_ICON += '2uL0xEcREUAQAtNjseqJnXseAoi+8ltFpABFpBU1voEIwiLCAmZUVVV7byIHAMd/++jskTQ/JUUA';
-HEAD_ICON += 'N44/OpWPmZx5J05T3MQTpRQzExGRYvYiIMAYQ6Qq75NWkcbRcjZGCGnijIvF2Oms1NY2ToPIGGut';
-HEAD_ICON += 'NUYbo61193d2FXi+mNVVSUQizZ0hgOTpJ+00nHYHCAAhhKCUYhbrDCm9un55Mp3mee5cNJrOorQV';
-HEAD_ICON += 'O5e1i8iQMcZEiXax0SQcAksduPYBIChtrEuT1PuwjpTDEv39xaRfLxbNLSAIQHJ8Jc6A03ZAEQhg';
-HEAD_ICON += 'EIBWu1hZuzRdLJV2XsQoZbTRUaKNS9O0m6e9ot3rrXbX1qM4pbAcDI4ODo76g9FwPFnWXhm7un75';
-HEAD_ICON += '5ZdfFcEndz/Z3f58MRsYqnf/9EnzLg0QVIA85f6fitOjEJFWCNxb30jz7tFgpLQBe2etMdY5Z6yJ';
-HEAD_ICON += 'YpdlUdZK251usdLN81aapkospJzPZvP5whrjvXjPZVl6qeMoiZPYGAtGVYe0VcynIwIxhM7OHs+K';
-HEAD_ICON += 'QsLMIqhrP5nOQIpAWikAJweXJVTENYkAMEalicuyqNWKu908z7PIWquNNVoTgq+qch7HNo5clkZE';
-HEAD_ICON += 'yNvtXm+tMQrAOdjjmXmAWQBV13Wa6tozC5NQI4CZmZuLTkSktXI2yrJWp1MQVwTdbk+iZGitWVYV';
-HEAD_ICON += 'IKGuy0UFgYsiETHGzBeL6WjUOHUO6s8WIAJSJMzGWIiIyJN1jshJdiMIoJRycZRlWZEX1iqQzlrD';
-HEAD_ICON += 'NEu1GWitNFPgsJjP69oba7W1pBSIQvAAQCQi56s/Ts0DgCIFIIqctZZFiIiZQwhNEmARhoCIFGlr';
-HEAD_ICON += 'rLNxmrSLPM+LXm+1u9LN0jSJI6MVALAsF8tyWWqtldLGmtrXL1y7lmRtNNacq5I1f2bqYwigCABa';
-HEAD_ICON += '7VyUwXgqzI1bIYRHGyIiSiki0tpkWdpu57FzINXOizRLo8SZqVYlBeaqrBbzOYS00UppACIszCKi';
-HEAD_ICON += 'tOJw5iQAwMg3lyFECCEA6sudnXZv1RgTQmhSjw9Ba+2cExYR8d4D0FobbfI8T5PUe07TLEkSZ63W';
-HEAD_ICON += 'REoQpK7K6WxmXERakSJjzGQy9d6D6Lj+OPtdMHmnEBFhMEtgYWYJzMdnWxNECJUP3ntmH0IQJgDW';
-HEAD_ICON += 'ORB5753VFEQJKdKkbZyvFGtrbYO8k1WlHOz1D/dGk/5iqTyHuq7relkaZQxZ0rHomBnKxBoAe9Li';
-HEAD_ICON += '/dkz8Y9efyNwgIADvGc+3lIQFEDCgbTy7AXMHLwPIlSV1Xg89lXVSmJi9uWinE9mo8Gkfzg+Otze';
-HEAD_ICON += '3JyV452d3Y8+vPPx7Tv3t7dns9l8uSx9HZTsbn9sWFXeL8pKQNZol9j5ZA5hoyjQmetSuvLDm772';
-HEAD_ICON += 'IhCBUpqgmhKiqRa5iTUErQ0zcwh1VZaLZTmdWC2tdkaK2ZdJ4tI47rTaqyvdXrcbRzydDIxzBGil';
-HEAD_ICON += 'nHPO2m63e/nSZQHKqj4YjDbv3b+3s7f38ODS5Y2HDw/u73ypCCxnF0DGCctxTfG4FWmsCFAEKDCT';
-HEAD_ICON += 'da0inwwHTlOWRGtF+9pLV9pFuqymHMq1XvHmz36ysbJydf1SO0liCxuZvQcPhpNRnCRZnMwm8/lk';
-HEAD_ICON += 'msRxURQVeDQr+5PqT9sP3vn9uzVFm5tbh4cDpRRzOBt9wIivnha6ml0QRRQY2rkfXHthOhm89cu/';
-HEAD_ICON += '/sELl166evnKxmrs1Gw+zjJ3aa0bO6XFD/b3aXY/SVZrsgdH463trStXXlhdK7TScebSttvd2V1W';
-HEAD_ICON += 'kyJt8ayqp5UTDA6HH23tAAQY5qZbOts1MN+QCKRpSUQEAvH1wf5enkWv3njxpY3OWjeO9Xw+nrWs';
-HEAD_ICON += 'vraymkc2dkYr27u68cUXW8MBddculUfDVZu8unpFi/JlWJa1E+fbK8PRkGOQ0toYpbXWugnB4czW';
-HEAD_ICON += 'H0Mx6KmfAAogFi3KBlbD4XjvweH+4X5ZzcpyajW0D4VLU6/80XTwxZ6rrUNClNWIfJAsTsrhtD6a';
-HEAD_ICON += 'FMGM7+398dZ75WjmFzVIiTVBK1YEqwIJMwsYVIOqc8RR9USj93WwEAMQIQIp6xm7e0eelQgRKVg6';
-HEAD_ICON += 'mhxNeb5z9OUCXBENJrP5snZRpJ3KVrL8Sm97dvjZ9FDWu9ff/PlQYb9cxkVulG4aHVKqSWcntOUc';
-HEAD_ICON += 'AsypZ44ggZpvoEVk9/6DsoQvUZXcWVkf9Pc+u39v49IanPt05/OqLLurrVZmyC9Sa9Y31g76w839';
-HEAD_ICON += 'nfF4rrXN0qzX62RxJHUNFjCEhR4ZJ42Jz7Uj+yoEwHA0GQxHvZapPSW1XV+5WpWTUX9SRpUAnZW8';
-HEAD_ICON += 't1a4SGshLTpy1ErzZVnOZ3MR0UYLh7peluCAUIeqqms+trxp/p7/WOXxgiKstDnojz/Z2llfLfKy';
-HEAD_ICON += 'biU1EbrdwtiuIt1uFz74/aN+WS20KDA8B2aOIre+tgapfVUFFlJchqoWqZk/v7fz6WfbBGLm8/I/';
-HEAD_ICON += 'RcBJj9EkCCFF0ID/6O7WT3/0yiSbFQGadc0RvE3i9O7drVv//f5kPo0T1ynaeZG3Wi0QzWfTvH3/';
-HEAD_ICON += 'Fz//KUM8cxXYs5ou5sua+8N55T0RQRSd/fA8S8DXIQJoaw8Go//7dLvbvjGeLbTLqKpVYvvD0e3b';
-HEAD_ICON += 'd974xRvKKuaKtADkA3c6K8aa9979nx9OlrGzgVVZ06Kmqlb7B4Nb7/4vEQG6OfrNbTjrLpwq4Mkl';
-HEAD_ICON += 'm6GBqLKsfv+H94rEFa/ftJYkJWtQliXgr1/fSFK7WE41xLkoSlJt3O0P70z6h+Q9E3xZl8tqNFlO';
-HEAD_ICON += 'ZtV//Of7+/2RVi48qgPOhW8WcML7kSUcfNN0TOfL3/7X+6uXV6/TOiFBWBSddgn+l7f/7cevvZa3';
-HEAD_ICON += 'W1malcvh5mdbd+9+evvDj//urTfjOBqPZ+Wyniz48Kj6w/u3P7hzV2kKHE6MorPXQcD5pDctwY0b';
-HEAD_ICON += 'f/X3f/v6j1++1o7Uykq++fnWr3/9r8tpDUYdOAQ4g16veO3mjX/4518WRT6bl4uFP+gvb31w9zf/';
-HEAD_ICON += '/o7SxCQIBGmmWo1Xz3UydwqMImHpFK1/+se/+cnN693EraTZYjqdL5bT2Xw8HzhtNq5c7XTyTrdd';
-HEAD_ICON += '1ovxdLYouT+YfvDHzbd/eysQQghCCkxgJoAhzZD4exKgoa02y1Aqo371q7d+9vK1y0naK1pREpnY';
-HEAD_ICON += 'OkOKKASp6qqqy6Wv5otyOK137/d/8/Y7D4czEztfBwWNICQMSCA+GVSfjcm3j0JfAZOqSZPRIvy7';
-HEAD_ICON += '372bkspuXteLqeOFLilW2pIBKSgChKC0dgo0n4XppCQgVF5pAz627/xDlXMLgCaGN0FiBevR330Y';
-HEAD_ICON += 'Xn4JVrVacUxilTHaaG0ABHgm6g/nPtGxohc7xWC+mFVV6Wt/MgwlPBHrvh8BQp5Y1lz8SrvXsqod';
-HEAD_ICON += 'lAV1Onk30l1r2YAMGaUhEoCqrpEbrpaXVpKNPOlpNwj15tERKREREB13sPLcR4t08i8HIgVSICiC';
-HEAD_ICON += 'AgyBRLG8tn7VzZayWGxcXW8lLtWqlSZp6tLMtBObRTqOTRZZ4xQcxw4vrq28snEFR+O1KCus1dwM';
-HEAD_ICON += 'dQWAKDRvOH7x1wdEGtBP5fj/TRwQscv1ygMAAAAASUVORK5CYII=';
 
-document.getElementById('loginLogo').src = HEAD_ICON;
-const fav = document.createElement('link');
-fav.rel='icon'; fav.href=HEAD_ICON; document.head.appendChild(fav);
+
+
 
 let username='', password='', role='';
 let statsData=null, chart=null, chartView='jour';
@@ -509,7 +450,7 @@ function login() {
     document.getElementById('loginScreen').style.display = 'none';
     document.getElementById('sidebar').style.display = 'flex';
     document.getElementById('mainContent').style.display = 'block';
-    document.getElementById('sidebarLogo').src = HEAD_ICON;
+    
     document.getElementById('sidebarUser').textContent = username;
     document.getElementById('sidebarRole').textContent = role;
     if (role === 'admin') document.getElementById('navComptes').style.display = 'flex';
@@ -645,7 +586,7 @@ function chargerDisc(userId) {
     for (var i = 0; i < data.messages.length; i++) {
       var msg = data.messages[i];
       var isBot = msg.isBot;
-      var avatar = isBot ? HEAD_ICON : (discMembre ? discMembre.avatar : 'https://cdn.discordapp.com/embed/avatars/0.png');
+      var avatar = isBot ? 'https://cdn.discordapp.com/embed/avatars/5.png' : (discMembre ? discMembre.avatar : 'https://cdn.discordapp.com/embed/avatars/0.png');
       var author = isBot ? 'ARMORED.BOT' : (discMembre ? discMembre.nom : 'Utilisateur');
       var inner = '<div class="msg-author">' + author + '</div>';
       if (msg.content) inner += '<div class="msg-text">' + msg.content + '</div>';
