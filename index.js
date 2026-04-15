@@ -1,306 +1,91 @@
-const { Client, GatewayIntentBits, EmbedBuilder, REST, Routes, SlashCommandBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
-const express = require('express');
-const path = require('path');
+const { Client, GatewayIntentBits, EmbedBuilder, REST, Routes, SlashCommandBuilder, AttachmentBuilder } = require('discord.js');
 const { MongoClient } = require('mongodb');
-
-const app = express();
-app.use(express.json());
-app.use(express.static('public'));
+const express = require('express');
 
 const client = new Client({
   intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMembers, GatewayIntentBits.DirectMessages]
 });
 
 const BOT_TOKEN = process.env.BOT_TOKEN;
-const USER_IDS = process.env.USER_IDS.split(',');
+const USER_IDS = process.env.USER_IDS ? process.env.USER_IDS.split(',').map(id => id.trim()) : [];
 const WEBHOOK_URL = process.env.WEBHOOK_URL;
 const CLIENT_ID = "1485359905639764070";
 const GUILD_ID = "1479289389476610149";
 const MONGODB_URL = process.env.MONGODB_URL;
-const ADMIN_PASSWORD = process.env.DASHBOARD_PASSWORD || "admin";
 
 let db;
-const parties = new Map();
-const MOIS = ['Janvier','Fevrier','Mars','Avril','Mai','Juin','Juillet','Aout','Septembre','Octobre','Novembre','Decembre'];
+const MOIS = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
 
 // ===== MONGODB =====
 async function connectMongo() {
   const mongoClient = new MongoClient(MONGODB_URL);
   await mongoClient.connect();
   db = mongoClient.db('multibot');
-  console.log('MongoDB connecte !');
-  const comptes = db.collection('comptes');
-  const admin = await comptes.findOne({ username: 'admin' });
-  if (!admin) await comptes.insertOne({ username: 'admin', password: ADMIN_PASSWORD, role: 'admin' });
+  console.log('MongoDB connecté !');
   const stats = db.collection('stats');
   const s = await stats.findOne({ _id: 'current' });
-  if (!s) await stats.insertOne({ _id: 'current', mois: new Date().getMonth(), annee: new Date().getFullYear(), charsDetruitTotal: 0, charsPerdusTotal: 0, charsCapturesTotal: 0, recordRapport: 0, tireurs: {}, rapports: [] });
+  if (!s) await stats.insertOne({
+    _id: 'current',
+    mois: new Date().getMonth(),
+    annee: new Date().getFullYear(),
+    charsDetruitTotal: 0, charsPerdusTotal: 0, charsCapturesTotal: 0,
+    recordRapport: 0, tireurs: {}, rapports: [], admins: USER_IDS
+  });
 }
 
-async function getComptes() { return db.collection('comptes').find({}).toArray(); }
 async function getStats() { return db.collection('stats').findOne({ _id: 'current' }); }
 async function saveStats(stats) { await db.collection('stats').replaceOne({ _id: 'current' }, stats, { upsert: true }); }
 
-// ===== COMMANDES SLASH =====
-const commands = [
-  new SlashCommandBuilder().setName('oxo').setDescription('Jouer au Morpion').addUserOption(o => o.setName('adversaire').setDescription('Ton adversaire').setRequired(true)),
-  new SlashCommandBuilder().setName('puissance4').setDescription('Jouer au Puissance 4').addUserOption(o => o.setName('adversaire').setDescription('Ton adversaire').setRequired(true)),
-  new SlashCommandBuilder().setName('demineur').setDescription('Jouer au Demineur').addStringOption(o => o.setName('difficulte').setDescription('Difficulte').setRequired(false).addChoices({ name: 'Facile (5x5)', value: 'facile' }, { name: 'Moyen (7x7)', value: 'moyen' }, { name: 'Difficile (9x9)', value: 'difficile' })),
-  new SlashCommandBuilder().setName('logimage').setDescription('Jouer au Logimage (Nonogramme)'),
-].map(c => c.toJSON());
-
-async function enregistrerCommandes() {
-  const rest = new REST({ version: '10' }).setToken(BOT_TOKEN);
-  try {
-    await rest.put(Routes.applicationCommands(CLIENT_ID), { body: [] });
-    await rest.put(Routes.applicationGuildCommands(CLIENT_ID, GUILD_ID), { body: commands });
-    console.log('Commandes enregistrees !');
-  } catch (err) { console.error('Erreur:', err); }
+async function getAdmins() {
+  const stats = await getStats();
+  return (stats && stats.admins && stats.admins.length) ? stats.admins : USER_IDS;
 }
-
-// ===== OXO =====
-function oxoGrille() { return Array(9).fill(null); }
-function oxoVerifier(g) {
-  const combos = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
-  for (const [a,b,c] of combos) if (g[a] && g[a] === g[b] && g[a] === g[c]) return g[a];
-  return g.every(c => c) ? 'nul' : null;
+async function isAdmin(userId) {
+  const admins = await getAdmins();
+  return admins.includes(userId);
 }
-function oxoButtons(grille, fini) {
-  const rows = [];
-  for (let r = 0; r < 3; r++) {
-    const row = new ActionRowBuilder();
-    for (let c = 0; c < 3; c++) {
-      const i = r * 3 + c;
-      row.addComponents(new ButtonBuilder().setCustomId(`oxo_${i}`).setLabel(grille[i] ? (grille[i] === 'X' ? 'X' : 'O') : '-').setStyle(grille[i] === 'X' ? ButtonStyle.Danger : grille[i] === 'O' ? ButtonStyle.Primary : ButtonStyle.Secondary).setDisabled(!!grille[i] || fini));
-    }
-    rows.push(row);
-  }
-  return rows;
-}
-
-// ===== PUISSANCE 4 =====
-function p4Grille() { return Array(6).fill(null).map(() => Array(7).fill(null)); }
-function p4Verifier(g) {
-  const check = (r, c, dr, dc) => {
-    const val = g[r][c]; if (!val) return false;
-    for (let i = 1; i < 4; i++) { const nr=r+dr*i, nc=c+dc*i; if (nr<0||nr>=6||nc<0||nc>=7||g[nr][nc]!==val) return false; }
-    return val;
-  };
-  for (let r = 0; r < 6; r++) for (let c = 0; c < 7; c++) {
-    const w = check(r,c,0,1)||check(r,c,1,0)||check(r,c,1,1)||check(r,c,1,-1);
-    if (w) return w;
-  }
-  return g.every(row => row.every(c => c)) ? 'nul' : null;
-}
-function p4Afficher(g) {
-  const e = { '1': 'R', '2': 'J', null: '.' };
-  let txt = '1 2 3 4 5 6 7\n';
-  for (const row of g) txt += row.map(c => e[c]).join(' ') + '\n';
-  return txt;
-}
-function p4Buttons(g) {
-  const row = new ActionRowBuilder();
-  for (let c = 0; c < 7; c++) row.addComponents(new ButtonBuilder().setCustomId(`p4_${c}`).setLabel(`${c+1}`).setStyle(ButtonStyle.Primary).setDisabled(g[0][c] !== null));
-  return [row];
-}
-
-// ===== DEMINEUR =====
-function demCreer(taille, mines) {
-  const g = Array(taille).fill(null).map(() => Array(taille).fill(0));
-  const rev = Array(taille).fill(null).map(() => Array(taille).fill(false));
-  const drap = Array(taille).fill(null).map(() => Array(taille).fill(false));
-  let placed = 0;
-  while (placed < mines) { const r=Math.floor(Math.random()*taille), c=Math.floor(Math.random()*taille); if (g[r][c]!==-1) { g[r][c]=-1; placed++; } }
-  for (let r=0;r<taille;r++) for (let c=0;c<taille;c++) {
-    if (g[r][c]===-1) continue;
-    let count=0;
-    for (let dr=-1;dr<=1;dr++) for (let dc=-1;dc<=1;dc++) { const nr=r+dr,nc=c+dc; if (nr>=0&&nr<taille&&nc>=0&&nc<taille&&g[nr][nc]===-1) count++; }
-    g[r][c]=count;
-  }
-  return { g, rev, drap, taille, mines, fini: false, gagne: false };
-}
-function demAfficher(jeu) {
-  let txt = '';
-  for (let r=0;r<jeu.taille;r++) { for (let c=0;c<jeu.taille;c++) { if (jeu.drap[r][c]) txt+='F'; else if (!jeu.rev[r][c]) txt+='?'; else if (jeu.g[r][c]===-1) txt+='*'; else txt+=jeu.g[r][c]; } txt+='\n'; }
-  return txt;
-}
-function demButtons(jeu) {
-  const rows = [];
-  for (let r=0;r<Math.min(jeu.taille,5);r++) {
-    const row = new ActionRowBuilder();
-    for (let c=0;c<Math.min(jeu.taille,5);c++) {
-      const rev = jeu.rev[r][c];
-      row.addComponents(new ButtonBuilder().setCustomId(`dem_${r}_${c}`).setLabel(rev?(jeu.g[r][c]===0?'.':String(jeu.g[r][c])):(jeu.drap[r][c]?'F':'?')).setStyle(rev?ButtonStyle.Secondary:ButtonStyle.Primary).setDisabled(rev||jeu.fini));
-    }
-    rows.push(row);
-  }
-  return rows;
-}
-
-// ===== LOGIMAGE =====
-const logimagesPuzzles = [
-  { nom: "Coeur", rows: [[0,2],[2,2],[4],[6],[4],[2,2],[0,2]], cols: [[1],[1,1],[3],[5],[3],[1,1],[1]], taille: 7,
-    solution: [[0,1,0,0,0,1,0],[1,1,0,0,0,1,1],[1,1,1,1,1,1,1],[0,1,1,1,1,1,0],[0,0,1,1,1,0,0],[0,0,0,1,0,0,0],[0,0,0,0,0,0,0]] },
-  { nom: "Maison", rows: [[3],[5],[1,1],[1,1],[5]], cols: [[1],[2,1],[5],[2,1],[1]], taille: 5,
-    solution: [[0,1,1,1,0],[1,1,1,1,1],[1,0,1,0,1],[1,0,1,0,1],[1,1,1,1,1]] }
-];
-function logiAfficher(jeu) {
-  const t = jeu.puzzle.taille;
-  let txt = '```\n';
-  const maxColHint = Math.max(...jeu.puzzle.cols.map(c => c.length));
-  for (let h=0;h<maxColHint;h++) { txt+='   '; for (let c=0;c<t;c++) { const hints=jeu.puzzle.cols[c]; const idx=hints.length-maxColHint+h; txt+=idx>=0?` ${hints[idx]}`:'  '; } txt+='\n'; }
-  for (let r=0;r<t;r++) { const hint=jeu.puzzle.rows[r].join(' '); txt+=hint.padStart(3)+' '; for (let c=0;c<t;c++) { const val=jeu.grille[r][c]; txt+=val===1?'##':val===-1?'XX':'..'; } txt+='\n'; }
-  txt+='```'; return txt;
-}
-function logiButtons(jeu) {
-  const rows = [];
-  const t = jeu.puzzle.taille;
-  for (let r=0;r<t&&r<5;r++) {
-    const row = new ActionRowBuilder();
-    for (let c=0;c<t&&c<5;c++) { const val=jeu.grille[r][c]; row.addComponents(new ButtonBuilder().setCustomId(`logi_${r}_${c}`).setLabel(val===1?'#':val===-1?'X':'.').setStyle(val===1?ButtonStyle.Success:val===-1?ButtonStyle.Danger:ButtonStyle.Secondary).setDisabled(jeu.fini)); }
-    rows.push(row);
-  }
-  rows.push(new ActionRowBuilder().addComponents(new ButtonBuilder().setCustomId('logi_check').setLabel('Verifier').setStyle(ButtonStyle.Primary).setDisabled(jeu.fini)));
-  return rows;
-}
-
-// ===== INTERACTIONS =====
-client.on('interactionCreate', async interaction => {
-  if (interaction.isChatInputCommand()) {
-    if (interaction.commandName === 'oxo') {
-      const adv = interaction.options.getUser('adversaire');
-      if (adv.id === interaction.user.id) return interaction.reply({ content: 'Tu ne peux pas jouer contre toi-meme !', ephemeral: true });
-      const id = `oxo_${interaction.channelId}`;
-      parties.set(id, { grille: oxoGrille(), joueurs: [interaction.user.id, adv.id], tour: 0 });
-      const embed = new EmbedBuilder().setTitle('Morpion').setColor(0xFFD700).setDescription(`${interaction.user.username} (X) vs ${adv.username} (O)\n\nTour de ${interaction.user.username}`);
-      await interaction.reply({ embeds: [embed], components: oxoButtons(parties.get(id).grille, false) });
-    }
-    else if (interaction.commandName === 'puissance4') {
-      const adv = interaction.options.getUser('adversaire');
-      if (adv.id === interaction.user.id) return interaction.reply({ content: 'Tu ne peux pas jouer contre toi-meme !', ephemeral: true });
-      const id = `p4_${interaction.channelId}`;
-      const grille = p4Grille();
-      parties.set(id, { grille, joueurs: [interaction.user.id, adv.id], tour: 0 });
-      const embed = new EmbedBuilder().setTitle('Puissance 4').setColor(0xFFD700).setDescription(`${interaction.user.username} (R) vs ${adv.username} (J)\n\n${p4Afficher(grille)}\nTour de ${interaction.user.username}`);
-      await interaction.reply({ embeds: [embed], components: p4Buttons(grille) });
-    }
-    else if (interaction.commandName === 'demineur') {
-      const diff = interaction.options.getString('difficulte') || 'facile';
-      const config = { facile: { taille: 5, mines: 4 }, moyen: { taille: 7, mines: 8 }, difficile: { taille: 9, mines: 12 } };
-      const { taille, mines } = config[diff];
-      const jeu = demCreer(taille, mines);
-      parties.set(`dem_${interaction.user.id}`, { ...jeu, userId: interaction.user.id });
-      const embed = new EmbedBuilder().setTitle('Demineur').setColor(0xFFD700).setDescription(`Difficulte : ${diff} | Mines : ${mines}\n\n${demAfficher(jeu)}`);
-      await interaction.reply({ embeds: [embed], components: demButtons(jeu) });
-    }
-    else if (interaction.commandName === 'logimage') {
-      const puzzle = logimagesPuzzles[Math.floor(Math.random() * logimagesPuzzles.length)];
-      const grille = Array(puzzle.taille).fill(null).map(() => Array(puzzle.taille).fill(0));
-      const jeu = { grille, puzzle, fini: false, userId: interaction.user.id };
-      parties.set(`logi_${interaction.user.id}`, jeu);
-      const embed = new EmbedBuilder().setTitle(`Logimage - ${puzzle.nom}`).setColor(0xFFD700).setDescription(`${logiAfficher(jeu)}\n# rempli | X vide | . efface`);
-      await interaction.reply({ embeds: [embed], components: logiButtons(jeu) });
-    }
-  }
-
-  if (interaction.isButton()) {
-    const id = interaction.customId;
-    if (id.startsWith('oxo_')) {
-      const partieId = `oxo_${interaction.channelId}`;
-      const partie = parties.get(partieId);
-      if (!partie) return interaction.reply({ content: 'Partie introuvable !', ephemeral: true });
-      const joueurIdx = partie.joueurs.indexOf(interaction.user.id);
-      if (joueurIdx === -1) return interaction.reply({ content: 'Tu ne fais pas partie de cette partie !', ephemeral: true });
-      if (joueurIdx !== partie.tour) return interaction.reply({ content: 'Ce n\'est pas ton tour !', ephemeral: true });
-      const case_ = parseInt(id.split('_')[1]);
-      if (partie.grille[case_]) return interaction.reply({ content: 'Case deja jouee !', ephemeral: true });
-      partie.grille[case_] = partie.tour === 0 ? 'X' : 'O';
-      const resultat = oxoVerifier(partie.grille);
-      const noms = await Promise.all(partie.joueurs.map(id => client.users.fetch(id)));
-      let desc = ''; let fini = false;
-      if (resultat === 'nul') { desc = 'Match nul !'; fini = true; parties.delete(partieId); }
-      else if (resultat) { desc = `${noms[partie.tour].username} a gagne !`; fini = true; parties.delete(partieId); }
-      else { partie.tour = 1 - partie.tour; desc = `Tour de ${noms[partie.tour].username}`; }
-      const embed = new EmbedBuilder().setTitle('Morpion').setColor(fini ? 0x4CAF50 : 0xFFD700).setDescription(`${noms[0].username} (X) vs ${noms[1].username} (O)\n\n${desc}`);
-      await interaction.update({ embeds: [embed], components: oxoButtons(partie.grille, fini) });
-    }
-    else if (id.startsWith('p4_')) {
-      const partieId = `p4_${interaction.channelId}`;
-      const partie = parties.get(partieId);
-      if (!partie) return interaction.reply({ content: 'Partie introuvable !', ephemeral: true });
-      const joueurIdx = partie.joueurs.indexOf(interaction.user.id);
-      if (joueurIdx === -1) return interaction.reply({ content: 'Tu ne fais pas partie de cette partie !', ephemeral: true });
-      if (joueurIdx !== partie.tour) return interaction.reply({ content: 'Ce n\'est pas ton tour !', ephemeral: true });
-      const col = parseInt(id.split('_')[1]);
-      let placed = false;
-      for (let r = 5; r >= 0; r--) { if (!partie.grille[r][col]) { partie.grille[r][col] = String(partie.tour + 1); placed = true; break; } }
-      if (!placed) return interaction.reply({ content: 'Colonne pleine !', ephemeral: true });
-      const resultat = p4Verifier(partie.grille);
-      const noms = await Promise.all(partie.joueurs.map(id => client.users.fetch(id)));
-      let desc = ''; let fini = false;
-      if (resultat === 'nul') { desc = 'Match nul !'; fini = true; parties.delete(partieId); }
-      else if (resultat) { desc = `${noms[partie.tour].username} a gagne !`; fini = true; parties.delete(partieId); }
-      else { partie.tour = 1 - partie.tour; desc = `Tour de ${noms[partie.tour].username}`; }
-      const embed = new EmbedBuilder().setTitle('Puissance 4').setColor(fini ? 0x4CAF50 : 0xFFD700).setDescription(`${noms[0].username} (R) vs ${noms[1].username} (J)\n\n${p4Afficher(partie.grille)}\n${desc}`);
-      await interaction.update({ embeds: [embed], components: fini ? [] : p4Buttons(partie.grille) });
-    }
-    else if (id.startsWith('dem_')) {
-      const jeu = parties.get(`dem_${interaction.user.id}`);
-      if (!jeu) return interaction.reply({ content: 'Partie introuvable !', ephemeral: true });
-      const [, r, c] = id.split('_').map(Number);
-      if (jeu.g[r][c] === -1) {
-        jeu.fini = true;
-        for (let i=0;i<jeu.taille;i++) for (let j=0;j<jeu.taille;j++) if (jeu.g[i][j]===-1) jeu.rev[i][j]=true;
-        return interaction.update({ embeds: [new EmbedBuilder().setTitle('Demineur').setColor(0xf44336).setDescription(`${demAfficher(jeu)}\n\nBOOM ! Tu as perdu !`)], components: [] });
-      }
-      const queue = [[r, c]];
-      while (queue.length) {
-        const [cr, cc] = queue.shift();
-        if (cr<0||cr>=jeu.taille||cc<0||cc>=jeu.taille||jeu.rev[cr][cc]) continue;
-        jeu.rev[cr][cc] = true;
-        if (jeu.g[cr][cc] === 0) for (let dr=-1;dr<=1;dr++) for (let dc=-1;dc<=1;dc++) queue.push([cr+dr,cc+dc]);
-      }
-      let gagne = true;
-      for (let i=0;i<jeu.taille;i++) for (let j=0;j<jeu.taille;j++) if (jeu.g[i][j]!==-1&&!jeu.rev[i][j]) { gagne=false; break; }
-      if (gagne) jeu.fini = true;
-      await interaction.update({ embeds: [new EmbedBuilder().setTitle('Demineur').setColor(gagne ? 0x4CAF50 : 0xFFD700).setDescription(`${demAfficher(jeu)}\n\n${gagne ? 'Bravo, tu as gagne !' : 'Continue !'}`)], components: jeu.fini ? [] : demButtons(jeu) });
-    }
-    else if (id.startsWith('logi_')) {
-      const jeu = parties.get(`logi_${interaction.user.id}`);
-      if (!jeu) return interaction.reply({ content: 'Partie introuvable !', ephemeral: true });
-      if (id === 'logi_check') {
-        const correct = jeu.grille.every((row, r) => row.every((v, c) => (v === 1) === (jeu.puzzle.solution[r][c] === 1)));
-        jeu.fini = correct;
-        return interaction.update({ embeds: [new EmbedBuilder().setTitle(`Logimage - ${jeu.puzzle.nom}`).setColor(correct ? 0x4CAF50 : 0xFFD700).setDescription(`${logiAfficher(jeu)}\n\n${correct ? 'Bravo, Logimage resolu !' : 'Pas encore correct, continue !'}`)], components: correct ? [] : logiButtons(jeu) });
-      }
-      const [, r, c] = id.split('_').map(Number);
-      jeu.grille[r][c] = jeu.grille[r][c] === 0 ? 1 : jeu.grille[r][c] === 1 ? -1 : 0;
-      await interaction.update({ embeds: [new EmbedBuilder().setTitle(`Logimage - ${jeu.puzzle.nom}`).setColor(0xFFD700).setDescription(`${logiAfficher(jeu)}\n# rempli | X vide | . efface`)], components: logiButtons(jeu) });
-    }
-  }
-});
 
 // ===== LOGS =====
 async function envoyerLog(titre, description, couleur = 0xFFD700) {
   if (!WEBHOOK_URL) return;
-  try { await fetch(WEBHOOK_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ embeds: [{ title: titre, description, color: couleur, timestamp: new Date().toISOString() }] }) }); }
-  catch (err) { console.error("Erreur log:", err.message); }
+  try {
+    await fetch(WEBHOOK_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ embeds: [{ title: titre, description, color: couleur, timestamp: new Date().toISOString() }] })
+    });
+  } catch (err) { console.error('Erreur log:', err.message); }
 }
 
 // ===== BILAN MENSUEL =====
 async function envoyerBilanMensuel(stats) {
-  const ratio = stats.charsPerdusTotal > 0 ? (stats.charsDetruitTotal / stats.charsPerdusTotal).toFixed(2) : stats.charsDetruitTotal > 0 ? 'inf' : '0';
-  const meilleurTireur = Object.entries(stats.tireurs).sort((a, b) => b[1] - a[1])[0];
-  const embed = { embeds: [{ title: `Bilan de ${MOIS[stats.mois]} ${stats.annee}`, color: 0xFFD700, fields: [
-    { name: 'Chars detruits', value: `**${stats.charsDetruitTotal}**`, inline: true },
-    { name: 'Chars perdus', value: `**${stats.charsPerdusTotal}**`, inline: true },
-    { name: 'Captures', value: `**${stats.charsCapturesTotal||0}**`, inline: true },
-    { name: 'Ratio', value: `**${ratio}**`, inline: true },
-    { name: 'Record', value: `**${stats.recordRapport}** chars en un rapport`, inline: false },
-    { name: 'Meilleur tireur', value: meilleurTireur ? `**${meilleurTireur[0]}** - **${meilleurTireur[1]}** chars` : 'Aucun', inline: false },
-  ], footer: { text: `Reinitialisation - ${MOIS[stats.mois]} ${stats.annee}` }, timestamp: new Date().toISOString() }] };
-  for (const userId of USER_IDS) { try { const u = await client.users.fetch(userId.trim()); await u.send(embed); } catch (e) {} }
-  if (WEBHOOK_URL) await fetch(WEBHOOK_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(embed) });
+  const ratio = stats.charsPerdusTotal > 0 ? (stats.charsDetruitTotal / stats.charsPerdusTotal).toFixed(2) : stats.charsDetruitTotal > 0 ? '∞' : '0';
+  const tireurs = Object.entries(stats.tireurs || {}).sort((a, b) => b[1] - a[1]);
+  const meilleurTireur = tireurs[0];
+  const embed = new EmbedBuilder()
+    .setTitle(`📊 Bilan de ${MOIS[stats.mois]} ${stats.annee}`)
+    .setColor(0xFFD700)
+    .addFields(
+      { name: '💥 Chars détruits', value: `**${stats.charsDetruitTotal}**`, inline: true },
+      { name: '💀 Chars perdus', value: `**${stats.charsPerdusTotal}**`, inline: true },
+      { name: '🚩 Capturés', value: `**${stats.charsCapturesTotal || 0}**`, inline: true },
+      { name: '⚖️ Ratio', value: `**${ratio}**`, inline: true },
+      { name: '🏆 Record', value: `**${stats.recordRapport}** chars en un rapport`, inline: false },
+      { name: '🎯 Meilleur tireur', value: meilleurTireur ? `**${meilleurTireur[0]}** — **${meilleurTireur[1]}** chars` : 'Aucun', inline: false }
+    )
+    .setFooter({ text: `Réinitialisation — ${MOIS[stats.mois]} ${stats.annee}` })
+    .setTimestamp();
+  const admins = await getAdmins();
+  for (const userId of admins) {
+    try { const u = await client.users.fetch(userId); await u.send({ embeds: [embed] }); } catch (e) {}
+  }
+  if (WEBHOOK_URL) {
+    await fetch(WEBHOOK_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ embeds: [embed.toJSON()] })
+    });
+  }
 }
 
 async function verifierReinitialisationMois(stats) {
@@ -313,78 +98,380 @@ async function verifierReinitialisationMois(stats) {
   return stats;
 }
 
-let botStartTime = new Date();
+// ===== GRAPHIQUE ASCII (sans canvas) =====
+function genererGraphiqueTexte(stats) {
+  const rapports = stats.rapports || [];
+  const parJour = {};
+  rapports.forEach(r => {
+    const d = r.date || '?';
+    if (!parJour[d]) parJour[d] = { d: 0, p: 0, c: 0 };
+    parJour[d].d += r.detruits || 0;
+    parJour[d].p += r.perdus || 0;
+    parJour[d].c += r.captures || 0;
+  });
+  const jours = Object.keys(parJour).sort();
+  if (!jours.length) return '```\nAucun rapport ce mois-ci\n```';
 
-client.once('ready', () => {
-  console.log(`Bot connecte : ${client.user.tag}`);
-  botStartTime = new Date();
-  envoyerLog("Bot demarre", `${client.user.tag} en ligne !`, 0x4CAF50);
-  enregistrerCommandes();
-});
-
-// ===== AUTH =====
-function auth(req, res, next) {
-  const username = req.headers['x-username'];
-  const password = req.headers['x-password'];
-  getComptes().then(comptes => {
-    const compte = comptes.find(c => c.username === username && c.password === password);
-    if (!compte) return res.status(401).json({ error: "Non autorise" });
-    req.compte = compte;
-    next();
-  }).catch(() => { res.status(500).json({ error: "Erreur serveur" }); });
-}
-
-function adminOnly(req, res, next) {
-  if (req.compte.role !== 'admin') return res.status(403).json({ error: "Reserve a l'admin" });
-  next();
-}
-
-// ===== ROUTES =====
-app.post('/login', async (req, res) => {
-  const comptes = await getComptes();
-  const compte = comptes.find(c => c.username === req.body.username && c.password === req.body.password);
-  if (!compte) { envoyerLog("Connexion echouee", req.body.username, 0xf44336); return res.status(401).json({ error: "Identifiants incorrects" }); }
-  envoyerLog("Connexion", `${compte.username} (${compte.role})`, 0x378ADD);
-  res.json({ success: true, role: compte.role, username: compte.username });
-});
-
-app.get('/status', auth, (req, res) => {
-  res.json({ online: client.isReady(), tag: client.user?.tag || "Deconnecte", uptime: Math.floor((new Date() - botStartTime) / 1000) });
-});
-
-app.get('/membres', auth, async (req, res) => {
-  try {
-    const guild = await client.guilds.fetch(GUILD_ID);
-    await guild.members.fetch();
-    const membres = guild.members.cache.map(m => ({
-      id: m.user.id,
-      username: m.user.username,
-      displayName: m.displayName,
-      avatar: m.user.displayAvatarURL({ size: 64, extension: 'png' })
-    }));
-    res.json(membres);
-  } catch (err) { res.status(500).json({ error: err.message }); }
-});
-
-app.post('/send', auth, async (req, res) => {
-  const ids = Array.isArray(req.body.userIds) ? req.body.userIds : [req.body.userIds];
-  const results = [];
-  for (const userId of ids) {
-    try {
-      const user = await client.users.fetch(userId.trim());
-      await user.send({ embeds: [new EmbedBuilder().setTitle('Message du Dashboard').setDescription(req.body.message).setColor(0xFFD700).setFooter({ text: `Envoye par ${req.compte.username}` }).setTimestamp()] });
-      results.push({ userId, success: true });
-    } catch (err) { results.push({ userId, success: false, error: err.message }); }
+  const maxVal = Math.max(...jours.map(j => Math.max(parJour[j].d, parJour[j].p, parJour[j].c)), 1);
+  const HAUTEUR = 8;
+  let lignes = [];
+  for (let h = HAUTEUR; h >= 1; h--) {
+    const seuil = Math.round((h / HAUTEUR) * maxVal);
+    let ligne = String(seuil).padStart(3) + ' |';
+    jours.forEach(j => {
+      const d = parJour[j].d >= seuil ? 'D' : ' ';
+      const p = parJour[j].p >= seuil ? 'P' : ' ';
+      const c = parJour[j].c >= seuil ? 'C' : ' ';
+      ligne += ' ' + d + p + c;
+    });
+    lignes.push(ligne);
   }
-  envoyerLog("Message MP", `Par ${req.compte.username}`, 0xFFD700);
-  res.json({ results });
+  lignes.push('    +' + jours.map(() => '----').join(''));
+  lignes.push('     ' + jours.map(j => j.slice(0, 4)).join(' '));
+  lignes.push('');
+  lignes.push('D=Détruits  P=Perdus  C=Capturés');
+  return '```\n' + lignes.join('\n') + '\n```';
+}
+
+// ===== COMMANDES =====
+const commands = [
+  new SlashCommandBuilder()
+    .setName('stats')
+    .setDescription('Voir les statistiques du mois'),
+
+  new SlashCommandBuilder()
+    .setName('rapport')
+    .setDescription('Gérer les rapports de combat')
+    .addSubcommand(sub => sub.setName('ajouter').setDescription('Ajouter un rapport')
+      .addStringOption(o => o.setName('nom').setDescription('Ton nom').setRequired(true))
+      .addStringOption(o => o.setName('tireur').setDescription('Nom du tireur').setRequired(true))
+      .addIntegerOption(o => o.setName('detruits').setDescription('Chars détruits').setRequired(true))
+      .addIntegerOption(o => o.setName('perdus').setDescription('Chars perdus').setRequired(true))
+      .addStringOption(o => o.setName('front').setDescription('Front').setRequired(true))
+      .addStringOption(o => o.setName('date').setDescription('Date (ex: 15/04/2025)').setRequired(true))
+      .addIntegerOption(o => o.setName('captures').setDescription('Chars capturés').setRequired(false))
+      .addStringOption(o => o.setName('char').setDescription('Char utilisé').setRequired(false))
+      .addStringOption(o => o.setName('ennemis').setDescription('Véhicules confrontés').setRequired(false))
+      .addStringOption(o => o.setName('equipage').setDescription('Autres personnes dans le char').setRequired(false))
+      .addIntegerOption(o => o.setName('reparations').setDescription('Nombre de réparations').setRequired(false)))
+    .addSubcommand(sub => sub.setName('supprimer').setDescription('Supprimer un rapport (admin)')
+      .addStringOption(o => o.setName('id').setDescription('ID du rapport').setRequired(true)))
+    .addSubcommand(sub => sub.setName('liste').setDescription('Voir tous les rapports du mois'))
+    .addSubcommand(sub => sub.setName('reset').setDescription('Réinitialiser les stats du mois (admin)')),
+
+  new SlashCommandBuilder()
+    .setName('mp')
+    .setDescription('Envoyer un message privé à un membre (admin)')
+    .addUserOption(o => o.setName('membre').setDescription('Membre à contacter').setRequired(true))
+    .addStringOption(o => o.setName('message').setDescription('Message à envoyer').setRequired(true)),
+
+  new SlashCommandBuilder()
+    .setName('message')
+    .setDescription('Envoyer un message dans un salon (admin)')
+    .addChannelOption(o => o.setName('salon').setDescription('Salon cible').setRequired(true))
+    .addStringOption(o => o.setName('message').setDescription('Message à envoyer').setRequired(true)),
+
+  new SlashCommandBuilder()
+    .setName('graphique')
+    .setDescription('Voir le graphique des stats du mois'),
+
+  new SlashCommandBuilder()
+    .setName('compte')
+    .setDescription('Gérer les admins autorisés (admin)')
+    .addSubcommand(sub => sub.setName('ajouter').setDescription('Ajouter un admin')
+      .addUserOption(o => o.setName('membre').setDescription('Membre à ajouter').setRequired(true)))
+    .addSubcommand(sub => sub.setName('retirer').setDescription('Retirer un admin')
+      .addUserOption(o => o.setName('membre').setDescription('Membre à retirer').setRequired(true)))
+    .addSubcommand(sub => sub.setName('liste').setDescription('Voir la liste des admins')),
+
+  new SlashCommandBuilder()
+    .setName('restart')
+    .setDescription('Redémarrer le bot (admin)'),
+
+].map(c => c.toJSON());
+
+async function enregistrerCommandes() {
+  const rest = new REST({ version: '10' }).setToken(BOT_TOKEN);
+  try {
+    await rest.put(Routes.applicationCommands(CLIENT_ID), { body: [] });
+    await rest.put(Routes.applicationGuildCommands(CLIENT_ID, GUILD_ID), { body: commands });
+    console.log('Commandes enregistrées !');
+  } catch (err) { console.error('Erreur commandes:', err); }
+}
+
+// ===== INTERACTIONS =====
+client.on('interactionCreate', async interaction => {
+  if (!interaction.isChatInputCommand()) return;
+  const { commandName } = interaction;
+  const userId = interaction.user.id;
+  const admin = await isAdmin(userId);
+
+  // ===== /stats =====
+  if (commandName === 'stats') {
+    await interaction.deferReply();
+    let stats = await getStats();
+    stats = await verifierReinitialisationMois(stats);
+    const ratio = stats.charsPerdusTotal > 0 ? (stats.charsDetruitTotal / stats.charsPerdusTotal).toFixed(2) : stats.charsDetruitTotal > 0 ? '∞' : '0';
+    const tireurs = Object.entries(stats.tireurs || {}).sort((a, b) => b[1] - a[1]);
+    const meilleurTireur = tireurs[0];
+    const top3 = tireurs.slice(0, 3).map((t, i) => `${['🥇','🥈','🥉'][i]} **${t[0]}** — ${t[1]} chars`).join('\n') || 'Aucun';
+    const embed = new EmbedBuilder()
+      .setTitle(`📊 Statistiques — ${MOIS[stats.mois]} ${stats.annee}`)
+      .setColor(0xFFD700)
+      .addFields(
+        { name: '💥 Chars détruits', value: `**${stats.charsDetruitTotal}**`, inline: true },
+        { name: '💀 Chars perdus', value: `**${stats.charsPerdusTotal}**`, inline: true },
+        { name: '🚩 Chars capturés', value: `**${stats.charsCapturesTotal || 0}**`, inline: true },
+        { name: '⚖️ Ratio', value: `**${ratio}**`, inline: true },
+        { name: '🏆 Record', value: `**${stats.recordRapport}** chars en un rapport`, inline: true },
+        { name: '📋 Rapports', value: `**${(stats.rapports || []).length}** ce mois`, inline: true },
+        { name: '🎯 Top Tireurs', value: top3, inline: false }
+      )
+      .setTimestamp();
+    await interaction.editReply({ embeds: [embed] });
+  }
+
+  // ===== /rapport =====
+  else if (commandName === 'rapport') {
+    const sub = interaction.options.getSubcommand();
+
+    if (sub === 'ajouter') {
+      await interaction.deferReply();
+      let stats = await getStats();
+      stats = await verifierReinitialisationMois(stats);
+      const nom = interaction.options.getString('nom');
+      const tireur = interaction.options.getString('tireur');
+      const detruits = interaction.options.getInteger('detruits') || 0;
+      const perdus = interaction.options.getInteger('perdus') || 0;
+      const front = interaction.options.getString('front');
+      const date = interaction.options.getString('date');
+      const captures = interaction.options.getInteger('captures') || 0;
+      const charUtilise = interaction.options.getString('char') || 'N/A';
+      const ennemis = interaction.options.getString('ennemis') || 'N/A';
+      const equipage = interaction.options.getString('equipage') || 'Solo';
+      const reparations = interaction.options.getInteger('reparations') || 0;
+
+      stats.charsDetruitTotal += detruits;
+      stats.charsPerdusTotal += perdus;
+      stats.charsCapturesTotal = (stats.charsCapturesTotal || 0) + captures;
+      if (detruits > stats.recordRapport) stats.recordRapport = detruits;
+      stats.tireurs[tireur] = (stats.tireurs[tireur] || 0) + detruits;
+      stats.rapports.push({ id: Date.now(), nom, tireur, detruits, perdus, captures, date });
+      await saveStats(stats);
+
+      const ratio = perdus > 0 ? (detruits / perdus).toFixed(2) : detruits > 0 ? '∞' : '0';
+      const embed = new EmbedBuilder()
+        .setTitle(`📋 Rapport de combat — ${nom}`)
+        .setColor(0xFFD700)
+        .addFields(
+          { name: '👤 Rapporteur', value: `**${nom}**`, inline: true },
+          { name: '🎯 Tireur', value: `**${tireur}**`, inline: true },
+          { name: '📍 Front', value: `**${front}**`, inline: true },
+          { name: '🛡️ Char utilisé', value: `**${charUtilise}**`, inline: true },
+          { name: '⚔️ Véhicules ennemis', value: `**${ennemis}**`, inline: true },
+          { name: '👥 Équipage', value: `**${equipage}**`, inline: true },
+          { name: '💥 Chars détruits', value: `**${detruits}**`, inline: true },
+          { name: '💀 Chars perdus', value: `**${perdus}**`, inline: true },
+          { name: '🚩 Chars capturés', value: `**${captures}**`, inline: true },
+          { name: '⚖️ Ratio', value: `**${ratio}**`, inline: true },
+          { name: '🔧 Réparations', value: `**${reparations}**`, inline: true },
+          { name: '📅 Date', value: `**${date}**`, inline: true },
+          { name: `📊 Total ${MOIS[stats.mois]}`, value: `**${stats.charsDetruitTotal}** détruits | **${stats.charsPerdusTotal}** perdus | **${stats.charsCapturesTotal}** capturés`, inline: false },
+          { name: '🏆 Record du mois', value: `**${stats.recordRapport}** chars détruits en un rapport`, inline: false }
+        )
+        .setTimestamp();
+
+      await interaction.editReply({ embeds: [embed] });
+
+      // Envoyer aux admins en MP
+      const admins = await getAdmins();
+      for (const adminId of admins) {
+        if (adminId !== userId) {
+          try { const u = await client.users.fetch(adminId); await u.send({ embeds: [embed] }); } catch (e) {}
+        }
+      }
+      if (WEBHOOK_URL) {
+        await fetch(WEBHOOK_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ embeds: [embed.toJSON()] })
+        });
+      }
+    }
+
+    else if (sub === 'supprimer') {
+      if (!admin) return interaction.reply({ content: '❌ Vous n\'avez pas la permission !', ephemeral: true });
+      await interaction.deferReply({ ephemeral: true });
+      const id = parseInt(interaction.options.getString('id'));
+      let stats = await getStats();
+      const rapport = stats.rapports.find(r => r.id === id);
+      if (!rapport) return interaction.editReply({ content: '❌ Rapport introuvable ! Utilise `/rapport liste` pour voir les IDs.' });
+      stats.charsDetruitTotal -= rapport.detruits;
+      stats.charsPerdusTotal -= rapport.perdus;
+      stats.charsCapturesTotal = (stats.charsCapturesTotal || 0) - (rapport.captures || 0);
+      stats.tireurs[rapport.tireur] = (stats.tireurs[rapport.tireur] || 0) - rapport.detruits;
+      stats.rapports = stats.rapports.filter(r => r.id !== id);
+      stats.recordRapport = stats.rapports.length > 0 ? Math.max(...stats.rapports.map(r => r.detruits)) : 0;
+      await saveStats(stats);
+      await interaction.editReply({ content: `✅ Rapport de **${rapport.nom}** (${rapport.detruits} détruits) supprimé !` });
+      envoyerLog('🗑️ Rapport supprimé', `**${rapport.nom}** par **${interaction.user.username}**`, 0xf44336);
+    }
+
+    else if (sub === 'liste') {
+      await interaction.deferReply({ ephemeral: true });
+      const stats = await getStats();
+      const rapports = stats.rapports || [];
+      if (!rapports.length) return interaction.editReply({ content: '📋 Aucun rapport ce mois-ci.' });
+      const chunks = [];
+      let current = '';
+      rapports.forEach((r, i) => {
+        const line = `**${i + 1}.** ${r.nom} — 🎯 ${r.tireur} — 💥 ${r.detruits} — 💀 ${r.perdus} — 🚩 ${r.captures || 0} — 📅 ${r.date} — ID: \`${r.id}\`\n`;
+        if (current.length + line.length > 3900) { chunks.push(current); current = ''; }
+        current += line;
+      });
+      if (current) chunks.push(current);
+      const embeds = chunks.map((desc, i) => new EmbedBuilder()
+        .setTitle(i === 0 ? `📋 Rapports de ${MOIS[stats.mois]} ${stats.annee}` : `📋 Rapports (suite)`)
+        .setColor(0xFFD700)
+        .setDescription(desc)
+        .setTimestamp()
+      );
+      await interaction.editReply({ embeds: embeds.slice(0, 10) });
+    }
+
+    else if (sub === 'reset') {
+      if (!admin) return interaction.reply({ content: '❌ Vous n\'avez pas la permission !', ephemeral: true });
+      await interaction.deferReply({ ephemeral: true });
+      let stats = await getStats();
+      await envoyerBilanMensuel(stats);
+      Object.assign(stats, { charsDetruitTotal: 0, charsPerdusTotal: 0, charsCapturesTotal: 0, recordRapport: 0, tireurs: {}, rapports: [] });
+      await saveStats(stats);
+      await interaction.editReply({ content: '✅ Stats réinitialisées ! Le bilan a été envoyé aux admins.' });
+      envoyerLog('🔁 Reset stats', `Par **${interaction.user.username}**`, 0xf44336);
+    }
+  }
+
+  // ===== /mp =====
+  else if (commandName === 'mp') {
+    if (!admin) return interaction.reply({ content: '❌ Vous n\'avez pas la permission !', ephemeral: true });
+    await interaction.deferReply({ ephemeral: true });
+    const membre = interaction.options.getUser('membre');
+    const message = interaction.options.getString('message');
+    try {
+      await membre.send({ embeds: [new EmbedBuilder()
+        .setTitle('📩 Message')
+        .setDescription(message)
+        .setColor(0xFFD700)
+        .setFooter({ text: `Envoyé par ${interaction.user.username}` })
+        .setTimestamp()
+      ]});
+      await interaction.editReply({ content: `✅ Message envoyé à **${membre.username}** !` });
+      envoyerLog('💬 MP envoyé', `Par **${interaction.user.username}** à **${membre.username}**`, 0xFFD700);
+    } catch (e) {
+      await interaction.editReply({ content: `❌ Impossible d'envoyer à ${membre.username} : DMs fermés ou bot non partagé.` });
+    }
+  }
+
+  // ===== /message =====
+  else if (commandName === 'message') {
+    if (!admin) return interaction.reply({ content: '❌ Vous n\'avez pas la permission !', ephemeral: true });
+    await interaction.deferReply({ ephemeral: true });
+    const salon = interaction.options.getChannel('salon');
+    const message = interaction.options.getString('message');
+    try {
+      await salon.send(message);
+      await interaction.editReply({ content: `✅ Message envoyé dans **#${salon.name}** !` });
+      envoyerLog('📢 Message salon', `Par **${interaction.user.username}** dans **#${salon.name}**`, 0xFFD700);
+    } catch (e) {
+      await interaction.editReply({ content: `❌ Erreur : ${e.message}` });
+    }
+  }
+
+  // ===== /graphique =====
+  else if (commandName === 'graphique') {
+    await interaction.deferReply();
+    const stats = await getStats();
+    const graphique = genererGraphiqueTexte(stats);
+    const ratio = stats.charsPerdusTotal > 0 ? (stats.charsDetruitTotal / stats.charsPerdusTotal).toFixed(2) : stats.charsDetruitTotal > 0 ? '∞' : '0';
+    const embed = new EmbedBuilder()
+      .setTitle(`📈 Graphique — ${MOIS[stats.mois]} ${stats.annee}`)
+      .setColor(0xFFD700)
+      .setDescription(graphique)
+      .addFields(
+        { name: '💥 Total détruits', value: `**${stats.charsDetruitTotal}**`, inline: true },
+        { name: '💀 Total perdus', value: `**${stats.charsPerdusTotal}**`, inline: true },
+        { name: '⚖️ Ratio', value: `**${ratio}**`, inline: true }
+      )
+      .setTimestamp();
+    await interaction.editReply({ embeds: [embed] });
+  }
+
+  // ===== /compte =====
+  else if (commandName === 'compte') {
+    if (!admin) return interaction.reply({ content: '❌ Vous n\'avez pas la permission !', ephemeral: true });
+    const sub = interaction.options.getSubcommand();
+    let stats = await getStats();
+    if (!stats.admins) stats.admins = [...USER_IDS];
+
+    if (sub === 'ajouter') {
+      const membre = interaction.options.getUser('membre');
+      if (stats.admins.includes(membre.id)) return interaction.reply({ content: `⚠️ **${membre.username}** est déjà admin !`, ephemeral: true });
+      stats.admins.push(membre.id);
+      await saveStats(stats);
+      await interaction.reply({ content: `✅ **${membre.username}** ajouté comme admin !`, ephemeral: true });
+      envoyerLog('👤 Admin ajouté', `**${membre.username}** par **${interaction.user.username}**`, 0x4CAF50);
+    }
+
+    else if (sub === 'retirer') {
+      const membre = interaction.options.getUser('membre');
+      if (!stats.admins.includes(membre.id)) return interaction.reply({ content: `⚠️ **${membre.username}** n'est pas admin !`, ephemeral: true });
+      stats.admins = stats.admins.filter(id => id !== membre.id);
+      await saveStats(stats);
+      await interaction.reply({ content: `✅ **${membre.username}** retiré des admins !`, ephemeral: true });
+      envoyerLog('🗑️ Admin retiré', `**${membre.username}** par **${interaction.user.username}**`, 0xf44336);
+    }
+
+    else if (sub === 'liste') {
+      const admins = stats.admins || [];
+      const membres = await Promise.all(admins.map(async id => {
+        try { const u = await client.users.fetch(id); return `• **${u.username}** (\`${id}\`)`; }
+        catch (e) { return `• ID inconnu (\`${id}\`)`; }
+      }));
+      const embed = new EmbedBuilder()
+        .setTitle('👥 Admins autorisés')
+        .setColor(0xFFD700)
+        .setDescription(membres.length ? membres.join('\n') : 'Aucun admin configuré')
+        .setFooter({ text: 'Accès à : /restart /compte /mp /message /rapport supprimer & reset' })
+        .setTimestamp();
+      await interaction.reply({ embeds: [embed], ephemeral: true });
+    }
+  }
+
+  // ===== /restart =====
+  else if (commandName === 'restart') {
+    if (!admin) return interaction.reply({ content: '❌ Vous n\'avez pas la permission !', ephemeral: true });
+    await interaction.reply({ content: '🔄 Redémarrage en cours...', ephemeral: true });
+    envoyerLog('🔄 Restart', `Par **${interaction.user.username}**`, 0xFF9800);
+    setTimeout(() => process.exit(0), 1500);
+  }
 });
+
+// ===== ROUTES (Google Forms) =====
+const app = express();
+app.use(express.json());
 
 app.post('/candidature', async (req, res) => {
   const { fields, titre } = req.body;
-  if (!fields?.length) return res.status(400).json({ error: "Aucun champ" });
-  const embed = new EmbedBuilder().setTitle(titre || "Candidature !").setColor(0xFFD700).setTimestamp().addFields(fields.map(f => ({ name: f.name, value: String(f.value) })));
-  for (const userId of USER_IDS) { try { const u = await client.users.fetch(userId); await u.send({ embeds: [embed] }); } catch (e) {} }
+  if (!fields?.length) return res.status(400).json({ error: 'Aucun champ' });
+  const embed = new EmbedBuilder()
+    .setTitle(titre || '📋 Candidature !')
+    .setColor(0xFFD700)
+    .setTimestamp()
+    .addFields(fields.map(f => ({ name: f.name, value: String(f.value) })));
+  const admins = await getAdmins();
+  for (const userId of admins) {
+    try { const u = await client.users.fetch(userId); await u.send({ embeds: [embed] }); } catch (e) {}
+  }
   res.json({ success: true });
 });
 
@@ -392,157 +479,54 @@ app.post('/rapport', async (req, res) => {
   const { nom, tireur, charsDetruit, charsPerdus, front, date, charUtilise, vehiculesConfront, autresPersonnes, charsCaptures, reparations } = req.body;
   let stats = await getStats();
   stats = await verifierReinitialisationMois(stats);
-  const detruits = parseInt(charsDetruit)||0, perdus = parseInt(charsPerdus)||0, captures = parseInt(charsCaptures)||0;
+  const detruits = parseInt(charsDetruit) || 0;
+  const perdus = parseInt(charsPerdus) || 0;
+  const captures = parseInt(charsCaptures) || 0;
   stats.charsDetruitTotal += detruits; stats.charsPerdusTotal += perdus;
-  stats.charsCapturesTotal = (stats.charsCapturesTotal||0) + captures;
+  stats.charsCapturesTotal = (stats.charsCapturesTotal || 0) + captures;
   if (detruits > stats.recordRapport) stats.recordRapport = detruits;
-  stats.tireurs[tireur] = (stats.tireurs[tireur]||0) + detruits;
+  stats.tireurs[tireur] = (stats.tireurs[tireur] || 0) + detruits;
   stats.rapports.push({ id: Date.now(), nom, tireur, detruits, perdus, captures, date });
   await saveStats(stats);
-  const ratio = perdus > 0 ? (detruits/perdus).toFixed(2) : detruits > 0 ? 'inf' : '0';
-  const embed = new EmbedBuilder().setTitle(`Rapport - ${nom}`).setColor(0xFFD700).setTimestamp().addFields(
-    { name: 'Rapporteur', value: `**${nom}**`, inline: true },
-    { name: 'Tireur', value: `**${tireur}**`, inline: true },
-    { name: 'Front', value: `**${front}**`, inline: true },
-    { name: 'Char', value: `**${charUtilise||'N/A'}**`, inline: true },
-    { name: 'Ennemis', value: `**${vehiculesConfront||'N/A'}**`, inline: true },
-    { name: 'Equipage', value: `**${autresPersonnes||'Solo'}**`, inline: true },
-    { name: 'Detruits', value: `**${detruits}**`, inline: true },
-    { name: 'Perdus', value: `**${perdus}**`, inline: true },
-    { name: 'Captures', value: `**${captures}**`, inline: true },
-    { name: 'Ratio', value: `**${ratio}**`, inline: true },
-    { name: 'Reparations', value: `**${reparations||0}**`, inline: true },
-    { name: 'Date', value: `**${date}**`, inline: true },
-    { name: `Total ${MOIS[stats.mois]}`, value: `**${stats.charsDetruitTotal}** detruits | **${stats.charsPerdusTotal}** perdus | **${stats.charsCapturesTotal}** captures`, inline: false },
-    { name: 'Record', value: `**${stats.recordRapport}** chars detruits`, inline: true },
-  );
-  for (const userId of USER_IDS) { try { const u = await client.users.fetch(userId.trim()); await u.send({ embeds: [embed] }); } catch (e) {} }
-  res.json({ success: true });
-});
-
-app.get('/stats', auth, async (req, res) => res.json(await getStats()));
-
-app.put('/stats', auth, async (req, res) => {
-  const stats = await getStats();
-  const { charsDetruitTotal, charsPerdusTotal, recordRapport, charsCapturesTotal } = req.body;
-  if (charsDetruitTotal !== undefined) stats.charsDetruitTotal = parseInt(charsDetruitTotal);
-  if (charsPerdusTotal !== undefined) stats.charsPerdusTotal = parseInt(charsPerdusTotal);
-  if (recordRapport !== undefined) stats.recordRapport = parseInt(recordRapport);
-  if (charsCapturesTotal !== undefined) stats.charsCapturesTotal = parseInt(charsCapturesTotal);
-  await saveStats(stats);
-  envoyerLog("Stats modifiees", `Par ${req.compte.username}`, 0xFF9800);
-  res.json({ success: true });
-});
-
-app.delete('/stats/rapport/:id', auth, async (req, res) => {
-  const stats = await getStats();
-  const rapport = stats.rapports.find(r => r.id === parseInt(req.params.id));
-  if (!rapport) return res.status(404).json({ error: "Introuvable" });
-  stats.charsDetruitTotal -= rapport.detruits; stats.charsPerdusTotal -= rapport.perdus;
-  stats.charsCapturesTotal = (stats.charsCapturesTotal||0) - (rapport.captures||0);
-  stats.tireurs[rapport.tireur] = (stats.tireurs[rapport.tireur]||0) - rapport.detruits;
-  stats.rapports = stats.rapports.filter(r => r.id !== parseInt(req.params.id));
-  stats.recordRapport = stats.rapports.length > 0 ? Math.max(...stats.rapports.map(r => r.detruits)) : 0;
-  await saveStats(stats);
-  envoyerLog("Rapport supprime", `Par ${req.compte.username}`, 0xf44336);
-  res.json({ success: true });
-});
-
-app.post('/stats/reset', auth, adminOnly, async (req, res) => {
-  const stats = await getStats();
-  await envoyerBilanMensuel(stats);
-  Object.assign(stats, { charsDetruitTotal: 0, charsPerdusTotal: 0, charsCapturesTotal: 0, recordRapport: 0, tireurs: {}, rapports: [] });
-  await saveStats(stats);
-  envoyerLog("Reset stats", `Par ${req.compte.username}`, 0xf44336);
-  res.json({ success: true });
-});
-
-app.get('/comptes', auth, adminOnly, async (req, res) => {
-  const comptes = await getComptes();
-  res.json(comptes.map(c => ({ username: c.username, role: c.role })));
-});
-
-app.post('/comptes', auth, adminOnly, async (req, res) => {
-  const { username, password, role } = req.body;
-  if (!username||!password||!role) return res.status(400).json({ error: "Champs manquants" });
-  const comptes = await getComptes();
-  if (comptes.find(c => c.username === username)) return res.status(400).json({ error: "Nom deja pris" });
-  await db.collection('comptes').insertOne({ username, password, role });
-  envoyerLog("Compte cree", `${username} (${role})`, 0x4CAF50);
-  res.json({ success: true });
-});
-
-app.put('/comptes/:username', auth, adminOnly, async (req, res) => {
-  const { username } = req.params;
-  const { newUsername, newPassword, newRole } = req.body;
-  if (username === 'admin' && newRole && newRole !== 'admin') return res.status(400).json({ error: "Impossible de changer le role de l'admin" });
-  const update = {};
-  if (newUsername) update.username = newUsername;
-  if (newPassword) update.password = newPassword;
-  if (newRole) update.role = newRole;
-  await db.collection('comptes').updateOne({ username }, { $set: update });
-  envoyerLog("Compte modifie", `${username} par ${req.compte.username}`, 0xFF9800);
-  res.json({ success: true });
-});
-
-app.delete('/comptes/:username', auth, adminOnly, async (req, res) => {
-  if (req.params.username === 'admin') return res.status(400).json({ error: "Impossible" });
-  await db.collection('comptes').deleteOne({ username: req.params.username });
-  envoyerLog("Compte supprime", req.params.username, 0xf44336);
-  res.json({ success: true });
-});
-
-app.get('/salons', auth, async (req, res) => {
-  try {
-    const guild = await client.guilds.fetch(GUILD_ID);
-    await guild.channels.fetch();
-    const salons = guild.channels.cache
-      .filter(c => c.type === 0)
-      .map(c => ({ id: c.id, name: c.name }))
-      .sort((a, b) => a.name.localeCompare(b.name));
-    res.json(salons);
-  } catch (err) { res.status(500).json({ error: err.message }); }
-});
-
-app.post('/send-salon', auth, async (req, res) => {
-  const { channelId, message } = req.body;
-  try {
-    const channel = await client.channels.fetch(channelId);
-    await channel.send(message);
-    envoyerLog("Message salon", `Par ${req.compte.username}`, 0xFFD700);
-    res.json({ success: true });
-  } catch (err) { res.status(500).json({ error: err.message }); }
-});
-
-app.get('/discussion/:userId', auth, async (req, res) => {
-  try {
-    const user = await client.users.fetch(req.params.userId);
-    const dmChannel = await user.createDM();
-    const messages = await dmChannel.messages.fetch({ limit: 50 });
-    const formatted = messages.reverse().map(m => ({
-      content: m.content || '',
-      embeds: m.embeds.map(e => ({
-        title: e.title,
-        description: e.description,
-        fields: e.fields
-      })),
-      isBot: m.author.bot,
-      timestamp: m.createdTimestamp,
-      author: m.author.username
-    }));
-    res.json({ messages: formatted });
-  } catch (err) {
-    res.status(500).json({ messages: [], error: err.message });
+  const ratio = perdus > 0 ? (detruits / perdus).toFixed(2) : detruits > 0 ? '∞' : '0';
+  const embed = new EmbedBuilder()
+    .setTitle(`📋 Rapport — ${nom}`)
+    .setColor(0xFFD700)
+    .setTimestamp()
+    .addFields(
+      { name: '👤 Rapporteur', value: `**${nom}**`, inline: true },
+      { name: '🎯 Tireur', value: `**${tireur}**`, inline: true },
+      { name: '📍 Front', value: `**${front}**`, inline: true },
+      { name: '🛡️ Char', value: `**${charUtilise || 'N/A'}**`, inline: true },
+      { name: '⚔️ Ennemis', value: `**${vehiculesConfront || 'N/A'}**`, inline: true },
+      { name: '👥 Équipage', value: `**${autresPersonnes || 'Solo'}**`, inline: true },
+      { name: '💥 Détruits', value: `**${detruits}**`, inline: true },
+      { name: '💀 Perdus', value: `**${perdus}**`, inline: true },
+      { name: '🚩 Capturés', value: `**${captures}**`, inline: true },
+      { name: '⚖️ Ratio', value: `**${ratio}**`, inline: true },
+      { name: '🔧 Réparations', value: `**${reparations || 0}**`, inline: true },
+      { name: '📅 Date', value: `**${date}**`, inline: true },
+      { name: `📊 Total ${MOIS[stats.mois]}`, value: `**${stats.charsDetruitTotal}** détruits | **${stats.charsPerdusTotal}** perdus | **${stats.charsCapturesTotal}** capturés`, inline: false },
+      { name: '🏆 Record', value: `**${stats.recordRapport}** chars détruits`, inline: true }
+    );
+  const admins = await getAdmins();
+  for (const userId of admins) {
+    try { const u = await client.users.fetch(userId.trim()); await u.send({ embeds: [embed] }); } catch (e) {}
   }
+  res.json({ success: true });
 });
 
-app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'public', 'index.html')));
-
-// ===== DEMARRAGE =====
+// ===== DÉMARRAGE =====
 const PORT = process.env.PORT || 3000;
+
+client.once('ready', () => {
+  console.log(`Bot connecté : ${client.user.tag}`);
+  envoyerLog('🟢 Bot démarré', `**${client.user.tag}** en ligne !`, 0x4CAF50);
+  enregistrerCommandes();
+});
 
 connectMongo().then(() => {
   client.login(BOT_TOKEN).then(() => {
-    app.listen(PORT, () => console.log('Serveur demarre sur port ' + PORT));
+    app.listen(PORT, () => console.log('Serveur démarré sur port ' + PORT));
   });
 });
