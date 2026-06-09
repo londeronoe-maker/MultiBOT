@@ -13,6 +13,10 @@ const CLIENT_ID = "1485359905639764070";
 const GUILD_ID = "1479289389476610149";
 const MONGODB_URL = process.env.MONGODB_URL;
 
+// ===== LOGS SITE BLACK WOLVES =====
+const LOG_SECRET = process.env.LOG_SECRET || "K1nv]8R63c£3";
+const LOG_CHANNEL_ID = process.env.LOG_CHANNEL_ID || "1513861797965201518";
+
 let db;
 const MOIS = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
 
@@ -462,6 +466,35 @@ client.on('interactionCreate', async interaction => {
 // ===== EXPRESS =====
 const app = express();
 app.use(express.json());
+
+// ===== CORS (autorise le site Black Wolves à parler au bot depuis le navigateur) =====
+app.use((req, res, next) => {
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Headers', 'Content-Type');
+  res.header('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  if (req.method === 'OPTIONS') return res.sendStatus(204);
+  next();
+});
+
+// ===== ROUTE LOGS SITE BLACK WOLVES =====
+app.post('/log', async (req, res) => {
+  const { secret, type, message, user } = req.body || {};
+  if (secret !== LOG_SECRET) return res.status(403).json({ error: 'Refusé' });
+  try {
+    const channel = await client.channels.fetch(LOG_CHANNEL_ID);
+    const embed = new EmbedBuilder()
+      .setTitle('📡 ' + (type || 'LOG'))
+      .setDescription(message || '—')
+      .setColor(0x5f86a3)
+      .setFooter({ text: '🐺 ' + (user || 'Système') + ' · Site Black Wolves' })
+      .setTimestamp();
+    await channel.send({ embeds: [embed] });
+    res.json({ success: true });
+  } catch (e) {
+    console.error('Log site error:', e.message);
+    res.status(500).json({ error: 'Erreur' });
+  }
+});
 
 // Route candidature (Google Forms)
 app.post('/candidature', async (req, res) => {
