@@ -160,16 +160,13 @@ const commands = [
     .addSubcommand(sub => sub.setName('so').setDescription('Définir qui reçoit le formulaire Rapport SO en MP')
       .addStringOption(o => o.setName('ids').setDescription('IDs Discord séparés par virgule').setRequired(true))),
 
-  new SlashCommandBuilder().setName('restart').setDescription('Redémarrer le bot (admin)'),
-
 ].map(c => c.toJSON());
 
 async function enregistrerCommandes() {
   const rest = new REST({ version: '10' }).setToken(BOT_TOKEN);
   try {
-    await rest.put(Routes.applicationCommands(CLIENT_ID), { body: [] });
-    await rest.put(Routes.applicationGuildCommands(CLIENT_ID, GUILD_ID), { body: commands });
-    console.log('Commandes enregistrées !');
+    await rest.put(Routes.applicationCommands(CLIENT_ID), { body: commands });
+    console.log('Commandes globales enregistrées !');
   } catch (err) { console.error('Erreur commandes:', err); }
 }
 
@@ -400,14 +397,6 @@ client.on('interactionCreate', async interaction => {
           .setTimestamp();
         await interaction.reply({ embeds: [embed], ephemeral: true });
       }
-    }
-
-    // /restart
-    else if (commandName === 'restart') {
-      if (!admin) return interaction.reply({ content: '❌ Vous n\'avez pas la permission !', ephemeral: true });
-      await interaction.reply({ content: '🔄 Redémarrage en cours...', ephemeral: true });
-      envoyerLog('🔄 Restart', `Par **${interaction.user.username}**`, 0xFF9800);
-      setTimeout(() => process.exit(0), 1500);
     }
   }
 
