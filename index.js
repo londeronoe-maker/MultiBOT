@@ -456,6 +456,10 @@ client.on('interactionCreate', async interaction => {
 const app = express();
 app.use(express.json());
 
+// ===== ROUTE PING (keep-alive UptimeRobot) =====
+app.get('/ping', (req, res) => res.json({ status: 'ok', uptime: process.uptime() }));
+app.get('/', (req, res) => res.send('MultiBOT en ligne 🐺'));
+
 // ===== CORS (autorise le site Black Wolves à parler au bot depuis le navigateur) =====
 app.use((req, res, next) => {
   res.header('Access-Control-Allow-Origin', '*');
