@@ -3,7 +3,7 @@ const { MongoClient } = require('mongodb');
 const express = require('express');
 
 const client = new Client({
-  intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMembers, GatewayIntentBits.DirectMessages]
+  intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMembers, GatewayIntentBits.DirectMessages, GatewayIntentBits.MessageContent]
 });
 
 const BOT_TOKEN = process.env.BOT_TOKEN;
@@ -120,6 +120,174 @@ function buildRapportEmbed(r, stats) {
   return embed;
 }
 
+// ===== HELPER — embed stats =====
+function buildStatsEmbed(stats) {
+  const ratio = stats.charsPerdusTotal > 0 ? (stats.charsDetruitTotal / stats.charsPerdusTotal).toFixed(2) : stats.charsDetruitTotal > 0 ? '∞' : '0';
+  const tireurs = Object.entries(stats.tireurs || {}).sort((a, b) => b[1] - a[1]);
+  const top3 = tireurs.slice(0, 3).map((t, i) => `${['🥇','🥈','🥉'][i]} **${t[0]}** — ${t[1]} chars`).join('\n') || 'Aucun';
+  return new EmbedBuilder()
+    .setTitle(`📊 Statistiques — ${MOIS[stats.mois]} ${stats.annee}`)
+    .setColor(0xFFD700)
+    .addFields(
+      { name: '💥 Chars détruits', value: `**${stats.charsDetruitTotal}**`, inline: true },
+      { name: '💀 Chars perdus', value: `**${stats.charsPerdusTotal}**`, inline: true },
+      { name: '🚩 Chars capturés', value: `**${stats.charsCapturesTotal || 0}**`, inline: true },
+      { name: '⚖️ Ratio', value: `**${ratio}**`, inline: true },
+      { name: '🏆 Record', value: `**${stats.recordRapport}** chars en un rapport`, inline: true },
+      { name: '📋 Rapports', value: `**${(stats.rapports || []).length}** ce mois`, inline: true },
+      { name: '🎯 Top Tireurs', value: top3, inline: false }
+    )
+    .setTimestamp();
+}
+
+// ===== HELPER — graphique ASCII =====
+function graphiqueTexte(stats) {
+  const rapports = stats.rapports || [];
+  const parJour = {};
+  rapports.forEach(r => {
+    const d = r.date || '?';
+    if (!parJour[d]) parJour[d] = { d: 0, p: 0, c: 0 };
+    parJour[d].d += r.detruits || 0; parJour[d].p += r.perdus || 0; parJour[d].c += r.captures || 0;
+  });
+  const jours = Object.keys(parJour).sort();
+  if (!jours.length) return '```\nAucun rapport ce mois-ci\n```';
+  const maxVal = Math.max(...jours.map(j => Math.max(parJour[j].d, parJour[j].p, parJour[j].c)), 1);
+  const H = 8;
+  let lignes = [];
+  for (let h = H; h >= 1; h--) {
+    const seuil = Math.round((h / H) * maxVal);
+    let ligne = String(seuil).padStart(3) + ' |';
+    jours.forEach(j => {
+      ligne += ' ' + (parJour[j].d >= seuil ? 'D' : ' ') + (parJour[j].p >= seuil ? 'P' : ' ') + (parJour[j].c >= seuil ? 'C' : ' ');
+    });
+    lignes.push(ligne);
+  }
+  lignes.push('    +' + jours.map(() => '----').join(''));
+  lignes.push('     ' + jours.map(j => j.slice(0, 4)).join(' '));
+  lignes.push('D=Détruits  P=Perdus  C=Capturés');
+  return '```\n' + lignes.join('\n') + '\n```';
+}
+
+function buildGraphiqueEmbed(stats) {
+  const ratio = stats.charsPerdusTotal > 0 ? (stats.charsDetruitTotal / stats.charsPerdusTotal).toFixed(2) : stats.charsDetruitTotal > 0 ? '∞' : '0';
+  return new EmbedBuilder()
+    .setTitle(`📈 Graphique — ${MOIS[stats.mois]} ${stats.annee}`)
+    .setColor(0xFFD700)
+    .setDescription(graphiqueTexte(stats))
+    .addFields(
+      { name: '💥 Total détruits', value: `**${stats.charsDetruitTotal}**`, inline: true },
+      { name: '💀 Total perdus', value: `**${stats.charsPerdusTotal}**`, inline: true },
+      { name: '⚖️ Ratio', value: `**${ratio}**`, inline: true }
+    )
+    .setTimestamp();
+}
+
+// ===== HELPER — liste des rapports =====
+function buildListeEmbed(stats) {
+  const rapports = stats.rapports || [];
+  const embed = new EmbedBuilder()
+    .setTitle(`📋 Rapports de ${MOIS[stats.mois]} ${stats.annee}`)
+    .setColor(0xFFD700)
+    .setTimestamp();
+  if (!rapports.length) {
+    embed.setDescription('Aucun rapport ce mois-ci.');
+    return embed;
+  }
+  const lignes = rapports.slice(-20).reverse().map((r, i) =>
+    `**${i + 1}.** ${r.nom} — 🎯 ${r.tireur} — 💥 ${r.detruits} — 💀 ${r.perdus} — 🚩 ${r.captures || 0} — 📅 ${r.date}`
+  );
+  embed.setDescription(lignes.join('\n').slice(0, 4000));
+  return embed;
+}
+
+// ===== HELPER — menu déroulant MP =====
+function buildMenuMP() {
+  return new ActionRowBuilder().addComponents(
+    new StringSelectMenuBuilder()
+      .setCustomId('menu_mp')
+      .setPlaceholder('📂 Choisis une action...')
+      .addOptions(
+        { label: 'Stats du mois', description: 'Voir les statistiques du mois', value: 'stats', emoji: '📊' },
+        { label: 'Graphique', description: 'Voir le graphique du mois', value: 'graphique', emoji: '📈' },
+        { label: 'Liste des rapports', description: 'Voir tous les rapports du mois', value: 'liste', emoji: '📋' },
+        { label: 'Stats individuelles', description: 'Voir les stats d\'une personne', value: 'individuel', emoji: '👤' }
+      )
+  );
+}
+
+// ===== HELPER — extraire les membres de l'équipage =====
+function membresEquipage(r) {
+  if (!r.equipage || r.equipage === 'Solo' || r.equipage === 'N/A') return [];
+  return r.equipage.split(',').map(n => n.trim()).filter(n => n.length > 0);
+}
+
+// ===== HELPER — toutes les personnes (tireurs + équipages) =====
+function toutesLesPersonnes(stats) {
+  const noms = new Set();
+  (stats.rapports || []).forEach(r => {
+    if (r.tireur) noms.add(r.tireur);
+    membresEquipage(r).forEach(n => noms.add(n));
+  });
+  return [...noms];
+}
+
+// ===== HELPER — agréger les stats d'une personne (tireur OU équipage) =====
+function getStatsTireur(stats, personne) {
+  // On compte un rapport si la personne est le tireur OU dans l'équipage
+  const raps = (stats.rapports || []).filter(r =>
+    r.tireur === personne || membresEquipage(r).includes(personne)
+  );
+  let detruits = 0, perdus = 0, captures = 0;
+  const chars = {};
+  let commeTireur = 0, commeEquipage = 0;
+  raps.forEach(r => {
+    detruits += r.detruits || 0;
+    perdus += r.perdus || 0;
+    captures += r.captures || 0;
+    const c = r.char && r.char !== 'N/A' ? r.char : null;
+    if (c) chars[c] = (chars[c] || 0) + 1;
+    if (r.tireur === personne) commeTireur++; else commeEquipage++;
+  });
+  const charsList = Object.entries(chars).sort((a, b) => b[1] - a[1]).map(([c, n]) => `${c} (${n}x)`).join(', ') || 'Aucun';
+  const ratio = perdus > 0 ? (detruits / perdus).toFixed(2) : detruits > 0 ? '∞' : '0';
+  return { tireur: personne, detruits, perdus, captures, charsList, ratio, nbRapports: raps.length, commeTireur, commeEquipage };
+}
+
+// ===== HELPER — embed stats individuelles =====
+function buildStatsIndividuelEmbed(stats, personne) {
+  const s = getStatsTireur(stats, personne);
+  return new EmbedBuilder()
+    .setTitle(`👤 Stats de ${s.tireur} — ${MOIS[stats.mois]} ${stats.annee}`)
+    .setColor(0xFFD700)
+    .addFields(
+      { name: '💥 Chars détruits', value: `**${s.detruits}**`, inline: true },
+      { name: '💀 Chars perdus', value: `**${s.perdus}**`, inline: true },
+      { name: '🚩 Chars capturés', value: `**${s.captures}**`, inline: true },
+      { name: '⚖️ Ratio', value: `**${s.ratio}**`, inline: true },
+      { name: '📋 Rapports', value: `**${s.nbRapports}** (🎯 ${s.commeTireur} tireur · 👥 ${s.commeEquipage} équipage)`, inline: true },
+      { name: '🛡️ Chars utilisés', value: s.charsList, inline: false }
+    )
+    .setTimestamp();
+}
+
+// ===== HELPER — menu de sélection d'une personne =====
+function buildMenuTireurs(stats) {
+  const personnes = toutesLesPersonnes(stats);
+  if (!personnes.length) return null;
+  const options = personnes.slice(0, 25).map(t => ({
+    label: t.slice(0, 100),
+    description: `Voir les stats de ${t}`.slice(0, 100),
+    value: t.slice(0, 100),
+    emoji: '👤'
+  }));
+  return new ActionRowBuilder().addComponents(
+    new StringSelectMenuBuilder()
+      .setCustomId('menu_tireur')
+      .setPlaceholder('👤 Choisis une personne...')
+      .addOptions(options)
+  );
+}
+
 // ===== COMMANDES =====
 const commands = [
   new SlashCommandBuilder().setName('stats').setDescription('Voir les statistiques du mois'),
@@ -159,6 +327,8 @@ const commands = [
       .addStringOption(o => o.setName('ids').setDescription('IDs Discord séparés par virgule').setRequired(true)))
     .addSubcommand(sub => sub.setName('so').setDescription('Définir qui reçoit le formulaire Rapport SO en MP')
       .addStringOption(o => o.setName('ids').setDescription('IDs Discord séparés par virgule').setRequired(true))),
+
+  new SlashCommandBuilder().setName('statsindiv').setDescription('Voir les stats individuelles d\'une personne'),
 
 ].map(c => c.toJSON());
 
@@ -201,6 +371,15 @@ client.on('interactionCreate', async interaction => {
         )
         .setTimestamp();
       await interaction.editReply({ embeds: [embed] });
+    }
+
+    // /statsindiv
+    else if (commandName === 'statsindiv') {
+      let stats = await getStats();
+      stats = await verifierMois(stats);
+      const menuTireurs = buildMenuTireurs(stats);
+      if (!menuTireurs) return interaction.reply({ content: '📋 Aucun rapport ce mois-ci, donc aucune personne à afficher.', ephemeral: true });
+      await interaction.reply({ content: '👤 De qui veux-tu voir les stats ?', components: [menuTireurs] });
     }
 
     // /rapport
@@ -402,7 +581,39 @@ client.on('interactionCreate', async interaction => {
 
   // ===== SELECT MENU =====
   else if (interaction.isStringSelectMenu()) {
-    if (interaction.customId === 'rapportmanage_select') {
+    if (interaction.customId === 'menu_mp') {
+      const choix = interaction.values[0];
+      let stats = await getStats();
+      stats = await verifierMois(stats);
+
+      // Stats individuelles : afficher le menu de sélection du tireur
+      if (choix === 'individuel') {
+        const menuTireurs = buildMenuTireurs(stats);
+        if (!menuTireurs) return interaction.reply({ content: '📋 Aucun rapport ce mois-ci, donc aucune personne à afficher.', ephemeral: true });
+        return interaction.reply({ content: '👤 De qui veux-tu voir les stats ?', components: [menuTireurs], ephemeral: false });
+      }
+
+      await interaction.deferReply();
+      let embed;
+      if (choix === 'stats') embed = buildStatsEmbed(stats);
+      else if (choix === 'graphique') embed = buildGraphiqueEmbed(stats);
+      else if (choix === 'liste') embed = buildListeEmbed(stats);
+      await interaction.editReply({ embeds: [embed] });
+      // Réaffiche le menu pour enchaîner
+      try { await interaction.followUp({ content: 'Autre chose ?', components: [buildMenuMP()] }); } catch (e) {}
+    }
+
+    else if (interaction.customId === 'menu_tireur') {
+      await interaction.deferReply();
+      let stats = await getStats();
+      stats = await verifierMois(stats);
+      const tireur = interaction.values[0];
+      const embed = buildStatsIndividuelEmbed(stats, tireur);
+      await interaction.editReply({ embeds: [embed] });
+      try { await interaction.followUp({ content: 'Autre chose ?', components: [buildMenuMP()] }); } catch (e) {}
+    }
+
+    else if (interaction.customId === 'rapportmanage_select') {
       if (!await isAdmin(interaction.user.id)) return interaction.reply({ content: '❌ Non autorisé !', ephemeral: true });
       const rapportId = parseInt(interaction.values[0]);
       const stats = await getStats();
@@ -450,6 +661,28 @@ client.on('interactionCreate', async interaction => {
       await interaction.update({ content: '❌ Annulé.', embeds: [], components: [] });
     }
   }
+});
+
+// ===== MESSAGE EN MP — affiche le menu déroulant =====
+const menuCooldowns = new Map(); // userId -> timestamp du dernier menu
+
+client.on('messageCreate', async message => {
+  // Ignore les bots et les messages hors MP
+  if (message.author.bot) return;
+  if (message.guild) return; // uniquement en MP
+
+  // Cooldown de 20 secondes par utilisateur
+  const now = Date.now();
+  const dernier = menuCooldowns.get(message.author.id) || 0;
+  if (now - dernier < 20000) return; // moins de 20s : on ignore
+  menuCooldowns.set(message.author.id, now);
+
+  try {
+    await message.reply({
+      content: '👋 Que veux-tu consulter ?',
+      components: [buildMenuMP()]
+    });
+  } catch (e) { console.error('Erreur menu MP:', e.message); }
 });
 
 // ===== EXPRESS =====
