@@ -13,6 +13,11 @@ const CLIENT_ID = "1485359905639764070";
 const GUILD_ID = "1479289389476610149";
 const MONGODB_URL = process.env.MONGODB_URL;
 
+// ===== STEAM WORKSHOP =====
+const STEAM_API_KEY = process.env.STEAM_API_KEY;
+const STEAM_ADDON_ID = process.env.STEAM_ADDON_ID || '3750430777';
+const STEAM_CHANNEL_ID = process.env.STEAM_CHANNEL_ID || '1520336068602232862';
+
 // ===== LOGS SITE BLACK WOLVES =====
 const LOG_SECRET = process.env.LOG_SECRET || "K1nv]8R63c£3";
 const LOG_CHANNEL_ID = process.env.LOG_CHANNEL_ID || "1513861797965201518";
@@ -799,6 +804,180 @@ app.post('/rapport-so', async (req, res) => {
   res.json({ success: true });
 });
 
+// ===== STEAM WORKSHOP — SURVEILLANCE =====
+
+// Récupère les détails de l'addon (abonnés, favoris, vues, votes)
+async function getSteamDetails() {
+  try {
+    const params = new URLSearchParams();
+    params.append('itemcount', '1');
+    params.append('publishedfileids[0]', STEAM_ADDON_ID);
+    const res = await fetch('https://api.steampowered.com/ISteamRemoteStorage/GetPublishedFileDetails/v1/', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: params
+    });
+    const data = await res.json();
+    const f = data?.response?.publishedfiledetails?.[0];
+    if (!f || f.result !== 1) return null;
+    return {
+      title: f.title,
+      subscriptions: f.subscriptions || 0,
+      favorited: f.favorited || 0,
+      views: f.views || 0,
+      votesUp: f.vote_data?.votes_up ?? (f.favorited || 0),
+      lifetimeSubs: f.lifetime_subscriptions || 0,
+      previewUrl: f.preview_url
+    };
+  } catch (e) {
+    console.error('Erreur Steam details:', e.message);
+    return null;
+  }
+}
+
+// Récupère le nombre total de commentaires de l'addon
+async function getSteamCommentCount() {
+  try {
+    const params = new URLSearchParams();
+    params.append('start', '0');
+    params.append('totalcount', '1');
+    params.append('count', '1');
+    const res = await fetch(`https://steamcommunity.com/comment/PublishedFile_Public/render/0/${STEAM_ADDON_ID}/`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: params
+    });
+    const data = await res.json();
+    return data?.total_count || 0;
+  } catch (e) {
+    console.error('Erreur Steam comments:', e.message);
+    return null;
+  }
+}
+
+// Envoie un message dans le salon Steam
+async function envoyerSteam(embed) {
+  try {
+    const channel = await client.channels.fetch(STEAM_CHANNEL_ID);
+    if (channel) await channel.send({ embeds: [embed] });
+  } catch (e) { console.error('Erreur envoi salon Steam:', e.message); }
+}
+
+// Vérifie les changements (abonnés, favoris, votes, commentaires)
+async function verifierSteam() {
+  if (!STEAM_API_KEY && !STEAM_ADDON_ID) return;
+  const details = await getSteamDetails();
+  if (!details) return;
+  const commentCount = await getSteamCommentCount();
+
+  // Charger l'état précédent depuis MongoDB
+  let steamState = await db.collection('steam').findOne({ _id: 'state' });
+  if (!steamState) {
+    // Première fois : on initialise sans notifier
+    await db.collection('steam').insertOne({
+      _id: 'state',
+      subscriptions: details.subscriptions,
+      favorited: details.favorited,
+      votesUp: details.votesUp,
+      views: details.views,
+      comments: commentCount || 0,
+      views2hStart: details.views,
+      lastSummary: Date.now()
+    });
+    console.log('État Steam initialisé.');
+    return;
+  }
+
+  // Détecter les changements
+  const diffSubs = details.subscriptions - steamState.subscriptions;
+  const diffFav = details.favorited - steamState.favorited;
+  const diffVotes = details.votesUp - steamState.votesUp;
+  const diffComments = (commentCount !== null) ? commentCount - (steamState.comments || 0) : 0;
+
+  if (diffSubs > 0) {
+    await envoyerSteam(new EmbedBuilder()
+      .setTitle('📈 Nouvel abonné !')
+      .setColor(0x4CAF50)
+      .setDescription(`**+${diffSubs}** abonné(s) sur **${details.title}**`)
+      .addFields({ name: '👥 Total abonnés', value: `**${details.subscriptions}**`, inline: true })
+      .setThumbnail(details.previewUrl || null)
+      .setTimestamp());
+  } else if (diffSubs < 0) {
+    await envoyerSteam(new EmbedBuilder()
+      .setTitle('📉 Désabonnement')
+      .setColor(0xf44336)
+      .setDescription(`**${diffSubs}** abonné(s) sur **${details.title}**`)
+      .addFields({ name: '👥 Total abonnés', value: `**${details.subscriptions}**`, inline: true })
+      .setTimestamp());
+  }
+
+  if (diffFav > 0) {
+    await envoyerSteam(new EmbedBuilder()
+      .setTitle('⭐ Nouveau favori !')
+      .setColor(0xFFD700)
+      .setDescription(`**+${diffFav}** favori(s) sur **${details.title}**`)
+      .addFields({ name: '⭐ Total favoris', value: `**${details.favorited}**`, inline: true })
+      .setTimestamp());
+  }
+
+  if (diffVotes > 0) {
+    await envoyerSteam(new EmbedBuilder()
+      .setTitle('👍 Nouveau like !')
+      .setColor(0x1565c0)
+      .setDescription(`**+${diffVotes}** like(s) sur **${details.title}**`)
+      .addFields({ name: '👍 Total likes', value: `**${details.votesUp}**`, inline: true })
+      .setTimestamp());
+  }
+
+  if (diffComments > 0) {
+    await envoyerSteam(new EmbedBuilder()
+      .setTitle('💬 Nouveau commentaire !')
+      .setColor(0x9B59B6)
+      .setDescription(`**+${diffComments}** commentaire(s) sur **${details.title}**\n[Voir les commentaires](https://steamcommunity.com/sharedfiles/filedetails/comments/${STEAM_ADDON_ID})`)
+      .addFields({ name: '💬 Total commentaires', value: `**${commentCount}**`, inline: true })
+      .setTimestamp());
+  }
+
+  // Résumé toutes les 2h
+  const deuxHeures = 2 * 60 * 60 * 1000;
+  let nouveauSummary = steamState.lastSummary;
+  let nouveauViews2hStart = steamState.views2hStart;
+  if (Date.now() - steamState.lastSummary >= deuxHeures) {
+    const vues2h = details.views - (steamState.views2hStart || details.views);
+    const subs2h = details.subscriptions - (steamState.subsSummaryStart ?? steamState.subscriptions);
+    await envoyerSteam(new EmbedBuilder()
+      .setTitle('📊 Résumé des 2 dernières heures')
+      .setColor(0xFFD700)
+      .setDescription(`**${details.title}**`)
+      .addFields(
+        { name: '👁️ Vues (2h)', value: `**+${vues2h}**`, inline: true },
+        { name: '👁️ Vues totales', value: `**${details.views}**`, inline: true },
+        { name: '\u200B', value: '\u200B', inline: true },
+        { name: '👥 Abonnés totaux', value: `**${details.subscriptions}**`, inline: true },
+        { name: '⭐ Favoris', value: `**${details.favorited}**`, inline: true },
+        { name: '👍 Likes', value: `**${details.votesUp}**`, inline: true }
+      )
+      .setThumbnail(details.previewUrl || null)
+      .setFooter({ text: 'Note : Steam ne fournit que les vues totales, pas les visites uniques' })
+      .setTimestamp());
+    nouveauSummary = Date.now();
+    nouveauViews2hStart = details.views;
+  }
+
+  // Sauvegarder le nouvel état
+  await db.collection('steam').replaceOne({ _id: 'state' }, {
+    _id: 'state',
+    subscriptions: details.subscriptions,
+    favorited: details.favorited,
+    votesUp: details.votesUp,
+    views: details.views,
+    comments: commentCount !== null ? commentCount : (steamState.comments || 0),
+    views2hStart: nouveauViews2hStart,
+    subsSummaryStart: (nouveauSummary !== steamState.lastSummary) ? details.subscriptions : (steamState.subsSummaryStart ?? steamState.subscriptions),
+    lastSummary: nouveauSummary
+  }, { upsert: true });
+}
+
 // ===== DÉMARRAGE =====
 const PORT = process.env.PORT || 3000;
 
@@ -806,6 +985,9 @@ client.once('ready', () => {
   console.log(`Bot connecté : ${client.user.tag}`);
   envoyerLog('🟢 Bot démarré', `**${client.user.tag}** en ligne !`, 0x4CAF50);
   enregistrerCommandes();
+  // Surveillance Steam toutes les 2 minutes
+  setTimeout(() => verifierSteam(), 10000); // premier check après 10s
+  setInterval(() => verifierSteam(), 2 * 60 * 1000);
 });
 
 connectMongo().then(() => {
