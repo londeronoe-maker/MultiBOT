@@ -938,19 +938,19 @@ async function verifierSteam() {
       .setTimestamp());
   }
 
-  // Résumé toutes les 2h
-  const deuxHeures = 2 * 60 * 60 * 1000;
+  // Résumé toutes les 24h
+  const intervalleSummary = 24 * 60 * 60 * 1000;
   let nouveauSummary = steamState.lastSummary;
   let nouveauViews2hStart = steamState.views2hStart;
-  if (Date.now() - steamState.lastSummary >= deuxHeures) {
+  if (Date.now() - steamState.lastSummary >= intervalleSummary) {
     const vues2h = details.views - (steamState.views2hStart || details.views);
     const subs2h = details.subscriptions - (steamState.subsSummaryStart ?? steamState.subscriptions);
     await envoyerSteam(new EmbedBuilder()
-      .setTitle('📊 Résumé des 2 dernières heures')
+      .setTitle('📊 Résumé des 24 dernières heures')
       .setColor(0xFFD700)
       .setDescription(`**${details.title}**`)
       .addFields(
-        { name: '👁️ Vues (2h)', value: `**+${vues2h}**`, inline: true },
+        { name: '👁️ Vues (24h)', value: `**+${vues2h}**`, inline: true },
         { name: '👁️ Vues totales', value: `**${details.views}**`, inline: true },
         { name: '\u200B', value: '\u200B', inline: true },
         { name: '👥 Abonnés totaux', value: `**${details.subscriptions}**`, inline: true },
