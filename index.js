@@ -856,10 +856,17 @@ async function getSteamCommentCount() {
 }
 
 // Envoie un message dans le salon Steam
-async function envoyerSteam(embed) {
+async function envoyerSteam(embed, content = null) {
   try {
     const channel = await client.channels.fetch(STEAM_CHANNEL_ID);
-    if (channel) await channel.send({ embeds: [embed] });
+    if (channel) {
+      const payload = { embeds: [embed] };
+      if (content) {
+        payload.content = content;
+        payload.allowedMentions = { roles: ['905540994144030800'] };
+      }
+      await channel.send(payload);
+    }
   } catch (e) { console.error('Erreur envoi salon Steam:', e.message); }
 }
 
@@ -935,7 +942,8 @@ async function verifierSteam() {
       .setColor(0x9B59B6)
       .setDescription(`**+${diffComments}** commentaire(s) sur **${details.title}**\n[Voir les commentaires](https://steamcommunity.com/sharedfiles/filedetails/comments/${STEAM_ADDON_ID})`)
       .addFields({ name: '💬 Total commentaires', value: `**${commentCount}**`, inline: true })
-      .setTimestamp());
+      .setTimestamp(),
+      '<@&905540994144030800>');
   }
 
   // Résumé toutes les 24h
