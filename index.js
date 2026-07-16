@@ -697,6 +697,11 @@ client.on('messageCreate', async message => {
 const app = express();
 app.use(express.json());
 
+// ===== MODULE CC-API =====
+const { ccRouter, initCC } = require('./cc-api');
+initCC(MONGODB_URL);
+app.use('/cc', ccRouter);
+
 // ===== ROUTE PING (keep-alive UptimeRobot) =====
 app.get('/ping', (req, res) => res.json({ status: 'ok', uptime: process.uptime() }));
 app.get('/', (req, res) => res.send('MultiBOT en ligne 🐺'));
