@@ -697,6 +697,9 @@ client.on('messageCreate', async message => {
 const app = express();
 app.use(express.json());
 
+// ===== CORS (autorise le dashboard à appeler l'API) =====
+app.use((req, res, next) => { res.header("Access-Control-Allow-Origin", "*"); next(); });
+
 // ===== MODULE CC-API =====
 const { ccRouter, initCC } = require('./cc-api');
 initCC(MONGODB_URL);
