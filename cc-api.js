@@ -22,7 +22,17 @@ const { MongoClient } = require("mongodb");
 
 const ccRouter = express.Router();
 
+// ---- CORS : autorise le dashboard (GitHub Pages) a appeler l'API ----
+ccRouter.use((req, res, next) => {
+  res.header("Access-Control-Allow-Origin", "*");
+  res.header("Access-Control-Allow-Methods", "GET,POST,DELETE,OPTIONS");
+  res.header("Access-Control-Allow-Headers", "Content-Type");
+  if (req.method === "OPTIONS") return res.sendStatus(204);
+  next();
+});
+
 let collection = null;
+let commands = null;   // file d'attente des ordres
 
 // ---- Connexion Mongo (réutilise l'URI de MultiBOT) ----
 async function initCC(mongoUri, dbName = "cctweaked", collName = "computers") {
@@ -34,8 +44,11 @@ async function initCC(mongoUri, dbName = "cctweaked", collName = "computers") {
     const client = new MongoClient(mongoUri);
     await client.connect();
     collection = client.db(dbName).collection(collName);
+    commands = client.db(dbName).collection("commands");
     // index TTL optionnel : supprime un computer inactif depuis 1h
     await collection.createIndex({ lastSeen: 1 }, { expireAfterSeconds: 3600 });
+    // ordres non recuperes purges apres 10 min
+    await commands.createIndex({ createdAt: 1 }, { expireAfterSeconds: 600 });
     console.log("[CC-API] Connecté à MongoDB, collection:", collName);
   } catch (e) {
     console.error("[CC-API] Erreur connexion Mongo:", e.message);
@@ -116,6 +129,59 @@ ccRouter.delete("/computers/:id", async (req, res) => {
   try {
     await collection.deleteOne({ id: String(req.params.id) });
     res.json({ ok: true });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// ============================================================
+//  POST /cc/command  — le SITE depose un ordre pour une turtle
+//  body : { token, id, action, x?, y?, z? }
+//  actions : mine | refuel | stop | resume | dump | return
+// ============================================================
+ccRouter.post("/command", async (req, res) => {
+  if (!commands) return res.status(503).json({ error: "db not ready" });
+  const b = req.body || {};
+  if (b.token !== TOKEN) return res.status(401).json({ error: "bad token" });
+  if (!b.id || !b.action) return res.status(400).json({ error: "id/action manquant" });
+
+  const cmd = {
+    targetId: String(b.id),
+    action: String(b.action),
+    x: b.x !== undefined ? Number(b.x) : undefined,
+    y: b.y !== undefined ? Number(b.y) : undefined,
+    z: b.z !== undefined ? Number(b.z) : undefined,
+    createdAt: new Date(),
+  };
+  try {
+    // stop/resume/return : on remplace tout ordre en attente (priorite)
+    if (["stop", "resume", "return"].includes(cmd.action)) {
+      await commands.deleteMany({ targetId: cmd.targetId });
+    }
+    await commands.insertOne(cmd);
+    res.json({ ok: true });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// ============================================================
+//  GET /cc/command/:id  — la TURTLE recupere son ordre (et le consomme)
+// ============================================================
+ccRouter.get("/command/:id", async (req, res) => {
+  if (!commands) return res.status(503).json({ error: "db not ready" });
+  if (req.query.token !== TOKEN) return res.status(401).json({ error: "bad token" });
+  try {
+    // recupere et supprime le plus ancien ordre pour cette turtle
+    const doc = await commands.findOneAndDelete(
+      { targetId: String(req.params.id) },
+      { sort: { createdAt: 1 } }
+    );
+    const cmd = doc && (doc.value || doc); // compat selon version driver
+    if (!cmd || !cmd.action) return res.json({ command: null });
+    res.json({
+      command: { action: cmd.action, x: cmd.x, y: cmd.y, z: cmd.z },
+    });
   } catch (e) {
     res.status(500).json({ error: e.message });
   }
