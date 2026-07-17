@@ -151,6 +151,9 @@ ccRouter.post("/command", async (req, res) => {
     x: b.x !== undefined ? Number(b.x) : undefined,
     y: b.y !== undefined ? Number(b.y) : undefined,
     z: b.z !== undefined ? Number(b.z) : undefined,
+    sx: b.sx !== undefined ? Number(b.sx) : undefined,
+    sy: b.sy !== undefined ? Number(b.sy) : undefined,
+    sz: b.sz !== undefined ? Number(b.sz) : undefined,
     createdAt: new Date(),
   };
   try {
@@ -180,7 +183,8 @@ ccRouter.get("/command/:id", async (req, res) => {
     const cmd = doc && (doc.value || doc); // compat selon version driver
     if (!cmd || !cmd.action) return res.json({ command: null });
     res.json({
-      command: { action: cmd.action, x: cmd.x, y: cmd.y, z: cmd.z },
+      command: { action: cmd.action, x: cmd.x, y: cmd.y, z: cmd.z,
+                 sx: cmd.sx, sy: cmd.sy, sz: cmd.sz },
     });
   } catch (e) {
     res.status(500).json({ error: e.message });
