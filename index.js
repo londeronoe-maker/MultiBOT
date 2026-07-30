@@ -1,6 +1,7 @@
 const { Client, GatewayIntentBits, EmbedBuilder, REST, Routes, SlashCommandBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, StringSelectMenuBuilder } = require('discord.js');
 const { MongoClient } = require('mongodb');
 const express = require('express');
+const crypto = require('crypto');
 
 const client = new Client({
   intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMembers, GatewayIntentBits.DirectMessages, GatewayIntentBits.MessageContent]
@@ -20,6 +21,10 @@ const STEAM_ADDON_IDS = process.env.STEAM_ADDON_IDS
   ? process.env.STEAM_ADDON_IDS.split(',').map(id => id.trim()).filter(Boolean)
   : ['3750430777', '3757736571'];
 const STEAM_CHANNEL_ID = process.env.STEAM_CHANNEL_ID || '1520336068602232862';
+
+// ===== PATREON =====
+const PATREON_SECRET = process.env.PATREON_SECRET || 'GZObk8ze15kOorzCMZrcWqy8pMAdz5j2-JSzBYh4fObkASJ5NsaFoxuYHszLQ921';
+const PATREON_CHANNEL_ID = process.env.PATREON_CHANNEL_ID || '1520336068602232862';
 
 // ===== LOGS SITE BLACK WOLVES =====
 const LOG_SECRET = process.env.LOG_SECRET || "K1nv]8R63c£3";
@@ -695,7 +700,9 @@ client.on('messageCreate', async message => {
 
 // ===== EXPRESS =====
 const app = express();
-app.use(express.json());
+app.use(express.json({
+  verify: (req, res, buf) => { req.rawBody = buf; }
+}));
 
 // ===== CORS (autorise le dashboard à appeler l'API) =====
 app.use((req, res, next) => { res.header("Access-Control-Allow-Origin", "*"); next(); });
@@ -746,6 +753,64 @@ app.post('/candidature', async (req, res) => {
   const admins = await getAdmins();
   for (const userId of admins) { try { const u = await client.users.fetch(userId); await u.send({ embeds: [embed] }); } catch (e) {} }
   res.json({ success: true });
+});
+
+// ===== PATREON — Webhook nouvel abonné =====
+app.post('/patreon', async (req, res) => {
+  // Vérifier la signature Patreon (HMAC-MD5 du corps brut avec le secret)
+  try {
+    const signature = req.get('X-Patreon-Signature');
+    const event = req.get('X-Patreon-Event'); // ex: "members:pledge:create"
+    if (req.rawBody && signature) {
+      const hash = crypto.createHmac('md5', PATREON_SECRET).update(req.rawBody).digest('hex');
+      if (hash !== signature) {
+        console.error('Patreon: signature invalide');
+        return res.status(403).json({ error: 'signature invalide' });
+      }
+    }
+
+    // On ne réagit qu'aux nouveaux abonnés / pledges
+    if (event && !event.includes('create')) {
+      return res.json({ ok: true, ignored: event });
+    }
+
+    const data = req.body?.data;
+    const included = req.body?.included || [];
+
+    // Récupérer le nom du patron
+    const userInc = included.find(i => i.type === 'user');
+    const nomPatron = userInc?.attributes?.full_name || data?.attributes?.full_name || 'Un patron';
+
+    // Récupérer le montant (en centimes -> euros/dollars)
+    const cents = data?.attributes?.currently_entitled_amount_cents
+      ?? data?.attributes?.pledge_amount_cents
+      ?? data?.attributes?.amount_cents
+      ?? null;
+    const montant = cents !== null ? (cents / 100).toFixed(2) : null;
+
+    // Récupérer le tier si dispo
+    const tierInc = included.find(i => i.type === 'tier');
+    const tierNom = tierInc?.attributes?.title || null;
+
+    const embed = new EmbedBuilder()
+      .setTitle('🎉 Nouvel abonné Patreon !')
+      .setColor(0xF96854) // couleur Patreon
+      .setDescription(`**${nomPatron}** vient de s'abonner ! Merci ! 🧡`)
+      .setTimestamp();
+
+    if (montant !== null) embed.addFields({ name: '💰 Montant', value: `**${montant} €/mois**`, inline: true });
+    if (tierNom) embed.addFields({ name: '⭐ Palier', value: `**${tierNom}**`, inline: true });
+
+    try {
+      const channel = await client.channels.fetch(PATREON_CHANNEL_ID);
+      if (channel) await channel.send({ embeds: [embed] });
+    } catch (e) { console.error('Erreur envoi salon Patreon:', e.message); }
+
+    res.json({ ok: true });
+  } catch (e) {
+    console.error('Erreur webhook Patreon:', e.message);
+    res.status(500).json({ error: e.message });
+  }
 });
 
 // Route rapport combat (Google Forms)
