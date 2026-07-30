@@ -769,8 +769,10 @@ app.post('/patreon', async (req, res) => {
       }
     }
 
-    // On ne réagit qu'aux nouveaux abonnés / pledges
-    if (event && !event.includes('create')) {
+    // On réagit aux abonnements (create) et désabonnements (delete)
+    const estAbonnement = event ? event.includes('create') : true;
+    const estDesabonnement = event ? event.includes('delete') : false;
+    if (event && !estAbonnement && !estDesabonnement) {
       return res.json({ ok: true, ignored: event });
     }
 
@@ -792,14 +794,24 @@ app.post('/patreon', async (req, res) => {
     const tierInc = included.find(i => i.type === 'tier');
     const tierNom = tierInc?.attributes?.title || null;
 
-    const embed = new EmbedBuilder()
-      .setTitle('🎉 Nouvel abonné Patreon !')
-      .setColor(0xF96854) // couleur Patreon
-      .setDescription(`**${nomPatron}** vient de s'abonner ! Merci ! 🧡`)
-      .setTimestamp();
-
-    if (montant !== null) embed.addFields({ name: '💰 Montant', value: `**${montant} €/mois**`, inline: true });
-    if (tierNom) embed.addFields({ name: '⭐ Palier', value: `**${tierNom}**`, inline: true });
+    let embed;
+    if (estDesabonnement) {
+      embed = new EmbedBuilder()
+        .setTitle('💔 Désabonnement Patreon')
+        .setColor(0x95a5a6) // gris
+        .setDescription(`**${nomPatron}** s'est désabonné.`)
+        .setTimestamp();
+      if (montant !== null) embed.addFields({ name: '💰 Ancien montant', value: `**${montant} €/mois**`, inline: true });
+      if (tierNom) embed.addFields({ name: '⭐ Ancien palier', value: `**${tierNom}**`, inline: true });
+    } else {
+      embed = new EmbedBuilder()
+        .setTitle('🎉 Nouvel abonné Patreon !')
+        .setColor(0xF96854) // couleur Patreon
+        .setDescription(`**${nomPatron}** vient de s'abonner ! Merci ! 🧡`)
+        .setTimestamp();
+      if (montant !== null) embed.addFields({ name: '💰 Montant', value: `**${montant} €/mois**`, inline: true });
+      if (tierNom) embed.addFields({ name: '⭐ Palier', value: `**${tierNom}**`, inline: true });
+    }
 
     try {
       const channel = await client.channels.fetch(PATREON_CHANNEL_ID);
