@@ -207,6 +207,51 @@ function initDashboard({ app, client: c, db: database, guildId }) {
     } catch (e) { res.status(500).json({ error: e.message }); }
   });
 
+  // ===== API : config des tickets (lecture) =====
+  app.get('/dashboard/api/tickets/config', requireAuth, async (req, res) => {
+    try {
+      const cfg = await db.collection('config').findOne({ _id: 'tickets' });
+      res.json({ config: cfg || {} });
+    } catch (e) { res.status(500).json({ error: e.message }); }
+  });
+
+  // ===== API : config des tickets (sauvegarde) =====
+  app.post('/dashboard/api/tickets/config', requireAuth, async (req, res) => {
+    try {
+      const allowed = ['enabled', 'categoryId', 'transcriptChannelId', 'staffRoleIds', 'panelTitle', 'panelDescription', 'panelColor', 'welcomeMessage', 'categories'];
+      const update = {};
+      for (const k of allowed) if (req.body[k] !== undefined) update[k] = req.body[k];
+      await db.collection('config').updateOne({ _id: 'tickets' }, { $set: update }, { upsert: true });
+      res.json({ ok: true });
+    } catch (e) { res.status(500).json({ error: e.message }); }
+  });
+
+  // ===== API : liste des rôles du serveur =====
+  app.get('/dashboard/api/roles', requireAuth, async (req, res) => {
+    try {
+      const guild = await client.guilds.fetch(GUILD_ID);
+      const roles = await guild.roles.fetch();
+      const list = roles
+        .filter(r => r.name !== '@everyone')
+        .map(r => ({ id: r.id, name: r.name }))
+        .sort((a, b) => a.name.localeCompare(b.name));
+      res.json({ roles: list });
+    } catch (e) { res.status(500).json({ error: e.message }); }
+  });
+
+  // ===== API : liste des catégories (salons parent) =====
+  app.get('/dashboard/api/categories', requireAuth, async (req, res) => {
+    try {
+      const guild = await client.guilds.fetch(GUILD_ID);
+      const channels = await guild.channels.fetch();
+      const list = channels
+        .filter(c => c && c.type === 4) // catégorie
+        .map(c => ({ id: c.id, name: c.name }))
+        .sort((a, b) => a.name.localeCompare(b.name));
+      res.json({ categories: list });
+    } catch (e) { res.status(500).json({ error: e.message }); }
+  });
+
   console.log('[Dashboard] Prêt sur', `${BASE_URL}/dashboard`);
 }
 
@@ -282,6 +327,7 @@ textarea{height:100px;resize:vertical}
 <a onclick="show('embed',this)">🎨 Embeds</a>
 <a onclick="show('roles',this)">🎭 Rôles-réactions</a>
 <a onclick="show('membres',this)">👥 Membres</a>
+<a onclick="show('tickets',this)">🎫 Tickets</a>
 <a onclick="show('config',this)">⚙️ Configuration</a>
 </div>
 <div class="userbar">
@@ -333,14 +379,38 @@ textarea{height:100px;resize:vertical}
 
 <div id="p-config" class="page">
 <h1 class="title">⚙️ Configuration</h1>
-<div class="card"><div class="soon">🚧 Les systèmes tickets, niveaux, logs et auto-modération seront configurables ici prochainement.</div></div>
+<div class="card"><div class="soon">🚧 Les systèmes niveaux, logs et auto-modération seront configurables ici prochainement.</div></div>
+</div>
+
+<div id="p-tickets" class="page">
+<h1 class="title">🎫 Configuration des tickets</h1>
+<div class="card">
+<div class="toggle"><input type="checkbox" id="tkEnabled"><label style="margin:0">Système de tickets activé</label></div>
+<label>Catégorie Discord où créer les tickets</label><select id="tkCategory"></select>
+<label>Salon d'archives des transcripts</label><select id="tkTranscript"></select>
+<label>Rôles staff (Ctrl+clic pour plusieurs)</label><select id="tkStaff" multiple style="height:120px"></select>
+</div>
+<div class="card">
+<label>Titre du panneau</label><input id="tkTitle">
+<label>Description du panneau</label><textarea id="tkDesc"></textarea>
+<label>Couleur (hex)</label><input id="tkColor" value="#5865F2">
+<label>Message d'accueil du ticket ({user} = mention)</label><textarea id="tkWelcome"></textarea>
+</div>
+<div class="card">
+<label>Catégories de tickets (une par ligne : emoji | label | description)</label>
+<textarea id="tkCats" style="height:140px" placeholder="🛠️ | Support | Besoin d'aide"></textarea>
+<small style="color:#888">Format : emoji | label | description</small>
+</div>
+<button class="btn" onclick="saveTickets()">💾 Sauvegarder</button>
+<div class="fb" id="tkFb"></div>
+<div class="card" style="margin-top:16px"><small style="color:#888">Après avoir configuré, va dans le salon voulu sur Discord et tape <b>/panel</b> pour poster le menu de tickets.</small></div>
 </div>
 
 </div>
 <script>
 let allMembers=[];
 function show(id,el){document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));document.querySelectorAll('.nav a').forEach(a=>a.classList.remove('active'));document.getElementById('p-'+id).classList.add('active');el.classList.add('active');
-if(id==='membres')loadMembers();if(id==='roles')loadRoles();}
+if(id==='membres')loadMembers();if(id==='roles')loadRoles();if(id==='tickets')loadTickets();}
 async function loadChannels(){const r=await fetch('/dashboard/api/channels');const d=await r.json();const opts=(d.channels||[]).map(c=>'<option value="'+c.id+'">#'+c.name+'</option>').join('');document.getElementById('msgChannel').innerHTML=opts;document.getElementById('embChannel').innerHTML=opts;}
 async function sendMsg(){const fb=document.getElementById('msgFb');const r=await fetch('/dashboard/api/send',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({channelId:document.getElementById('msgChannel').value,message:document.getElementById('msgText').value})});const d=await r.json();if(d.ok){fb.className='fb ok';fb.textContent='✅ Message envoyé !';document.getElementById('msgText').value='';}else{fb.className='fb err';fb.textContent='❌ '+(d.error||'Erreur');}}
 async function sendEmbed(){const fb=document.getElementById('embFb');const r=await fetch('/dashboard/api/send',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({channelId:document.getElementById('embChannel').value,embed:{title:document.getElementById('embTitle').value,description:document.getElementById('embDesc').value,color:document.getElementById('embColor').value,image:document.getElementById('embImage').value,footer:document.getElementById('embFooter').value}})});const d=await r.json();if(d.ok){fb.className='fb ok';fb.textContent='✅ Embed envoyé !';}else{fb.className='fb err';fb.textContent='❌ '+(d.error||'Erreur');}}
@@ -348,6 +418,27 @@ async function loadMembers(){const r=await fetch('/dashboard/api/members');const
 function renderMembers(list){document.getElementById('membersList').innerHTML=list.map(m=>'<div class="member"><img src="'+m.avatar+'"><div><b>'+m.displayName+'</b>'+(m.bot?'<span class="badge">BOT</span>':'')+'<br><small style="color:#888">'+m.id+'</small></div></div>').join('')||'<p style="color:#888">Aucun membre</p>';}
 function filterMembers(){const q=document.getElementById('memberSearch').value.toLowerCase();renderMembers(allMembers.filter(m=>m.displayName.toLowerCase().includes(q)||m.username.toLowerCase().includes(q)||m.id.includes(q)));}
 async function loadRoles(){const r=await fetch('/dashboard/api/rolereactions');const d=await r.json();const list=d.bindings||[];document.getElementById('rolesList').innerHTML=list.length?list.map(b=>'<div class="member">'+(b.emojiRaw||b.emoji)+' → <b>'+b.roleId+'</b> <small style="color:#888">(msg '+b.messageId+')</small></div>').join(''):'<p style="color:#888">Aucune liaison configurée.</p>';}
+async function loadTickets(){
+const [cfgR,catR,chR,roleR]=await Promise.all([fetch('/dashboard/api/tickets/config'),fetch('/dashboard/api/categories'),fetch('/dashboard/api/channels'),fetch('/dashboard/api/roles')]);
+const cfg=(await cfgR.json()).config||{};const cats=(await catR.json()).categories||[];const chans=(await chR.json()).channels||[];const roles=(await roleR.json()).roles||[];
+document.getElementById('tkCategory').innerHTML='<option value="">— Aucune —</option>'+cats.map(c=>'<option value="'+c.id+'"'+(cfg.categoryId===c.id?' selected':'')+'>'+c.name+'</option>').join('');
+document.getElementById('tkTranscript').innerHTML='<option value="">— Aucun —</option>'+chans.map(c=>'<option value="'+c.id+'"'+(cfg.transcriptChannelId===c.id?' selected':'')+'>#'+c.name+'</option>').join('');
+document.getElementById('tkStaff').innerHTML=roles.map(r=>'<option value="'+r.id+'"'+((cfg.staffRoleIds||[]).includes(r.id)?' selected':'')+'>'+r.name+'</option>').join('');
+document.getElementById('tkEnabled').checked=cfg.enabled!==false;
+document.getElementById('tkTitle').value=cfg.panelTitle||'';
+document.getElementById('tkDesc').value=cfg.panelDescription||'';
+document.getElementById('tkColor').value=cfg.panelColor||'#5865F2';
+document.getElementById('tkWelcome').value=cfg.welcomeMessage||'';
+document.getElementById('tkCats').value=(cfg.categories||[]).map(c=>(c.emoji||'')+' | '+c.label+' | '+(c.description||'')).join('\n');
+}
+async function saveTickets(){
+const fb=document.getElementById('tkFb');
+const staff=Array.from(document.getElementById('tkStaff').selectedOptions).map(o=>o.value);
+const cats=document.getElementById('tkCats').value.split('\n').filter(l=>l.trim()).map((l,i)=>{const p=l.split('|').map(x=>x.trim());return{id:'cat'+i,emoji:p[0]||'',label:p[1]||p[0]||'Catégorie',description:p[2]||''};});
+const body={enabled:document.getElementById('tkEnabled').checked,categoryId:document.getElementById('tkCategory').value||null,transcriptChannelId:document.getElementById('tkTranscript').value||null,staffRoleIds:staff,panelTitle:document.getElementById('tkTitle').value,panelDescription:document.getElementById('tkDesc').value,panelColor:document.getElementById('tkColor').value,welcomeMessage:document.getElementById('tkWelcome').value,categories:cats};
+const r=await fetch('/dashboard/api/tickets/config',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});const d=await r.json();
+if(d.ok){fb.className='fb ok';fb.textContent='✅ Configuration sauvegardée !';}else{fb.className='fb err';fb.textContent='❌ '+(d.error||'Erreur');}
+}
 loadChannels();
 </script>
 </body></html>`;
