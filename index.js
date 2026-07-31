@@ -1,4 +1,4 @@
-const { Client, GatewayIntentBits, EmbedBuilder, REST, Routes, SlashCommandBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, StringSelectMenuBuilder } = require('discord.js');
+const { Client, GatewayIntentBits, EmbedBuilder, REST, Routes, SlashCommandBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, StringSelectMenuBuilder, ChannelType, PermissionFlagsBits } = require('discord.js');
 const { MongoClient } = require('mongodb');
 const express = require('express');
 const crypto = require('crypto');
@@ -25,6 +25,77 @@ const STEAM_CHANNEL_ID = process.env.STEAM_CHANNEL_ID || '1520336068602232862';
 // ===== PATREON =====
 const PATREON_SECRET = process.env.PATREON_SECRET || 'GZObk8ze15kOorzCMZrcWqy8pMAdz5j2-JSzBYh4fObkASJ5NsaFoxuYHszLQ921';
 const PATREON_CHANNEL_ID = process.env.PATREON_CHANNEL_ID || '1520336068602232862';
+
+// ===== CONFIG SERVEUR (setup / rolemenu / reset) =====
+const R_FONDATEUR = '👑 Fondateur';
+const R_DEV = '🛠️ Développeur';
+const R_MOD = '🛡️ Modérateur';
+const R_PREMIUM = '⭐ Client Premium';
+const R_SUPPORTER = '💚 Supporter';
+const R_GERANT = '🎮 Gérant de serveur';
+const R_ANNONCES = '🔔 Annonces';
+const R_MEMBRE = '👤 Membre';
+const R_SORTIES = '🆕 Nouvelles sorties';
+const R_BETA = '🧪 Bêta-testeur';
+
+const STAFF_ROLES = [R_FONDATEUR, R_DEV, R_MOD];
+
+// [nom, couleur, permissions, mentionnable]
+const SETUP_ROLES = [
+  [R_FONDATEUR, 0xF1C40F, [PermissionFlagsBits.Administrator], true],
+  [R_DEV, 0x9B59B6, [PermissionFlagsBits.ManageMessages, PermissionFlagsBits.ManageThreads], true],
+  [R_MOD, 0x3498DB, [PermissionFlagsBits.ManageMessages, PermissionFlagsBits.KickMembers, PermissionFlagsBits.BanMembers, PermissionFlagsBits.ModerateMembers, PermissionFlagsBits.ManageNicknames], true],
+  [R_PREMIUM, 0xE74C3C, [], false],
+  [R_SUPPORTER, 0x2ECC71, [], false],
+  [R_GERANT, 0x1ABC9C, [], true],
+  [R_ANNONCES, 0x95A5A6, [], false],
+  [R_MEMBRE, 0x99AAB5, [], false],
+  [R_SORTIES, 0x5DADE2, [], false],
+  [R_BETA, 0xE67E22, [], false]
+];
+
+// Premium et Supporter volontairement absents : donnés à la main
+const SELF_ROLES = [
+  [R_MEMBRE, 'Accès de base à la communauté'],
+  [R_GERANT, 'Tu gères un serveur qui utilise mes addons'],
+  [R_ANNONCES, 'Être ping à chaque mise à jour'],
+  [R_SORTIES, 'Être ping pour les nouvelles sorties'],
+  [R_BETA, 'Tester les versions bêta']
+];
+
+const STRUCTURE = [
+  { name: '📋 Informations', channels: [
+    { name: 'bienvenue', mode: 'read_only' },
+    { name: 'règles', mode: 'read_only' },
+    { name: 'annonces', mode: 'read_only' },
+    { name: 'rôles', mode: 'read_only' },
+    { name: 'liens', mode: 'read_only' }
+  ]},
+  { name: '🎮 Addons', channels: [
+    { name: 'showcase' },
+    { name: 'changelog', mode: 'read_only' },
+    { name: 'roadmap', mode: 'read_only' },
+    { name: 'turbolaser' },
+    { name: 'holocomm' },
+    { name: 'gm-tool' }
+  ]},
+  { name: '🛠️ Support', channels: [
+    { name: 'support-gratuit' },
+    { name: 'support-premium', mode: 'premium' },
+    { name: 'bug-report' },
+    { name: 'suggestions' },
+    { name: 'faq', mode: 'read_only' }
+  ]},
+  { name: '💬 Communauté', channels: [
+    { name: 'général' },
+    { name: 'média' },
+    { name: 'recrutement' },
+    { name: 'Vocal', type: 'voice' }
+  ]}
+];
+
+const SETUP_ROLE_NAMES = new Set(SETUP_ROLES.map(r => r[0]));
+const SETUP_CAT_NAMES = new Set(STRUCTURE.map(c => c.name));
 
 // ===== LOGS SITE BLACK WOLVES =====
 const LOG_SECRET = process.env.LOG_SECRET || "K1nv]8R63c£3";
@@ -343,6 +414,13 @@ const commands = [
 
   new SlashCommandBuilder().setName('statsindiv').setDescription('Voir les stats individuelles d\'une personne'),
 
+  new SlashCommandBuilder().setName('setup').setDescription('Construit le serveur complet (admin)')
+    .setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
+  new SlashCommandBuilder().setName('rolemenu').setDescription('Poste le menu des auto-rôles (admin)')
+    .setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
+  new SlashCommandBuilder().setName('reset').setDescription('⚠️ Supprime tout ce que /setup a créé (admin)')
+    .setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
+
 ].map(c => c.toJSON());
 
 async function enregistrerCommandes() {
@@ -351,6 +429,50 @@ async function enregistrerCommandes() {
     await rest.put(Routes.applicationCommands(CLIENT_ID), { body: commands });
     console.log('Commandes globales enregistrées !');
   } catch (err) { console.error('Erreur commandes:', err); }
+}
+
+// ===== SETUP SERVEUR — helpers =====
+async function ensureRoles(guild) {
+  const created = {};
+  for (const [name, color, perms, mentionable] of SETUP_ROLES) {
+    let role = guild.roles.cache.find(r => r.name === name);
+    if (!role) {
+      role = await guild.roles.create({ name, color, permissions: perms, mentionable, reason: 'Auto-setup' });
+    }
+    created[name] = role;
+  }
+  return created;
+}
+
+function overwritesFor(guild, roles, mode) {
+  const everyone = guild.roles.everyone;
+  const ow = [];
+  if (mode === 'read_only') {
+    ow.push({ id: everyone.id, deny: [PermissionFlagsBits.SendMessages], allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.AddReactions] });
+    for (const r of STAFF_ROLES) {
+      if (roles[r]) ow.push({ id: roles[r].id, allow: [PermissionFlagsBits.SendMessages] });
+    }
+  } else if (mode === 'premium') {
+    ow.push({ id: everyone.id, deny: [PermissionFlagsBits.ViewChannel] });
+    if (roles[R_PREMIUM]) ow.push({ id: roles[R_PREMIUM].id, allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages] });
+    for (const r of STAFF_ROLES) {
+      if (roles[r]) ow.push({ id: roles[r].id, allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages] });
+    }
+  }
+  return ow;
+}
+
+function buildRoleMenu() {
+  const rows = [];
+  let current = new ActionRowBuilder();
+  let count = 0;
+  for (const [name] of SELF_ROLES) {
+    if (count === 5) { rows.push(current); current = new ActionRowBuilder(); count = 0; }
+    current.addComponents(new ButtonBuilder().setCustomId(`selfrole:${name}`).setLabel(name).setStyle(ButtonStyle.Secondary));
+    count++;
+  }
+  if (count > 0) rows.push(current);
+  return rows;
 }
 
 // ===== INTERACTIONS =====
@@ -393,6 +515,60 @@ client.on('interactionCreate', async interaction => {
       const menuTireurs = buildMenuTireurs(stats);
       if (!menuTireurs) return interaction.reply({ content: '📋 Aucun rapport ce mois-ci, donc aucune personne à afficher.', ephemeral: true });
       await interaction.reply({ content: '👤 De qui veux-tu voir les stats ?', components: [menuTireurs] });
+    }
+
+    // /setup
+    else if (commandName === 'setup') {
+      if (!interaction.member.permissions.has(PermissionFlagsBits.Administrator))
+        return interaction.reply({ content: '❌ Il faut être Administrateur.', ephemeral: true });
+      await interaction.reply({ content: '⚙️ Construction en cours…', ephemeral: true });
+      const guild = interaction.guild;
+      try {
+        const roles = await ensureRoles(guild);
+        for (const cat of STRUCTURE) {
+          let category = guild.channels.cache.find(c => c.type === ChannelType.GuildCategory && c.name === cat.name);
+          if (!category) category = await guild.channels.create({ name: cat.name, type: ChannelType.GuildCategory, reason: 'Auto-setup' });
+          for (const ch of cat.channels) {
+            const slug = ch.name.toLowerCase().replace(/ /g, '-');
+            const exists = guild.channels.cache.find(c => c.parentId === category.id && (c.name === slug || c.name === ch.name));
+            if (exists) continue;
+            const mode = ch.mode || 'open';
+            const ow = mode !== 'open' ? overwritesFor(guild, roles, mode) : [];
+            const type = ch.type === 'voice' ? ChannelType.GuildVoice : ChannelType.GuildText;
+            await guild.channels.create({ name: ch.name, type, parent: category.id, permissionOverwrites: ow, reason: 'Auto-setup' });
+          }
+        }
+        await interaction.editReply({ content: '✅ **Serveur construit !** Va dans #rôles et lance `/rolemenu`.' });
+      } catch (e) {
+        console.error('Erreur setup:', e);
+        await interaction.editReply({ content: `❌ Erreur : ${e.message}\nVérifie que le rôle du bot est tout en haut et qu'il a la permission Administrateur.` });
+      }
+    }
+
+    // /rolemenu
+    else if (commandName === 'rolemenu') {
+      if (!interaction.member.permissions.has(PermissionFlagsBits.Administrator))
+        return interaction.reply({ content: '❌ Il faut être Administrateur.', ephemeral: true });
+      let desc = '**Choisis tes rôles** — clique pour ajouter / retirer :\n\n';
+      desc += SELF_ROLES.map(([name, d]) => `${name} — ${d}`).join('\n');
+      desc += '\n\n*⭐ Client Premium et 💚 Supporter sont attribués manuellement.*';
+      const embed = new EmbedBuilder().setTitle('🎭 Auto-rôles').setDescription(desc).setColor(0x5865F2);
+      await interaction.channel.send({ embeds: [embed], components: buildRoleMenu() });
+      await interaction.reply({ content: '✅ Menu posté.', ephemeral: true });
+    }
+
+    // /reset
+    else if (commandName === 'reset') {
+      if (!interaction.member.permissions.has(PermissionFlagsBits.Administrator))
+        return interaction.reply({ content: '❌ Il faut être Administrateur.', ephemeral: true });
+      const row = new ActionRowBuilder().addComponents(
+        new ButtonBuilder().setCustomId('reset_confirm').setLabel('🗑️ Tout supprimer').setStyle(ButtonStyle.Danger),
+        new ButtonBuilder().setCustomId('reset_cancel').setLabel('Annuler').setStyle(ButtonStyle.Secondary)
+      );
+      await interaction.reply({
+        content: '⚠️ **Attention** : ça supprime toutes les catégories, salons et rôles créés par `/setup`.\nCe que tu as ajouté toi-même hors de cette liste n\'est **pas** touché.\n\nConfirmer ?',
+        components: [row], ephemeral: true
+      });
     }
 
     // /rapport
@@ -647,6 +823,56 @@ client.on('interactionCreate', async interaction => {
 
   // ===== BOUTONS =====
   else if (interaction.isButton()) {
+    // Auto-rôles : tout le monde peut cliquer
+    if (interaction.customId.startsWith('selfrole:')) {
+      const roleName = interaction.customId.slice('selfrole:'.length);
+      const role = interaction.guild.roles.cache.find(r => r.name === roleName);
+      if (!role) return interaction.reply({ content: '❌ Rôle introuvable — relance /setup.', ephemeral: true });
+      try {
+        if (interaction.member.roles.cache.has(role.id)) {
+          await interaction.member.roles.remove(role, 'Auto-rôle');
+          return interaction.reply({ content: `➖ **${role.name}** retiré.`, ephemeral: true });
+        } else {
+          await interaction.member.roles.add(role, 'Auto-rôle');
+          return interaction.reply({ content: `➕ **${role.name}** ajouté.`, ephemeral: true });
+        }
+      } catch (e) {
+        return interaction.reply({ content: `❌ Impossible : le rôle du bot doit être au-dessus de **${role.name}** dans la hiérarchie.`, ephemeral: true });
+      }
+    }
+
+    // Reset : confirmation (admin uniquement)
+    if (interaction.customId === 'reset_confirm' || interaction.customId === 'reset_cancel') {
+      if (!interaction.member.permissions.has(PermissionFlagsBits.Administrator))
+        return interaction.reply({ content: '❌ Il faut être Administrateur.', ephemeral: true });
+      if (interaction.customId === 'reset_cancel') {
+        return interaction.update({ content: '❎ Annulé — rien n\'a été supprimé.', components: [] });
+      }
+      await interaction.update({ content: '🗑️ Suppression en cours…', components: [] });
+      const guild = interaction.guild;
+      const deleted = { channels: 0, categories: 0, roles: 0, errors: 0 };
+      // Salons + catégories
+      for (const cat of STRUCTURE) {
+        const category = guild.channels.cache.find(c => c.type === ChannelType.GuildCategory && c.name === cat.name);
+        if (!category) continue;
+        const children = guild.channels.cache.filter(c => c.parentId === category.id);
+        for (const [, channel] of children) {
+          try { await channel.delete('Reset'); deleted.channels++; } catch (e) { deleted.errors++; }
+        }
+        try { await category.delete('Reset'); deleted.categories++; } catch (e) { deleted.errors++; }
+      }
+      // Rôles
+      for (const [, role] of guild.roles.cache) {
+        if (SETUP_ROLE_NAMES.has(role.name) && !role.managed && role.id !== guild.roles.everyone.id) {
+          try { await role.delete('Reset'); deleted.roles++; } catch (e) { deleted.errors++; }
+        }
+      }
+      return interaction.editReply({
+        content: `🗑️ **Reset terminé** — ${deleted.categories} catégories, ${deleted.channels} salons, ${deleted.roles} rôles supprimés` +
+          (deleted.errors ? ` (${deleted.errors} erreurs, souvent des rôles au-dessus du bot).` : '.')
+      });
+    }
+
     if (!await isAdmin(interaction.user.id)) return interaction.reply({ content: '❌ Non autorisé !', ephemeral: true });
 
     if (interaction.customId.startsWith('rapport_del_')) {
