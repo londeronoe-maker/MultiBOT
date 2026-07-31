@@ -3,6 +3,7 @@ const { MongoClient } = require('mongodb');
 const express = require('express');
 const crypto = require('crypto');
 const community = require('./community');
+const dashboard = require('./dashboard');
 
 const client = new Client({
   intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMembers, GatewayIntentBits.DirectMessages, GatewayIntentBits.MessageContent, GatewayIntentBits.GuildMessageReactions],
@@ -1332,6 +1333,7 @@ client.once('ready', () => {
 
 connectMongo().then(() => {
   client.login(BOT_TOKEN).then(() => {
+    dashboard.initDashboard({ app, client, db, guildId: '975054589407674430' });
     app.listen(PORT, () => console.log('Serveur démarré sur port ' + PORT));
   });
 });
