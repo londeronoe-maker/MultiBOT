@@ -4,6 +4,7 @@ const express = require('express');
 const crypto = require('crypto');
 const community = require('./community');
 const dashboard = require('./dashboard');
+const tickets = require('./tickets');
 
 const client = new Client({
   intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMembers, GatewayIntentBits.DirectMessages, GatewayIntentBits.MessageContent, GatewayIntentBits.GuildMessageReactions],
@@ -113,6 +114,7 @@ async function connectMongo() {
   db = mongoClient.db('multibot');
   console.log('MongoDB connecté !');
   community.initCommunity(db);
+  await tickets.initTickets(db, client);
 }
 
 // admins = liste fixe via variable d'environnement USER_IDS
@@ -148,6 +150,9 @@ const commands = [
     .setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
   new SlashCommandBuilder().setName('reset').setDescription('⚠️ Supprime tout ce que /setup a créé (admin)')
     .setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
+
+  new SlashCommandBuilder().setName('panel').setDescription('Poster le panneau de tickets (admin)')
+    .setDefaultMemberPermissions(PermissionFlagsBits.ManageChannels),
 
 ].map(c => c.toJSON());
 
@@ -212,6 +217,8 @@ function buildRoleMenu() {
 client.on('interactionCreate', async interaction => {
   // Module communauté (rôles-réactions, embed, say) — priorité
   try { if (await community.handleInteraction(interaction)) return; } catch (e) { console.error('Erreur community:', e.message); }
+  // Module tickets
+  try { if (await tickets.handleInteraction(interaction)) return; } catch (e) { console.error('Erreur tickets:', e.message); }
 
   const userId = interaction.user.id;
   const admin = await isAdmin(userId);
@@ -272,6 +279,14 @@ client.on('interactionCreate', async interaction => {
         content: '⚠️ **Attention** : ça supprime toutes les catégories, salons et rôles créés par `/setup`.\nCe que tu as ajouté toi-même hors de cette liste n\'est **pas** touché.\n\nConfirmer ?',
         components: [row], ephemeral: true
       });
+    }
+
+    // /panel
+    else if (commandName === 'panel') {
+      if (!interaction.member.permissions.has(PermissionFlagsBits.ManageChannels))
+        return interaction.reply({ content: '❌ Il faut la permission Gérer les salons.', ephemeral: true });
+      await tickets.postPanelCommand(interaction);
+      await interaction.reply({ content: '✅ Panneau de tickets posté.', ephemeral: true });
     }
 
     // /mp
