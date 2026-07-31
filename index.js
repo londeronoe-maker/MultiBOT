@@ -158,11 +158,11 @@ const commands = [
 
 async function enregistrerCommandes() {
   const rest = new REST({ version: '10' }).setToken(BOT_TOKEN);
-  const MON_SERVEUR = '975054589407674430';
+  const SERVEUR_COMMU = '1532545431006089236';
   try {
-    // Commandes perso (mp, message, setup, rolemenu, reset) → uniquement sur mon serveur
-    await rest.put(Routes.applicationGuildCommands(CLIENT_ID, MON_SERVEUR), { body: commands });
-    console.log('Commandes serveur (perso) enregistrées !');
+    // Commandes admin/tickets (mp, message, setup, rolemenu, reset, panel) → serveur communautaire
+    await rest.put(Routes.applicationGuildCommands(CLIENT_ID, SERVEUR_COMMU), { body: commands });
+    console.log('Commandes serveur (communautaire) enregistrées !');
     // Commandes communauté (rolereaction, embed, say) → globales
     await rest.put(Routes.applicationCommands(CLIENT_ID), { body: community.getCommands() });
     console.log('Commandes globales (communauté) enregistrées !');
