@@ -2,9 +2,9 @@ const { Client, GatewayIntentBits, Partials, EmbedBuilder, REST, Routes, SlashCo
 const { MongoClient } = require('mongodb');
 const express = require('express');
 const crypto = require('crypto');
-const community = require('./community');
-const dashboard = require('./dashboard');
-const tickets = require('./tickets');
+const community = require('./modules/community');
+const dashboard = require('./modules/dashboard');
+const tickets = require('./modules/tickets');
 
 const client = new Client({
   intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMembers, GatewayIntentBits.DirectMessages, GatewayIntentBits.MessageContent, GatewayIntentBits.GuildMessageReactions],
