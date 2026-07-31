@@ -429,12 +429,12 @@ document.getElementById('tkTitle').value=cfg.panelTitle||'';
 document.getElementById('tkDesc').value=cfg.panelDescription||'';
 document.getElementById('tkColor').value=cfg.panelColor||'#5865F2';
 document.getElementById('tkWelcome').value=cfg.welcomeMessage||'';
-document.getElementById('tkCats').value=(cfg.categories||[]).map(c=>(c.emoji||'')+' | '+c.label+' | '+(c.description||'')).join('\n');
+document.getElementById('tkCats').value=(cfg.categories||[]).map(c=>(c.emoji||'')+' | '+c.label+' | '+(c.description||'')).join('\\n');
 }
 async function saveTickets(){
 const fb=document.getElementById('tkFb');
 const staff=Array.from(document.getElementById('tkStaff').selectedOptions).map(o=>o.value);
-const cats=document.getElementById('tkCats').value.split('\n').filter(l=>l.trim()).map((l,i)=>{const p=l.split('|').map(x=>x.trim());return{id:'cat'+i,emoji:p[0]||'',label:p[1]||p[0]||'Catégorie',description:p[2]||''};});
+const cats=document.getElementById('tkCats').value.split('\\n').filter(l=>l.trim()).map((l,i)=>{const p=l.split('|').map(x=>x.trim());return{id:'cat'+i,emoji:p[0]||'',label:p[1]||p[0]||'Catégorie',description:p[2]||''};});
 const body={enabled:document.getElementById('tkEnabled').checked,categoryId:document.getElementById('tkCategory').value||null,transcriptChannelId:document.getElementById('tkTranscript').value||null,staffRoleIds:staff,panelTitle:document.getElementById('tkTitle').value,panelDescription:document.getElementById('tkDesc').value,panelColor:document.getElementById('tkColor').value,welcomeMessage:document.getElementById('tkWelcome').value,categories:cats};
 const r=await fetch('/dashboard/api/tickets/config',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});const d=await r.json();
 if(d.ok){fb.className='fb ok';fb.textContent='✅ Configuration sauvegardée !';}else{fb.className='fb err';fb.textContent='❌ '+(d.error||'Erreur');}
