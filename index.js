@@ -1,10 +1,12 @@
-const { Client, GatewayIntentBits, EmbedBuilder, REST, Routes, SlashCommandBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, StringSelectMenuBuilder, ChannelType, PermissionFlagsBits } = require('discord.js');
+const { Client, GatewayIntentBits, Partials, EmbedBuilder, REST, Routes, SlashCommandBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, StringSelectMenuBuilder, ChannelType, PermissionFlagsBits } = require('discord.js');
 const { MongoClient } = require('mongodb');
 const express = require('express');
 const crypto = require('crypto');
+const community = require('./community');
 
 const client = new Client({
-  intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMembers, GatewayIntentBits.DirectMessages, GatewayIntentBits.MessageContent]
+  intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMembers, GatewayIntentBits.DirectMessages, GatewayIntentBits.MessageContent, GatewayIntentBits.GuildMessageReactions],
+  partials: [Partials.Message, Partials.Channel, Partials.Reaction]
 });
 
 const BOT_TOKEN = process.env.BOT_TOKEN;
@@ -121,6 +123,7 @@ async function connectMongo() {
     sosup_ids: [...USER_IDS],
     so_ids: [...USER_IDS]
   });
+  community.initCommunity(db);
 }
 
 async function getStats() { return db.collection('stats').findOne({ _id: 'current' }); }
@@ -426,7 +429,8 @@ const commands = [
 async function enregistrerCommandes() {
   const rest = new REST({ version: '10' }).setToken(BOT_TOKEN);
   try {
-    await rest.put(Routes.applicationCommands(CLIENT_ID), { body: commands });
+    const allCommands = [...commands, ...community.getCommands()];
+    await rest.put(Routes.applicationCommands(CLIENT_ID), { body: allCommands });
     console.log('Commandes globales enregistrées !');
   } catch (err) { console.error('Erreur commandes:', err); }
 }
@@ -477,6 +481,9 @@ function buildRoleMenu() {
 
 // ===== INTERACTIONS =====
 client.on('interactionCreate', async interaction => {
+  // Module communauté (rôles-réactions, embed, say) — priorité
+  try { if (await community.handleInteraction(interaction)) return; } catch (e) { console.error('Erreur community:', e.message); }
+
   const userId = interaction.user.id;
   const admin = await isAdmin(userId);
 
@@ -1317,6 +1324,7 @@ client.once('ready', () => {
   console.log(`Bot connecté : ${client.user.tag}`);
   envoyerLog('🟢 Bot démarré', `**${client.user.tag}** en ligne !`, 0x4CAF50);
   enregistrerCommandes();
+  community.attachReactionListeners(client);
   // Surveillance Steam toutes les 2 minutes
   setTimeout(() => verifierSteam(), 10000); // premier check après 10s
   setInterval(() => verifierSteam(), 2 * 60 * 1000);
